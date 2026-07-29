@@ -27,6 +27,17 @@ from app.core.request_context import (
 IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
 
 
+def request_uuid(value: str | None) -> uuid.UUID | None:
+    """Parse an optional request identifier for UUID-backed audit columns."""
+    if not value:
+        return None
+
+    try:
+        return uuid.UUID(value)
+    except ValueError:
+        return None
+
+
 @dataclass(frozen=True, slots=True)
 class AuthRequestContext:
     """Immutable request metadata supplied to authentication workflows."""
@@ -269,4 +280,5 @@ class AuthRequestContext:
 
 __all__ = [
     "AuthRequestContext",
+    "request_uuid",
 ]

@@ -8,7 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
-from app.auth.request_context.dependencies import require_permissions
+from app.auth.authorization.dependencies import require_permissions
 from app.auth.request_context.principals import UserPrincipal
 from app.common.response import APIResponse, APIResponseModel
 from app.core.di import PostgresUOWDep

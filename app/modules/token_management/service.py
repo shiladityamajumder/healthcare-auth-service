@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import uuid
 
-from app.auth.request_context.context import AuthRequestContext
-from app.auth.infrastructure.authorization.policies import AccountAccessPolicy
+from app.auth.authorization.policies import AccountAccessPolicy
 from app.auth.identity.presentation import public_user_data
+from app.auth.request_context.context import AuthRequestContext
 from app.auth.security.hashing import SecureHashing
 from app.auth.security.tokens import TokenManager, TokenType
 from app.common.exceptions import (

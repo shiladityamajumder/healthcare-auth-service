@@ -11,10 +11,49 @@ only to an authorized recipient.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+from typing import Any
+
 from app.auth.identity.normalization import (
     normalize_email,
     normalize_phone,
 )
+
+
+def public_user_data(
+    user: Any,
+    *,
+    roles: Iterable[str] = (),
+    permissions: Iterable[str] = (),
+) -> dict[str, object]:
+    """Build the non-sensitive user representation used by API contracts.
+
+    Password hashes, lockout counters, and other internal account state are
+    intentionally excluded. Authorization codes are sorted so responses are
+    deterministic when callers supply sets or database-derived collections.
+    """
+    phone_number_masked = None
+    if user.phone_country_code is not None and user.phone_number is not None:
+        phone_number_masked = mask_phone(
+            user.phone_country_code,
+            user.phone_number,
+        )
+
+    status = getattr(user.status, "value", user.status)
+
+    return {
+        "id": user.id,
+        "email": user.email,
+        "email_verified": user.email_verified_at is not None,
+        "phone_country_code": user.phone_country_code,
+        "phone_number_masked": phone_number_masked,
+        "phone_verified": user.phone_verified_at is not None,
+        "status": status,
+        "preferred_locale": user.preferred_locale,
+        "timezone": user.timezone,
+        "roles": sorted(set(roles)),
+        "permissions": sorted(set(permissions)),
+    }
 
 
 def mask_email(
@@ -107,4 +146,5 @@ def mask_phone(
 __all__ = [
     "mask_email",
     "mask_phone",
+    "public_user_data",
 ]
