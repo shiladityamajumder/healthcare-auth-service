@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from app.auth.dependencies import CurrentUserDep
+from app.auth.request_context.dependencies import CurrentUserDep
 from app.common.response import APIResponse, APIResponseModel
 from app.core.di import PostgresUOWDep
 from app.modules.current_user.openapi import RESPONSES, TAG

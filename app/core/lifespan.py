@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING
 
 from fastapi import FastAPI
 
-from app.auth.runtime import AuthRuntime
+from app.auth.infrastructure.runtime import AuthRuntime
 from app.core.config import AppSettings
 from app.core.logging import get_logger
 from app.core.rate_limiting import (

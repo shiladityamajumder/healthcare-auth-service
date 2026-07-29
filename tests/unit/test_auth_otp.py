@@ -7,7 +7,7 @@ import pytest
 
 from app.models.identity import OtpChallenges
 from app.auth.security.hashing import SecureHashing
-from app.auth.otp import OTPFailure, OTPService
+from app.auth.workflows.otp import OTPFailure, OTPService
 from app.utils.datetime_utils import utc_now
 from tests.conftest import build_test_settings
 

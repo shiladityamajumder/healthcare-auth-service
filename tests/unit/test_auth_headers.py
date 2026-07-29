@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from starlette.requests import Request
 
 from app.main import create_app
-from app.auth.context import AuthRequestContext
+from app.auth.request_context.context import AuthRequestContext
 from tests.conftest import build_test_settings
 
 

@@ -5,13 +5,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from app.auth.dependencies import (
+from app.auth.request_context.dependencies import (
     AuthRateLimitsDep,
     AuthRequestContextDep,
     AuthRuntimeDep,
     CurrentUserDep,
 )
-from app.auth.identities import generic_identity
+from app.auth.identity.canonical import generic_identity
 from app.common.response import APIResponse, APIResponseModel
 from app.core.di import PostgresUOWDep
 from app.models.enums import OTPPurpose

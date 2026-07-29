@@ -7,16 +7,16 @@ from datetime import datetime
 
 from sqlalchemy.exc import IntegrityError
 
-from app.auth.context import AuthRequestContext
-from app.auth.normalization import normalize_email, normalize_phone, phone_destination
-from app.auth.notifications import AuthNotificationGateway, NotificationDispatcher
-from app.auth.otp import IssuedOTP, OTPService
-from app.auth.policies import OtpVerificationPolicy
-from app.auth.presentation import public_user_data
+from app.auth.request_context.context import AuthRequestContext
+from app.auth.identity.normalization import normalize_email, normalize_phone, phone_destination
+from app.auth.workflows.notifications import AuthNotificationGateway, NotificationDispatcher
+from app.auth.workflows.otp import IssuedOTP, OTPService
+from app.auth.infrastructure.authorization.policies import OtpVerificationPolicy
+from app.auth.identity.presentation import public_user_data
 from app.auth.security.hashing import SecureHashing
 from app.auth.security.passwords import PasswordManager
 from app.auth.security.tokens import TokenManager
-from app.auth.session_tokens import (
+from app.auth.workflows.session_tokens import (
     DeviceMetadataPort,
     IssuedSessionTokens,
     SessionTokenIssuer,

@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from app.auth.dependencies import (
+from app.auth.request_context.dependencies import (
     AuthRateLimitsDep,
     AuthRequestContextDep,
     AuthRuntimeDep,

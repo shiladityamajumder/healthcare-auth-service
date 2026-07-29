@@ -5,8 +5,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from app.auth.dependencies import AuthRateLimitsDep, AuthRequestContextDep, AuthRuntimeDep
-from app.auth.identities import email_identity
+from app.auth.request_context.dependencies import AuthRateLimitsDep, AuthRequestContextDep, AuthRuntimeDep
+from app.auth.identity.canonical import email_identity
 from app.common.response import APIResponse, APIResponseModel
 from app.core.di import PostgresUOWDep
 from app.models.enums import OTPPurpose

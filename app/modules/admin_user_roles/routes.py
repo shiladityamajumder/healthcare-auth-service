@@ -8,8 +8,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 
-from app.auth.dependencies import require_permissions
-from app.auth.principals import UserPrincipal
+from app.auth.request_context.dependencies import require_permissions
+from app.auth.request_context.principals import UserPrincipal
 from app.common.response import APIResponse, APIResponseModel
 from app.core.di import PostgresUOWDep
 from app.modules.admin_user_roles.openapi import RESPONSES, TAG

@@ -8,7 +8,7 @@ from datetime import datetime
 from sqlalchemy import func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.authorization import AuthorizationClaims, load_authorization_claims
+from app.auth.authorization.claims import AuthorizationClaims, load_authorization_claims
 from app.models.identity import LoginAttempts, OtpChallenges, Sessions, Users
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.auth.notifications import NotificationDispatcher
+from app.auth.workflows.notifications import NotificationDispatcher
 
 
 class RecordingNotificationGateway:

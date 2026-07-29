@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 
-from app.auth.presentation import public_user_data
+from app.auth.identity.presentation import public_user_data
 from app.common.exceptions import NotFoundError
 from app.db.uow import SQLAlchemyUnitOfWork
 from app.modules.current_user.repositories import CurrentUserRepository

@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 
-from app.auth.normalization import normalize_email, normalize_phone
+from app.auth.identity.normalization import normalize_email, normalize_phone
 from app.auth.security.hashing import SecureHashing
 from app.auth.security.passwords import PasswordManager
 from app.auth.security.tokens import TokenManager, TokenType

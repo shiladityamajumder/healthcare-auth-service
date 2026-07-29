@@ -4,8 +4,8 @@ import pytest
 
 from app.common.exceptions import RateLimitError
 from app.core.rate_limiting import InMemoryRateLimiter, enforce_rate_limit
-from app.auth.context import AuthRequestContext
-from app.auth.rate_limits import AuthRateLimits
+from app.auth.request_context.context import AuthRequestContext
+from app.auth.workflows.rate_limits import AuthRateLimits
 from app.auth.security.hashing import SecureHashing
 from tests.conftest import build_test_settings
 
