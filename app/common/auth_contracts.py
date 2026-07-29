@@ -40,7 +40,7 @@ class TokenPairResponse(StrictModel):
 
     access_token: str
     refresh_token: str
-    token_type: str = "Bearer"
+    token_type: str = "Bearer"  # noqa: S105
     access_expires_at: datetime
     refresh_expires_at: datetime
     user: UserResponse

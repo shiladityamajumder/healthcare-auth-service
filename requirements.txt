@@ -1,13 +1,54 @@
-# Runtime dependencies. This is the only production dependency manifest.
+# Production runtime dependencies for the authentication service.
+# Development and test-only packages belong in requirements-dev.txt.
+
+# -----------------------------------------------------------------------------
+# API framework and server
+# -----------------------------------------------------------------------------
+
 fastapi>=0.128,<1
 uvicorn[standard]>=0.38,<1
+
+# -----------------------------------------------------------------------------
+# Configuration, validation, and serialization
+# -----------------------------------------------------------------------------
+
 pydantic>=2.13,<3
 pydantic-settings>=2.14,<3
+email-validator>=2.3,<3
+
+# -----------------------------------------------------------------------------
+# PostgreSQL and asynchronous SQLAlchemy
+# -----------------------------------------------------------------------------
+
 SQLAlchemy[asyncio]>=2.0.50,<2.1
 asyncpg>=0.30,<1
+
+# -----------------------------------------------------------------------------
+# Redis
+# -----------------------------------------------------------------------------
+
+# Provides redis.asyncio.Redis used by the shared Redis lifecycle adapter and
+# the distributed authentication rate limiter.
+redis>=5,<8
+
+# -----------------------------------------------------------------------------
+# MongoDB
+# -----------------------------------------------------------------------------
+
+# PyMongo 4.13 introduced the generally available asynchronous API used by
+# AsyncMongoClient. The "srv" extra adds support for mongodb+srv:// URIs.
+pymongo[srv]>=4.13,<5
+
+# -----------------------------------------------------------------------------
+# Authentication and cryptography
+# -----------------------------------------------------------------------------
+
 PyJWT[crypto]>=2.11,<3
 argon2-cffi>=25.1,<26
 cryptography>=46,<50
-email-validator>=2.3,<3
+
+# -----------------------------------------------------------------------------
+# Timezone database
+# -----------------------------------------------------------------------------
+
 tzdata
-redis>=5,<8
