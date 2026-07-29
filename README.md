@@ -276,4 +276,4 @@ POSTGRES_URL='postgresql+asyncpg://identity_app:password@127.0.0.1:5432/pharmacy
 pytest -m integration -q
 ```
 
-See `Architecture.md`, `AUTH_REFACTOR_REPORT.md`, and `VALIDATION_REPORT.md` for the design and validation record.
+See `Architecture.md` for the detailed design and `deployment_guide.md` for production deployment guidance.
