@@ -1,0 +1,32 @@
+services:
+  api:
+    image: ${IMAGE_URI}
+    env_file:
+      - ${ENV_FILE_PATH}
+    environment:
+      PORT: ${APP_INTERNAL_PORT:-5555}
+    command:
+      - python
+      - -m
+      - uvicorn
+      - app.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - ${APP_INTERNAL_PORT:-5555}
+      - --no-server-header
+    ports:
+      - "${APP_EXTERNAL_PORT:-5555}:${APP_INTERNAL_PORT:-5555}"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,urllib.request; p=os.getenv('PORT','5555'); urllib.request.urlopen(f'http://127.0.0.1:{p}/health/ready',timeout=5).close()"]
+      interval: 15s
+      timeout: 7s
+      retries: 5
+      start_period: 30s

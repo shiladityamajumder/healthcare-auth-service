@@ -1,0 +1,88 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        timeout(time: 40, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '30'))
+    }
+
+    parameters {
+        choice(name: 'DEPLOY_ENV', choices: ['staging', 'production'])
+        string(name: 'RELEASE_IMAGE_TAG', defaultValue: '', trim: true)
+    }
+
+    environment {
+        APP_NAME = 'pharmacy-identity-service'
+        PYTHON = 'python3.13'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps { checkout scm }
+        }
+
+        stage('Install') {
+            steps {
+                sh '''
+                    set -Eeuo pipefail
+                    ${PYTHON} -m venv .ci-venv
+                    . .ci-venv/bin/activate
+                    python -m pip install --upgrade pip
+                    python -m pip install -r requirements.txt -r requirements-dev.txt
+                    python -m pip check
+                '''
+            }
+        }
+
+        stage('Quality gates') {
+            parallel {
+                stage('Lint') {
+                    steps {
+                        sh '''
+                            . .ci-venv/bin/activate
+                            ruff check app tests
+                            ruff format --check app tests
+                        '''
+                    }
+                }
+                stage('Type check') {
+                    steps {
+                        sh '''
+                            . .ci-venv/bin/activate
+                            mypy app
+                        '''
+                    }
+                }
+                stage('Tests') {
+                    steps {
+                        sh '''
+                            . .ci-venv/bin/activate
+                            pytest --junitxml=test-results/pytest.xml
+                        '''
+                    }
+                    post {
+                        always { junit allowEmptyResults: true, testResults: 'test-results/pytest.xml' }
+                    }
+                }
+            }
+        }
+
+        stage('Build image') {
+            steps {
+                script {
+                    def commit = sh(script: 'git rev-parse --short=12 HEAD', returnStdout: true).trim()
+                    env.IMAGE_TAG = params.RELEASE_IMAGE_TAG?.trim() ?: "git-${commit}-${env.BUILD_NUMBER}"
+                }
+                sh 'docker build --pull -t ${APP_NAME}:${IMAGE_TAG} .'
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'rm -rf .ci-venv || true'
+        }
+    }
+}

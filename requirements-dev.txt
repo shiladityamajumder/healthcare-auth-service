@@ -1,0 +1,5 @@
+# Development-only dependencies. Install after requirements.txt.
+pytest>=9,<10
+pytest-asyncio>=1.3,<2
+ruff>=0.14,<1
+mypy>=1.19,<2

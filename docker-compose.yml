@@ -1,0 +1,66 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pharmacy_platform}
+      POSTGRES_USER: ${POSTGRES_USER:-identity_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-identity_dev_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - identity_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-identity_app} -d ${POSTGRES_DB:-pharmacy_platform}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - identity_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      POSTGRES_URL: postgresql+asyncpg://${POSTGRES_USER:-identity_app}:${POSTGRES_PASSWORD:-identity_dev_password}@postgres:5432/${POSTGRES_DB:-pharmacy_platform}
+      HOST: 0.0.0.0
+      PORT: 5555
+      RATE_LIMIT_BACKEND: redis
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  identity_postgres_data:
+  identity_redis_data:
