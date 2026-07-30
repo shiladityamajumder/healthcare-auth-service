@@ -48,10 +48,11 @@ The removed directories previously caused business logic to live behind module-l
 
 ## Vertical modules
 
-Each module contains exactly these architectural surfaces:
+Each module contains these architectural surfaces:
 
 ```text
 routes.py
+dependencies.py
 schemas.py
 service.py
 repositories.py
@@ -88,7 +89,8 @@ The current modules are:
 - Persisted session verification
 - Role and permission dependencies
 - Effective authorization-claim loading
-- Authentication rate-limit key construction
+- Declarative route-security policies and dependency composition
+- Authentication and general API rate-limit key construction
 - Notification integration boundary
 - Safe user projection helpers
 
@@ -123,6 +125,39 @@ every possible metadata header on every operation:
 The bearer token is declared as the OpenAPI `BearerAuth` security scheme, so
 Swagger collects it through **Authorize** and FastAPI resolves it before the
 service is called. Metadata headers never replace that signed token.
+
+## Route-security composition
+
+FastAPI dependencies are the security composition boundary. Each protected
+module defines named access aliases in its local `dependencies.py`; routes
+inject those aliases instead of manually repeating authentication,
+authorization, and generic API rate-limiting calls.
+
+```text
+module access alias
+  -> secure_route(RouteSecurityPolicy)
+  -> bearer principal and persisted-session validation
+  -> fresh permission/role checks
+  -> APIRateLimits risk tier
+  -> typed UserPrincipal
+```
+
+The route policy is immutable metadata and supports `STANDARD`, `SENSITIVE`,
+`ADMIN_READ`, `ADMIN_WRITE`, and explicit `NONE` rate tiers. Public policies
+use an optional principal, but cannot declare role or permission requirements.
+A supplied invalid bearer token is still rejected; optional authentication
+does not silently downgrade invalid credentials to anonymous access.
+
+Authentication workflows keep their payload-aware limits. Login, OTP,
+registration, password reset, refresh, and refresh-token logout need identity,
+purpose, or token-fingerprint keys that a generic route policy cannot safely
+infer. The generic API limiter is used for authenticated profile,
+administrative, password, logout-all, and session routes.
+
+The rate-limit backend may be disabled in development and tests. Production
+startup rejects a disabled backend and requires Redis. Authorization has no
+global production bypass; tests use dependency overrides where isolation is
+required.
 
 ## Registration flows
 

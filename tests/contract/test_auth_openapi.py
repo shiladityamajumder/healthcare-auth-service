@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Iterator
+
+from app.auth.request_context.dependencies import get_current_user_principal
+from app.auth.route_security import route_security_policy
+from app.auth.security_policy import RateLimitPolicy, RouteSecurityPolicy
 from app.main import create_app
+from app.modules.router import router as modules_router
+from fastapi.routing import APIRoute
 
 EXPECTED_IDENTITY_PATHS = {
     "/api/v1/auth/register/email",
@@ -120,3 +127,58 @@ def test_password_and_role_paths_publish_expected_methods() -> None:
     assert {"get", "put"}.issubset(paths["/api/v1/admin/roles/{role_id}/permissions"])
     assert {"get", "post"}.issubset(paths["/api/v1/admin/permissions"])
     assert {"get", "patch", "delete"}.issubset(paths["/api/v1/admin/permissions/{permission_id}"])
+
+
+def test_every_bearer_protected_module_route_has_declarative_security() -> None:
+    """Prevent new protected endpoints from bypassing composed route policy."""
+    protected_route_names: list[str] = []
+
+    for route in _iter_api_routes(modules_router.routes):
+        calls = tuple(_dependency_calls(route.dependant))
+        if get_current_user_principal not in calls:
+            continue
+
+        protected_route_names.append(route.name)
+        assert any(route_security_policy(call) is not None for call in calls), route.name
+
+    assert protected_route_names
+
+
+def test_route_security_uses_risk_based_rate_limit_profiles() -> None:
+    policies: dict[str, RouteSecurityPolicy] = {}
+
+    for route in _iter_api_routes(modules_router.routes):
+        for call in _dependency_calls(route.dependant):
+            policy = route_security_policy(call)
+            if policy is not None:
+                policies[route.name] = policy
+
+    assert policies["list_users"].rate_limit is RateLimitPolicy.ADMIN_READ
+    assert policies["update_user_status"].rate_limit is RateLimitPolicy.ADMIN_WRITE
+    assert policies["get_current_user"].rate_limit is RateLimitPolicy.STANDARD
+    assert policies["update_current_user"].rate_limit is RateLimitPolicy.SENSITIVE
+    assert policies["list_sessions"].rate_limit is RateLimitPolicy.STANDARD
+    assert policies["revoke_session"].rate_limit is RateLimitPolicy.SENSITIVE
+    assert policies["logout_all"].rate_limit is RateLimitPolicy.SENSITIVE
+
+
+def _iter_api_routes(routes: Iterable[object]) -> Iterator[APIRoute]:
+    """Traverse FastAPI's lazy included-router structure."""
+    for route in routes:
+        if isinstance(route, APIRoute):
+            yield route
+            continue
+        original_router = getattr(route, "original_router", None)
+        nested_routes = getattr(original_router, "routes", None)
+        if isinstance(nested_routes, list):
+            yield from _iter_api_routes(nested_routes)
+
+
+def _dependency_calls(dependant: object) -> Iterator[object]:
+    """Yield every callable in one FastAPI dependency tree."""
+    call = getattr(dependant, "call", None)
+    if call is not None:
+        yield call
+    dependencies = getattr(dependant, "dependencies", ())
+    for child in dependencies:
+        yield from _dependency_calls(child)

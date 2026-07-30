@@ -160,6 +160,22 @@ class AuthRateLimits:
             ),
         )
 
+    async def logout(
+        self,
+        *,
+        context: AuthRequestContext,
+        token_fingerprint: str,
+    ) -> None:
+        """Enforce refresh-token logout limits by token fingerprint and origin."""
+        # The shared helper hashes the fingerprint before building limiter keys.
+        await self._enforce(
+            operation="token-logout",
+            context=context,
+            identity=token_fingerprint,
+            limit=self._settings.TOKEN_LOGOUT_RATE_LIMIT,
+            window_seconds=self._settings.TOKEN_LOGOUT_RATE_WINDOW_SECONDS,
+        )
+
     async def _enforce(
         self,
         *,

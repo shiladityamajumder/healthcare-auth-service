@@ -11,8 +11,8 @@ from fastapi.responses import JSONResponse
 from app.common.response import APIResponse, APIResponseModel
 from app.modules.admin_roles.dependencies import (
     AdminRolesServiceDep,
-    RoleManagePrincipal,
-    RoleReadPrincipal,
+    RoleManageAccess,
+    RoleReadAccess,
 )
 from app.modules.admin_roles.openapi import RESPONSES, TAG
 from app.modules.admin_roles.schemas import (
@@ -36,7 +36,7 @@ router = APIRouter(
     summary="List roles",
 )
 async def list_roles(
-    principal: RoleReadPrincipal,
+    principal: RoleReadAccess,
     service: AdminRolesServiceDep,
 ) -> JSONResponse:
     """Return all active RBAC roles."""
@@ -52,7 +52,7 @@ async def list_roles(
 )
 async def create_role(
     payload: CreateRoleRequest,
-    principal: RoleManagePrincipal,
+    principal: RoleManageAccess,
     service: AdminRolesServiceDep,
 ) -> JSONResponse:
     """Create a non-system RBAC role."""
@@ -67,7 +67,7 @@ async def create_role(
 )
 async def get_role(
     role_id: uuid.UUID,
-    principal: RoleReadPrincipal,
+    principal: RoleReadAccess,
     service: AdminRolesServiceDep,
 ) -> JSONResponse:
     """Return one active role."""
@@ -83,7 +83,7 @@ async def get_role(
 async def update_role(
     role_id: uuid.UUID,
     payload: UpdateRoleRequest,
-    principal: RoleManagePrincipal,
+    principal: RoleManageAccess,
     service: AdminRolesServiceDep,
 ) -> JSONResponse:
     """Update a role while preserving system-role invariants."""
@@ -103,7 +103,7 @@ async def update_role(
 )
 async def delete_role(
     role_id: uuid.UUID,
-    principal: RoleManagePrincipal,
+    principal: RoleManageAccess,
     service: AdminRolesServiceDep,
 ) -> JSONResponse:
     """Soft-delete a custom role."""

@@ -5,7 +5,11 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from app.common.response import APIResponse, APIResponseModel
-from app.modules.current_user.dependencies import CurrentUserDep, CurrentUserServiceDep
+from app.modules.current_user.dependencies import (
+    CurrentUserReadAccess,
+    CurrentUserServiceDep,
+    CurrentUserWriteAccess,
+)
 from app.modules.current_user.openapi import RESPONSES, TAG
 from app.modules.current_user.schemas import (
     UpdateCurrentUserRequest,
@@ -27,7 +31,7 @@ router = APIRouter(
     summary="Get current user",
 )
 async def get_current_user(
-    principal: CurrentUserDep,
+    principal: CurrentUserReadAccess,
     service: CurrentUserServiceDep,
 ) -> JSONResponse:
     """Return authenticated identity details and effective authorization."""
@@ -41,7 +45,7 @@ async def get_current_user(
 )
 async def update_current_user(
     payload: UpdateCurrentUserRequest,
-    principal: CurrentUserDep,
+    principal: CurrentUserWriteAccess,
     service: CurrentUserServiceDep,
 ) -> JSONResponse:
     """Update locale or timezone without changing login identifiers."""
@@ -56,7 +60,7 @@ async def update_current_user(
     summary="Get current user's roles",
 )
 async def get_current_user_roles(
-    principal: CurrentUserDep,
+    principal: CurrentUserReadAccess,
     service: CurrentUserServiceDep,
 ) -> JSONResponse:
     """Return effective active role codes."""
@@ -69,7 +73,7 @@ async def get_current_user_roles(
     summary="Get current user's permissions",
 )
 async def get_current_user_permissions(
-    principal: CurrentUserDep,
+    principal: CurrentUserReadAccess,
     service: CurrentUserServiceDep,
 ) -> JSONResponse:
     """Return effective active permission codes."""

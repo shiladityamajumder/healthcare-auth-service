@@ -4,7 +4,9 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from app.auth.request_context.dependencies import CurrentUserDep
+from app.auth.request_context.principals import UserPrincipal
+from app.auth.route_security import secure_route
+from app.auth.security_policy import RateLimitPolicy, RouteSecurityPolicy
 from app.core.di import PostgresUOWDep
 from app.modules.session_management.service import SessionManagementService
 
@@ -21,8 +23,19 @@ SessionManagementServiceDep = Annotated[
     Depends(get_session_management_service),
 ]
 
+# Revocation writes are more tightly limited than session-list reads.
+SessionReadAccess = Annotated[
+    UserPrincipal,
+    Depends(secure_route(RouteSecurityPolicy(rate_limit=RateLimitPolicy.STANDARD))),
+]
+SessionRevokeAccess = Annotated[
+    UserPrincipal,
+    Depends(secure_route(RouteSecurityPolicy(rate_limit=RateLimitPolicy.SENSITIVE))),
+]
+
 __all__ = [
-    "CurrentUserDep",
     "SessionManagementServiceDep",
+    "SessionReadAccess",
+    "SessionRevokeAccess",
     "get_session_management_service",
 ]

@@ -13,8 +13,8 @@ from app.common.response import APIResponse, APIResponseModel
 from app.core.pagination import PaginationParams
 from app.models.enums import UserStatus
 from app.modules.admin_users.dependencies import (
-    AdminManagePrincipal,
-    AdminReadPrincipal,
+    AdminUserManageAccess,
+    AdminUserReadAccess,
     AdminUsersServiceDep,
 )
 from app.modules.admin_users.openapi import RESPONSES, TAG
@@ -39,7 +39,7 @@ router = APIRouter(
     summary="List users",
 )
 async def list_users(
-    principal: AdminReadPrincipal,
+    principal: AdminUserReadAccess,
     service: AdminUsersServiceDep,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0, le=100_000)] = 0,
@@ -63,7 +63,7 @@ async def list_users(
 )
 async def get_user(
     user_id: uuid.UUID,
-    principal: AdminReadPrincipal,
+    principal: AdminUserReadAccess,
     service: AdminUsersServiceDep,
 ) -> JSONResponse:
     """Return one identity visible to an authorized administrator."""
@@ -79,7 +79,7 @@ async def get_user(
 async def update_user_status(
     user_id: uuid.UUID,
     payload: UpdateUserStatusRequest,
-    principal: AdminManagePrincipal,
+    principal: AdminUserManageAccess,
     service: AdminUsersServiceDep,
 ) -> JSONResponse:
     """Activate, suspend, lock, or close a user account."""
@@ -100,7 +100,7 @@ async def update_user_status(
 async def logout_user_from_all_devices(
     user_id: uuid.UUID,
     payload: AdminLogoutAllRequest,
-    principal: AdminManagePrincipal,
+    principal: AdminUserManageAccess,
     service: AdminUsersServiceDep,
 ) -> JSONResponse:
     """Administratively revoke every active session for a user."""

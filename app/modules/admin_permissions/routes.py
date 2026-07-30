@@ -11,8 +11,8 @@ from fastapi.responses import JSONResponse
 from app.common.response import APIResponse, APIResponseModel
 from app.modules.admin_permissions.dependencies import (
     AdminPermissionsServiceDep,
-    PermissionManagePrincipal,
-    PermissionReadPrincipal,
+    PermissionManageAccess,
+    PermissionReadAccess,
 )
 from app.modules.admin_permissions.openapi import RESPONSES, TAG
 from app.modules.admin_permissions.schemas import (
@@ -43,7 +43,7 @@ role_permissions_router = APIRouter(
     summary="List permissions",
 )
 async def list_permissions(
-    principal: PermissionReadPrincipal,
+    principal: PermissionReadAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
     """Return all active permission definitions."""
@@ -59,7 +59,7 @@ async def list_permissions(
 )
 async def create_permission(
     payload: CreatePermissionRequest,
-    principal: PermissionManagePrincipal,
+    principal: PermissionManageAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
     """Create one permission master record."""
@@ -77,7 +77,7 @@ async def create_permission(
 )
 async def get_permission(
     permission_id: uuid.UUID,
-    principal: PermissionReadPrincipal,
+    principal: PermissionReadAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
     """Return one active permission master record."""
@@ -93,7 +93,7 @@ async def get_permission(
 async def update_permission(
     permission_id: uuid.UUID,
     payload: UpdatePermissionRequest,
-    principal: PermissionManagePrincipal,
+    principal: PermissionManageAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
     """Update selected fields on an active permission."""
@@ -113,7 +113,7 @@ async def update_permission(
 )
 async def delete_permission(
     permission_id: uuid.UUID,
-    principal: PermissionManagePrincipal,
+    principal: PermissionManageAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
     """Soft-delete one permission master record."""
@@ -132,7 +132,7 @@ async def delete_permission(
 )
 async def get_role_permissions(
     role_id: uuid.UUID,
-    principal: PermissionReadPrincipal,
+    principal: PermissionReadAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
     """Return a role's complete active permission set."""
@@ -148,7 +148,7 @@ async def get_role_permissions(
 async def replace_role_permissions(
     role_id: uuid.UUID,
     payload: ReplaceRolePermissionsRequest,
-    principal: PermissionManagePrincipal,
+    principal: PermissionManageAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
     """Atomically replace every permission mapping for a role."""

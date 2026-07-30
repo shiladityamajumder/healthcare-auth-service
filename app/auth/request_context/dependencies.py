@@ -369,6 +369,38 @@ CurrentUserDep = Annotated[
 ]
 
 
+async def get_optional_user_principal(
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(_bearer),
+    ],
+    database: DatabaseDep,
+    runtime: AuthRuntimeDep,
+    context: PrincipalRequestContextDep,
+) -> UserPrincipal | None:
+    """Resolve a bearer principal when supplied, otherwise remain anonymous.
+
+    Invalid supplied bearer tokens still fail authentication; optional means
+    credentials may be absent, never that invalid credentials are ignored.
+    """
+    # Missing credentials are valid only for routes that selected this dependency.
+    if credentials is None:
+        return None
+    # Reuse the strict resolver so supplied credentials receive identical checks.
+    return await get_current_user_principal(
+        credentials=credentials,
+        database=database,
+        runtime=runtime,
+        context=context,
+    )
+
+
+OptionalUserDep = Annotated[
+    UserPrincipal | None,
+    Depends(get_optional_user_principal),
+]
+
+
 def _uuid_claim(
     payload: Mapping[str, object],
     *,
@@ -556,6 +588,7 @@ __all__ = [
     "AuthRequestContextDep",
     "AuthRuntimeDep",
     "CurrentUserDep",
+    "OptionalUserDep",
     "PrincipalAssertionHeadersDep",
     "PrincipalRequestContextDep",
     "RateLimitHeadersDep",
@@ -567,6 +600,7 @@ __all__ = [
     "get_auth_request_context",
     "get_auth_runtime",
     "get_current_user_principal",
+    "get_optional_user_principal",
     "get_principal_request_context",
     "get_rate_limit_request_context",
     "get_session_creation_request_context",

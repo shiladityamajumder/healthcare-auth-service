@@ -7,10 +7,12 @@ from fastapi import Depends
 from app.auth.request_context.dependencies import (
     AuthRateLimitsDep,
     AuthRuntimeDep,
-    CurrentUserDep,
     RateLimitRequestContextDep,
     SessionCreationRequestContextDep,
 )
+from app.auth.request_context.principals import UserPrincipal
+from app.auth.route_security import secure_route
+from app.auth.security_policy import RateLimitPolicy, RouteSecurityPolicy
 from app.core.di import PostgresUOWDep
 from app.modules.password_management.service import PasswordManagementService
 
@@ -36,10 +38,16 @@ PasswordManagementServiceDep = Annotated[
     Depends(get_password_management_service),
 ]
 
+# Authenticated password mutations use the sensitive API protection tier.
+PasswordSensitiveAccess = Annotated[
+    UserPrincipal,
+    Depends(secure_route(RouteSecurityPolicy(rate_limit=RateLimitPolicy.SENSITIVE))),
+]
+
 __all__ = [
     "AuthRateLimitsDep",
-    "CurrentUserDep",
     "PasswordManagementServiceDep",
+    "PasswordSensitiveAccess",
     "RateLimitRequestContextDep",
     "SessionCreationRequestContextDep",
     "get_password_management_service",

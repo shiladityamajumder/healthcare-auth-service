@@ -8,8 +8,9 @@ from fastapi.responses import JSONResponse
 
 from app.common.response import APIResponse, APIResponseModel
 from app.modules.session_management.dependencies import (
-    CurrentUserDep,
     SessionManagementServiceDep,
+    SessionReadAccess,
+    SessionRevokeAccess,
 )
 from app.modules.session_management.openapi import RESPONSES, TAG
 from app.modules.session_management.schemas import MessageResponse, SessionListResponse
@@ -23,7 +24,7 @@ router = APIRouter(prefix="/auth/sessions", tags=[TAG], responses=RESPONSES)
     summary="List active sessions",
 )
 async def list_sessions(
-    principal: CurrentUserDep,
+    principal: SessionReadAccess,
     service: SessionManagementServiceDep,
 ) -> JSONResponse:
     """Return active sessions and identify the current session."""
@@ -42,7 +43,7 @@ async def list_sessions(
 )
 async def revoke_session(
     session_id: uuid.UUID,
-    principal: CurrentUserDep,
+    principal: SessionRevokeAccess,
     service: SessionManagementServiceDep,
 ) -> JSONResponse:
     """Revoke only a session owned by the authenticated user."""

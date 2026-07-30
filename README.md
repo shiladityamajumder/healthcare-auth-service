@@ -27,7 +27,8 @@ The application is a modular monolith. Every public API family is implemented as
 - Purpose-specific OTP challenges with hashing, expiry, cooldown, attempt limits, and replay prevention
 - Typed request and device headers in OpenAPI
 - Structured logging with credential redaction
-- Redis-backed authentication rate limiting for production
+- Redis-backed, risk-tiered authentication and API rate limiting for production
+- Declarative FastAPI security policies for authenticated module routes
 
 No MFA or API-client authentication routes, services, schemas, repositories, token types, settings, or runtime dependencies are active in this release. The supplied ORM mappings for future database compatibility remain unchanged.
 
@@ -60,10 +61,11 @@ app/
       hashing.py                HMAC and OTP hashing
       passwords.py              Argon2 password policy and verification
       tokens.py                 access, refresh, and reset JWTs
-    authorization.py            effective role/permission loading
-    context.py                  normalized request metadata
-    dependencies.py             JWT/session/role/permission dependencies
-    headers.py                  typed OpenAPI headers
+    api_rate_limits.py          generic authenticated API rate-limit policies
+    authorization/              effective role/permission loading
+    request_context/            typed headers, contexts, and principals
+    route_security.py           composable FastAPI security dependency factory
+    security_policy.py          immutable route-security metadata and risk tiers
     identities.py               canonical identity keys
     normalization.py            email and phone normalization/masking
     notifications.py            outbound notification boundary
@@ -71,8 +73,7 @@ app/
     otp.py                      persistence-agnostic OTP engine
     policies.py                 account, OTP, and password-history policies
     presentation.py             safe user projection helper
-    principals.py               authenticated user principal
-    rate_limits.py              authentication rate-limit facade
+    workflows/rate_limits.py    payload-aware authentication rate-limit facade
     runtime.py                  immutable process-wide security container
     session_tokens.py           session and token-pair issuer
   common/
@@ -95,7 +96,8 @@ app/
     admin_user_roles/
 
     # Every module contains:
-    # routes.py, schemas.py, service.py, repositories.py, openapi.py
+    # routes.py, dependencies.py, schemas.py, service.py,
+    # repositories.py, openapi.py
 
   utils/
     debug.py                    development-only redacted debug helper
@@ -114,6 +116,35 @@ app/auth/repositories/
 app/auth/schemas/
 app/modules/auth/
 ```
+
+## Declarative route security
+
+Protected module routes declare one local typed access alias, such as
+`AdminUserReadAccess` or `CurrentUserWriteAccess`. That alias composes bearer
+authentication, persisted-session and account validation, optional header
+consistency checks, fresh role/permission enforcement, and a risk-appropriate
+API rate limit. Route bodies therefore contain use-case transport logic rather
+than repeated security calls.
+
+The generic policies are intentionally risk based:
+
+| Policy | Intended use |
+| --- | --- |
+| `STANDARD` | Authenticated profile and ordinary reads |
+| `SENSITIVE` | Profile/password changes and session revocation |
+| `ADMIN_READ` | Administrative list and detail operations |
+| `ADMIN_WRITE` | Administrative mutations and assignments |
+| `NONE` | Explicit exceptions such as gateway-managed endpoints |
+
+Login, registration, OTP, password-reset, refresh, and refresh-token logout
+retain their specialized rate-limit methods because their strongest keys come
+from validated payload values, not only route metadata. Ordinary Python route
+decorators are not used; FastAPI dependencies preserve dependency overrides,
+request validation, signatures, and OpenAPI behavior.
+
+`RATE_LIMIT_BACKEND=disabled` is a development/test facility only. Production
+configuration rejects it and requires the Redis backend. There is deliberately
+no global authorization-bypass setting.
 
 ## Public API groups
 

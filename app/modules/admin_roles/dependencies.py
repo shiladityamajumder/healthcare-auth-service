@@ -4,18 +4,34 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from app.auth.authorization.dependencies import require_permissions
 from app.auth.request_context.principals import UserPrincipal
+from app.auth.route_security import secure_route
+from app.auth.security_policy import RateLimitPolicy, RouteSecurityPolicy
 from app.core.di import PostgresUOWDep
 from app.modules.admin_roles.service import AdminRolesService
 
-RoleReadPrincipal = Annotated[
+# Reads and writes use separate permissions and risk-based limiter budgets.
+RoleReadAccess = Annotated[
     UserPrincipal,
-    Depends(require_permissions("identity.roles.read")),
+    Depends(
+        secure_route(
+            RouteSecurityPolicy(
+                permissions=frozenset({"identity.roles.read"}),
+                rate_limit=RateLimitPolicy.ADMIN_READ,
+            )
+        )
+    ),
 ]
-RoleManagePrincipal = Annotated[
+RoleManageAccess = Annotated[
     UserPrincipal,
-    Depends(require_permissions("identity.roles.manage")),
+    Depends(
+        secure_route(
+            RouteSecurityPolicy(
+                permissions=frozenset({"identity.roles.manage"}),
+                rate_limit=RateLimitPolicy.ADMIN_WRITE,
+            )
+        )
+    ),
 ]
 
 
@@ -31,7 +47,7 @@ AdminRolesServiceDep = Annotated[
 
 __all__ = [
     "AdminRolesServiceDep",
-    "RoleManagePrincipal",
-    "RoleReadPrincipal",
+    "RoleManageAccess",
+    "RoleReadAccess",
     "get_admin_roles_service",
 ]

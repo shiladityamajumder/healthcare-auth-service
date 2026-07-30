@@ -4,18 +4,34 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from app.auth.authorization.dependencies import require_permissions
 from app.auth.request_context.principals import UserPrincipal
+from app.auth.route_security import secure_route
+from app.auth.security_policy import RateLimitPolicy, RouteSecurityPolicy
 from app.core.di import PostgresUOWDep
 from app.modules.admin_users.service import AdminUsersService
 
-AdminReadPrincipal = Annotated[
+# Route aliases combine bearer authentication, authorization, and rate limiting.
+AdminUserReadAccess = Annotated[
     UserPrincipal,
-    Depends(require_permissions("identity.users.read")),
+    Depends(
+        secure_route(
+            RouteSecurityPolicy(
+                permissions=frozenset({"identity.users.read"}),
+                rate_limit=RateLimitPolicy.ADMIN_READ,
+            )
+        )
+    ),
 ]
-AdminManagePrincipal = Annotated[
+AdminUserManageAccess = Annotated[
     UserPrincipal,
-    Depends(require_permissions("identity.users.manage")),
+    Depends(
+        secure_route(
+            RouteSecurityPolicy(
+                permissions=frozenset({"identity.users.manage"}),
+                rate_limit=RateLimitPolicy.ADMIN_WRITE,
+            )
+        )
+    ),
 ]
 
 
@@ -30,8 +46,8 @@ AdminUsersServiceDep = Annotated[
 ]
 
 __all__ = [
-    "AdminManagePrincipal",
-    "AdminReadPrincipal",
+    "AdminUserManageAccess",
+    "AdminUserReadAccess",
     "AdminUsersServiceDep",
     "get_admin_users_service",
 ]

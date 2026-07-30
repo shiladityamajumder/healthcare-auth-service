@@ -4,7 +4,9 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from app.auth.request_context.dependencies import CurrentUserDep
+from app.auth.request_context.principals import UserPrincipal
+from app.auth.route_security import secure_route
+from app.auth.security_policy import RateLimitPolicy, RouteSecurityPolicy
 from app.core.di import PostgresUOWDep
 from app.modules.current_user.service import CurrentUserService
 
@@ -23,8 +25,19 @@ CurrentUserServiceDep = Annotated[
     Depends(get_current_user_service),
 ]
 
+# Profile mutations receive a tighter budget than ordinary account reads.
+CurrentUserReadAccess = Annotated[
+    UserPrincipal,
+    Depends(secure_route(RouteSecurityPolicy(rate_limit=RateLimitPolicy.STANDARD))),
+]
+CurrentUserWriteAccess = Annotated[
+    UserPrincipal,
+    Depends(secure_route(RouteSecurityPolicy(rate_limit=RateLimitPolicy.SENSITIVE))),
+]
+
 __all__ = [
-    "CurrentUserDep",
+    "CurrentUserReadAccess",
     "CurrentUserServiceDep",
+    "CurrentUserWriteAccess",
     "get_current_user_service",
 ]

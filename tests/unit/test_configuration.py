@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import pytest
-from pydantic import ValidationError
-
 from app.core.config import AppSettings, Environment
-
+from pydantic import ValidationError
 
 BASE = {
     "_env_file": None,
@@ -39,6 +37,20 @@ def test_production_rejects_symmetric_jwt() -> None:
                 "HSTS_ENABLED": True,
                 "HOST_VALIDATION_ENABLED": True,
                 "ALLOWED_HOSTS": ["identity.example.com"],
+            }
+        )
+
+
+def test_production_rejects_disabled_rate_limiting_explicitly() -> None:
+    with pytest.raises(
+        ValidationError,
+        match="Production cannot use RATE_LIMIT_BACKEND=disabled",
+    ):
+        AppSettings(
+            **{
+                **BASE,
+                "ENVIRONMENT": Environment.PRODUCTION,
+                "RATE_LIMIT_BACKEND": "disabled",
             }
         )
 

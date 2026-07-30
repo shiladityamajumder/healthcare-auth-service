@@ -11,8 +11,8 @@ from fastapi.responses import JSONResponse
 from app.common.response import APIResponse, APIResponseModel
 from app.modules.admin_user_roles.dependencies import (
     AdminUserRolesServiceDep,
-    UserRoleManagePrincipal,
-    UserRoleReadPrincipal,
+    UserRoleManageAccess,
+    UserRoleReadAccess,
 )
 from app.modules.admin_user_roles.openapi import RESPONSES, TAG
 from app.modules.admin_user_roles.schemas import (
@@ -37,7 +37,7 @@ router = APIRouter(
 )
 async def list_user_roles(
     user_id: uuid.UUID,
-    principal: UserRoleReadPrincipal,
+    principal: UserRoleReadAccess,
     service: AdminUserRolesServiceDep,
 ) -> JSONResponse:
     """Return global and scoped assignments for one user."""
@@ -54,7 +54,7 @@ async def list_user_roles(
 async def assign_user_role(
     user_id: uuid.UUID,
     payload: AssignUserRoleRequest,
-    principal: UserRoleManagePrincipal,
+    principal: UserRoleManageAccess,
     service: AdminUserRolesServiceDep,
 ) -> JSONResponse:
     """Create one global or scoped role assignment."""
@@ -75,7 +75,7 @@ async def update_user_role(
     user_id: uuid.UUID,
     user_role_id: uuid.UUID,
     payload: UpdateUserRoleRequest,
-    principal: UserRoleManagePrincipal,
+    principal: UserRoleManageAccess,
     service: AdminUserRolesServiceDep,
 ) -> JSONResponse:
     """Update assignment scope, validity, or active state."""
@@ -97,7 +97,7 @@ async def update_user_role(
 async def remove_user_role(
     user_id: uuid.UUID,
     user_role_id: uuid.UUID,
-    principal: UserRoleManagePrincipal,
+    principal: UserRoleManageAccess,
     service: AdminUserRolesServiceDep,
 ) -> JSONResponse:
     """Delete one explicit role assignment."""

@@ -484,6 +484,20 @@ class AppSettings(BaseSettings):
         le=86_400,
     )
 
+    TOKEN_LOGOUT_RATE_LIMIT: int = Field(default=30, ge=1, le=5_000)
+    TOKEN_LOGOUT_RATE_WINDOW_SECONDS: int = Field(default=60, ge=1, le=86_400)
+
+    # Risk-based limits for authenticated and general API routes. Specialized
+    # login, registration, OTP, password-reset, and refresh limits remain above.
+    API_STANDARD_RATE_LIMIT: int = Field(default=120, ge=1, le=100_000)
+    API_STANDARD_RATE_WINDOW_SECONDS: int = Field(default=60, ge=1, le=86_400)
+    API_SENSITIVE_RATE_LIMIT: int = Field(default=30, ge=1, le=100_000)
+    API_SENSITIVE_RATE_WINDOW_SECONDS: int = Field(default=60, ge=1, le=86_400)
+    API_ADMIN_READ_RATE_LIMIT: int = Field(default=120, ge=1, le=100_000)
+    API_ADMIN_READ_RATE_WINDOW_SECONDS: int = Field(default=60, ge=1, le=86_400)
+    API_ADMIN_WRITE_RATE_LIMIT: int = Field(default=20, ge=1, le=100_000)
+    API_ADMIN_WRITE_RATE_WINDOW_SECONDS: int = Field(default=60, ge=1, le=86_400)
+
     # -------------------------------------------------------------------------
     # Notification service integration
     # -------------------------------------------------------------------------
@@ -626,6 +640,16 @@ class AppSettings(BaseSettings):
     # -------------------------------------------------------------------------
     # Cross-field validation
     # -------------------------------------------------------------------------
+
+    @model_validator(mode="after")
+    def reject_disabled_production_rate_limiting(self) -> Self:
+        """Fail closed when production attempts to disable rate limiting."""
+        if (
+            self.ENVIRONMENT is Environment.PRODUCTION
+            and self.RATE_LIMIT_BACKEND is RateLimitBackend.DISABLED
+        ):
+            raise ValueError("Production cannot use RATE_LIMIT_BACKEND=disabled")
+        return self
 
     @model_validator(mode="after")
     def validate_cross_field_rules(self) -> Self:

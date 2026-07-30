@@ -8,7 +8,8 @@ from app.common.exceptions import NotFoundError
 from app.common.response import APIResponse, APIResponseModel
 from app.modules.token_management.dependencies import (
     AuthRateLimitsDep,
-    CurrentUserDep,
+    LogoutAccess,
+    RateLimitRequestContextDep,
     SessionCreationRequestContextDep,
     TokenManagementServiceDep,
     TokenManagerDep,
@@ -71,9 +72,15 @@ async def refresh_token(
 )
 async def logout(
     payload: LogoutRequest,
+    context: RateLimitRequestContextDep,
+    rate_limits: AuthRateLimitsDep,
     service: TokenManagementServiceDep,
 ) -> JSONResponse:
     """Revoke the session identified by a valid refresh token."""
+    await rate_limits.logout(
+        context=context,
+        token_fingerprint=payload.refresh_token[-32:],
+    )
     return APIResponse.success(data=await service.logout(payload))
 
 
@@ -83,7 +90,7 @@ async def logout(
     summary="Logout from every other device",
 )
 async def logout_others(
-    principal: CurrentUserDep,
+    principal: LogoutAccess,
     service: TokenManagementServiceDep,
 ) -> JSONResponse:
     """Preserve the current session and revoke all remaining sessions."""
@@ -101,7 +108,7 @@ async def logout_others(
     summary="Logout from all devices",
 )
 async def logout_all(
-    principal: CurrentUserDep,
+    principal: LogoutAccess,
     service: TokenManagementServiceDep,
 ) -> JSONResponse:
     """Revoke every active session, including the current one."""

@@ -11,8 +11,8 @@ from app.common.response import APIResponse, APIResponseModel
 from app.models.enums import OTPPurpose
 from app.modules.password_management.dependencies import (
     AuthRateLimitsDep,
-    CurrentUserDep,
     PasswordManagementServiceDep,
+    PasswordSensitiveAccess,
     RateLimitRequestContextDep,
     SessionCreationRequestContextDep,
 )
@@ -112,7 +112,7 @@ async def reset_password(
 async def change_password(
     payload: ChangePasswordRequest,
     context: SessionCreationRequestContextDep,
-    principal: CurrentUserDep,
+    principal: PasswordSensitiveAccess,
     service: PasswordManagementServiceDep,
 ) -> JSONResponse:
     """Verify the current password and rotate every active session."""
@@ -133,7 +133,7 @@ async def change_password(
 async def set_password(
     payload: SetPasswordRequest,
     context: SessionCreationRequestContextDep,
-    principal: CurrentUserDep,
+    principal: PasswordSensitiveAccess,
     service: PasswordManagementServiceDep,
 ) -> JSONResponse:
     """Add an initial password to an account that has no password hash."""
