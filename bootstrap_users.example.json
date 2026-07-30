@@ -1,0 +1,64 @@
+{
+  "users": [
+    {
+      "email": "super.admin@example.com",
+      "phone_country_code": "+91",
+      "phone_number": "9000000001",
+      "password": "Coffee@Star8#Go",
+      "first_name": "Super",
+      "last_name": "Administrator",
+      "preferred_name": "Super Admin",
+      "preferred_locale": "en-IN",
+      "timezone": "Asia/Kolkata",
+      "role_codes": ["super_admin"]
+    },
+    {
+      "email": "platform.admin@example.com",
+      "phone_country_code": "+91",
+      "phone_number": "9000000002",
+      "password": "Coffee@Star8#Go",
+      "first_name": "Platform",
+      "last_name": "Administrator",
+      "preferred_name": "Platform Admin",
+      "preferred_locale": "en-IN",
+      "timezone": "Asia/Kolkata",
+      "role_codes": ["platform_admin"]
+    },
+    {
+      "email": "identity.admin@example.com",
+      "phone_country_code": "+91",
+      "phone_number": "9000000003",
+      "password": "Coffee@Star8#Go",
+      "first_name": "Identity",
+      "last_name": "Administrator",
+      "preferred_name": "Identity Admin",
+      "preferred_locale": "en-IN",
+      "timezone": "Asia/Kolkata",
+      "role_codes": ["identity_admin"]
+    },
+    {
+      "email": "operations.manager@example.com",
+      "phone_country_code": "+91",
+      "phone_number": "9000000004",
+      "password": "Coffee@Star8#Go",
+      "first_name": "Operations",
+      "last_name": "Manager",
+      "preferred_name": "Operations Manager",
+      "preferred_locale": "en-IN",
+      "timezone": "Asia/Kolkata",
+      "role_codes": ["operations_manager"]
+    },
+    {
+      "email": "compliance.officer@example.com",
+      "phone_country_code": "+91",
+      "phone_number": "9000000005",
+      "password": "Coffee@Star8#Go",
+      "first_name": "Compliance",
+      "last_name": "Officer",
+      "preferred_name": "Compliance Officer",
+      "preferred_locale": "en-IN",
+      "timezone": "Asia/Kolkata",
+      "role_codes": ["compliance_officer"]
+    }
+  ]
+}

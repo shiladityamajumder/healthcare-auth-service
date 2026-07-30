@@ -20,9 +20,9 @@ from enum import StrEnum
 
 
 class UserStatus(StrEnum):
-    """Lifecycle states supported for a user account."""
+    """Lifecycle states supported by identity.users.status."""
 
-    PENDING_VERIFICATION = "pending_verification"
+    PENDING = "pending"
     ACTIVE = "active"
     LOCKED = "locked"
     SUSPENDED = "suspended"

@@ -1,32 +1,52 @@
 """File: app/models/common.py
 
 Purpose:
-Provides the shared PostgreSQL enum-column mapping used by identity ORM models.
+Provides shared SQLAlchemy enum-column mappings for identity ORM models.
 
 Dependency flow:
 Identity StrEnum type
 -> enum_column()
--> schema-qualified non-creating PostgreSQL ENUM
--> ORM mapped column
+-> VARCHAR-backed SQLAlchemy enum with a CHECK constraint
+-> externally managed PostgreSQL column
+
+The healthcare database stores identity status fields as VARCHAR-backed enums,
+not native PostgreSQL enum types. This mapping must remain aligned with the
+database schema maintained by the healthcare_db repository.
 """
 
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import TypeVar
 
-from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy import Enum as SAEnum
+
+EnumT = TypeVar("EnumT", bound=StrEnum)
 
 
-def enum_column(enum_type: type[StrEnum]) -> ENUM:
-    """Map an externally managed PostgreSQL enum using its string values."""
-    return ENUM(
+def enum_column(
+    enum_type: type[EnumT],
+    *,
+    name: str | None = None,
+) -> SAEnum:
+    """Map a string enum exactly as the healthcare database defines it."""
+
+    max_length = max(
+        len(member.value)
+        for member in enum_type
+    )
+
+    return SAEnum(
         enum_type,
-        name=enum_type.__name__.replace("Status", "_status").lower(),
-        schema="identity",
-        native_enum=True,
+        name=name or enum_type.__name__.lower(),
+        native_enum=False,
+        create_constraint=True,
         validate_strings=True,
-        values_callable=lambda values: [item.value for item in values],
-        create_type=False,
+        values_callable=lambda enum_class: [
+            member.value
+            for member in enum_class
+        ],
+        length=max(16, max_length),
     )
 
 
