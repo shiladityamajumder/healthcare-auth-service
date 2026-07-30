@@ -25,16 +25,12 @@ class PasswordLoginRequest(DeviceContext):
     password: str = Field(min_length=1, max_length=128)
 
     @model_validator(mode="after")
-    def validate_identity(self) -> "PasswordLoginRequest":
+    def validate_identity(self) -> PasswordLoginRequest:
         """Require the destination fields selected by the login channel."""
         if self.channel == "email" and self.email is None:
             raise ValueError("email is required for email password login")
-        if self.channel == "phone" and (
-            not self.phone_country_code or not self.phone_number
-        ):
-            raise ValueError(
-                "phone_country_code and phone_number are required for phone login"
-            )
+        if self.channel == "phone" and (not self.phone_country_code or not self.phone_number):
+            raise ValueError("phone_country_code and phone_number are required for phone login")
         return self
 
 

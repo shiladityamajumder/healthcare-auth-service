@@ -26,7 +26,11 @@ router = APIRouter(
 
 
 def get_current_user_service(uow: PostgresUOWDep) -> CurrentUserService:
-    """Build the request-scoped current-user service."""
+    """Build the service with FastAPI's request-scoped unit of work.
+
+    Constructor injection makes transaction ownership explicit and keeps the
+    service independently testable without global database state.
+    """
     return CurrentUserService(uow=uow)
 
 
@@ -88,9 +92,7 @@ async def get_current_user_permissions(
     service: CurrentUserServiceDep,
 ) -> JSONResponse:
     """Return effective active permission codes."""
-    return APIResponse.success(
-        data=await service.permissions(user_id=principal.user_id)
-    )
+    return APIResponse.success(data=await service.permissions(user_id=principal.user_id))
 
 
 __all__ = ["router"]

@@ -20,7 +20,11 @@ router = APIRouter(prefix="/auth/sessions", tags=[TAG], responses=RESPONSES)
 def get_session_management_service(
     uow: PostgresUOWDep,
 ) -> SessionManagementService:
-    """Build the request-scoped session-management service."""
+    """Build the service with FastAPI's request-scoped unit of work.
+
+    Injecting the transaction boundary avoids hidden sessions and makes
+    rollback behavior consistent across every session endpoint.
+    """
     return SessionManagementService(uow=uow)
 
 

@@ -29,7 +29,7 @@ class PasswordRepository:
         statement = select(Users).where(Users.id == user_id)
         if for_update:
             statement = statement.with_for_update()
-        return await self._session.scalar(statement)
+        return (await self._session.scalars(statement)).first()
 
     async def get_by_email(
         self,
@@ -41,7 +41,7 @@ class PasswordRepository:
         statement = select(Users).where(Users.email_normalized == email)
         if for_update:
             statement = statement.with_for_update()
-        return await self._session.scalar(statement)
+        return (await self._session.scalars(statement)).first()
 
     async def get_by_phone(
         self,
@@ -57,7 +57,7 @@ class PasswordRepository:
         )
         if for_update:
             statement = statement.with_for_update()
-        return await self._session.scalar(statement)
+        return (await self._session.scalars(statement)).first()
 
     def update_password_hash(self, user: Users, password_hash: str) -> None:
         """Update password hash in the current unit of work."""
@@ -122,7 +122,7 @@ class PasswordRepository:
             )
             .values(revoked_at=revoked_at, revoke_reason=reason)
         )
-        return int(result.rowcount or 0)
+        return int(getattr(result, "rowcount", 0) or 0)
 
     def add(self, challenge: OtpChallenges) -> None:
         """Stage a new OTP challenge in the current unit of work."""
@@ -157,7 +157,7 @@ class PasswordRepository:
         purpose: str,
     ) -> OtpChallenges | None:
         """Load the latest for destination from persistence."""
-        return await self._session.scalar(
+        statement = (
             select(OtpChallenges)
             .where(
                 OtpChallenges.destination_hash == destination_hash,
@@ -166,6 +166,7 @@ class PasswordRepository:
             .order_by(OtpChallenges.created_at.desc())
             .limit(1)
         )
+        return (await self._session.scalars(statement)).first()
 
     async def invalidate_active(
         self,
@@ -185,15 +186,12 @@ class PasswordRepository:
             )
             .values(consumed_at=consumed_at)
         )
-        return int(result.rowcount or 0)
+        return int(getattr(result, "rowcount", 0) or 0)
 
     async def get_for_update(self, challenge_id: uuid.UUID) -> OtpChallenges | None:
         """Load and lock an OTP challenge for verification."""
-        return await self._session.scalar(
-            select(OtpChallenges)
-            .where(OtpChallenges.id == challenge_id)
-            .with_for_update()
-        )
+        statement = select(OtpChallenges).where(OtpChallenges.id == challenge_id).with_for_update()
+        return (await self._session.scalars(statement)).first()
 
 
 __all__ = ["PasswordRepository"]

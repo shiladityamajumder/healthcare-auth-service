@@ -55,9 +55,7 @@ def _user_response(
     permissions: Sequence[str],
 ) -> UserResponse:
     """Map a persisted user and its effective authorization to the API DTO."""
-    return UserResponse.model_validate(
-        public_user_data(user, roles=roles, permissions=permissions)
-    )
+    return UserResponse.model_validate(public_user_data(user, roles=roles, permissions=permissions))
 
 
 def _token_response(
@@ -188,9 +186,7 @@ class _RegistrationWriter:
         restricted = [
             code
             for code in requested_role_codes
-            if code != default_code
-            and code in available
-            and available[code].is_system
+            if code != default_code and code in available and available[code].is_system
         ]
         unavailable = list(dict.fromkeys([*missing, *restricted]))
         if unavailable:
@@ -290,9 +286,7 @@ class EmailPasswordRegistrationService(_RegistrationBase):
                         else UserStatus.ACTIVE
                     ),
                     email_verified_at=(
-                        None
-                        if self._settings.EMAIL_VERIFICATION_REQUIRED
-                        else utc_now()
+                        None if self._settings.EMAIL_VERIFICATION_REQUIRED else utc_now()
                     ),
                     preferred_locale=payload.preferred_locale,
                     timezone=payload.timezone,
@@ -320,9 +314,7 @@ class EmailPasswordRegistrationService(_RegistrationBase):
                         verification_required=True,
                         challenge_id=issued_otp.challenge.id,
                         expires_at=issued_otp.challenge.expires_at,
-                        development_otp=self._otp_responses.development_code(
-                            issued_otp.code
-                        ),
+                        development_otp=self._otp_responses.development_code(issued_otp.code),
                     )
                 else:
                     tokens = await self._issue_tokens(

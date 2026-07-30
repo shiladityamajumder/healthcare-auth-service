@@ -30,9 +30,9 @@ class SessionManagementService:
     ) -> SessionListResponse:
         """List active visible to the current workflow."""
         async with self._uow:
-            records = await SessionManagementRepository(
-                self._uow.session
-            ).list_active(user_id=user_id, now=utc_now())
+            records = await SessionManagementRepository(self._uow.session).list_active(
+                user_id=user_id, now=utc_now()
+            )
             return SessionListResponse(
                 sessions=[
                     SessionResponse(
@@ -58,9 +58,9 @@ class SessionManagementService:
     ) -> MessageResponse:
         """Revoke one non-current session owned by the authenticated user."""
         async with self._uow:
-            session = await SessionManagementRepository(
-                self._uow.session
-            ).get_for_update(session_id)
+            session = await SessionManagementRepository(self._uow.session).get_for_update(
+                session_id
+            )
             if session is None or session.user_id != user_id:
                 raise NotFoundError("The session was not found.")
             if session.revoked_at is None:

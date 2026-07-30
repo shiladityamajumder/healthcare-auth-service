@@ -19,18 +19,15 @@ class UserRoleRepository:
 
     async def user_exists(self, user_id: uuid.UUID) -> bool:
         """Return whether a user exists."""
-        return await self._session.scalar(
-            select(Users.id).where(Users.id == user_id)
-        ) is not None
+        return await self._session.scalar(select(Users.id).where(Users.id == user_id)) is not None
 
     async def get_active_role(self, role_id: uuid.UUID) -> Roles | None:
         """Return a non-deleted role."""
-        return await self._session.scalar(
-            select(Roles).where(
-                Roles.id == role_id,
-                Roles.is_deleted.is_(False),
-            )
+        statement = select(Roles).where(
+            Roles.id == role_id,
+            Roles.is_deleted.is_(False),
         )
+        return (await self._session.scalars(statement)).first()
 
     async def list_for_user(
         self,
@@ -47,7 +44,7 @@ class UserRoleRepository:
                 UserRoles.created_at.asc(),
             )
         )
-        return list((await self._session.execute(statement)).all())
+        return list((await self._session.execute(statement)).tuples().all())
 
     async def get_assignment(
         self,
@@ -67,7 +64,7 @@ class UserRoleRepository:
         )
         if for_update:
             statement = statement.with_for_update(of=UserRoles)
-        return (await self._session.execute(statement)).first()
+        return (await self._session.execute(statement)).tuples().first()
 
     def add(self, assignment: UserRoles) -> None:
         """Stage a new assignment."""

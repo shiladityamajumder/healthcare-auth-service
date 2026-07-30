@@ -28,7 +28,7 @@ class UpdateRoleRequest(StrictModel):
     description: str | None = Field(default=None, max_length=2000)
 
     @model_validator(mode="after")
-    def require_update(self) -> "UpdateRoleRequest":
+    def require_update(self) -> UpdateRoleRequest:
         """Require at least one mutable role field."""
         if not self.model_fields_set:
             raise ValueError("at least one role field must be supplied")

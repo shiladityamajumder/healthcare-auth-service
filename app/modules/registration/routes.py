@@ -3,13 +3,16 @@ Registration HTTP endpoints."""
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, Request, status
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 
 from app.auth.identity.canonical import email_identity, phone_identity
-from app.auth.request_context.context import AuthRequestContext
-from app.auth.request_context.dependencies import AuthRateLimitsDep, AuthRuntimeDep
-from app.auth.request_context.headers import get_auth_headers
+from app.auth.request_context.dependencies import (
+    AuthRateLimitsDep,
+    AuthRuntimeDep,
+    RateLimitRequestContextDep,
+    SessionCreationRequestContextDep,
+)
 from app.common.response import APIResponse, APIResponseModel
 from app.core.di import PostgresUOWDep
 from app.models.enums import OTPPurpose
@@ -33,82 +36,6 @@ router = APIRouter(
     tags=[TAG],
     responses=RESPONSES,
 )
-
-
-def get_registration_request_context(
-    request: Request,
-    runtime: AuthRuntimeDep,
-    x_client_id: Annotated[
-        str | None,
-        Header(
-            alias="X-Client-ID",
-            min_length=1,
-            max_length=128,
-            description="Optional client identifier used for registration rate limits.",
-        ),
-    ] = None,
-    x_platform: Annotated[
-        str | None,
-        Header(
-            alias="X-Platform",
-            min_length=1,
-            max_length=16,
-            description=(
-                "Client platform: web, android, ios, or service; used as the "
-                "session device-type fallback."
-            ),
-        ),
-    ] = None,
-    x_device_id: Annotated[
-        str | None,
-        Header(
-            alias="X-Device-ID",
-            min_length=1,
-            max_length=255,
-            description=(
-                "Optional stable identifier used for rate limits and as the "
-                "first-session fallback when device_id is absent from the body."
-            ),
-        ),
-    ] = None,
-    x_device_type: Annotated[
-        str | None,
-        Header(
-            alias="X-Device-Type",
-            min_length=1,
-            max_length=32,
-            description=(
-                "Optional first-session device type used when device_type is "
-                "absent from the body."
-            ),
-        ),
-    ] = None,
-) -> AuthRequestContext:
-    """Build the anonymous registration context from headers that are used.
-
-    ``X-User-ID`` and ``X-Session-ID`` are excluded because registration has no
-    authenticated principal. Client version, device name, and idempotency are
-    also excluded until registration has persistence that consumes them. For
-    backward compatibility, body device metadata takes precedence over header
-    fallback values when both are supplied.
-    """
-    headers = get_auth_headers(
-        x_client_id=x_client_id,
-        x_platform=x_platform,
-        x_device_id=x_device_id,
-        x_device_type=x_device_type,
-    )
-    return AuthRequestContext.from_request(
-        request,
-        settings=runtime.settings,
-        headers=headers,
-    )
-
-
-RegistrationRequestContextDep = Annotated[
-    AuthRequestContext,
-    Depends(get_registration_request_context),
-]
 
 
 def get_email_registration_service(
@@ -166,7 +93,7 @@ PhoneOtpRegistrationDep = Annotated[
 )
 async def register_email(
     payload: EmailPasswordRegistrationRequest,
-    context: RegistrationRequestContextDep,
+    context: SessionCreationRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: EmailPasswordRegistrationDep,
 ) -> JSONResponse:
@@ -187,7 +114,7 @@ async def register_email(
 )
 async def request_phone_registration_otp(
     payload: PhoneOtpRegistrationRequest,
-    context: RegistrationRequestContextDep,
+    context: RateLimitRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: PhoneOtpRegistrationDep,
 ) -> JSONResponse:
@@ -210,7 +137,7 @@ async def request_phone_registration_otp(
 )
 async def verify_phone_registration_otp(
     payload: PhoneOtpRegistrationVerifyRequest,
-    context: RegistrationRequestContextDep,
+    context: SessionCreationRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: PhoneOtpRegistrationDep,
 ) -> JSONResponse:

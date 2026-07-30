@@ -22,18 +22,22 @@ class RegistrationRepository:
 
     async def email_exists(self, email: str) -> bool:
         """Return whether the normalized email is already registered."""
-        return await self._session.scalar(
-            select(Users.id).where(Users.email_normalized == email)
-        ) is not None
+        return (
+            await self._session.scalar(select(Users.id).where(Users.email_normalized == email))
+            is not None
+        )
 
     async def phone_exists(self, country_code: str, phone_number: str) -> bool:
         """Return whether the normalized phone number is already registered."""
-        return await self._session.scalar(
-            select(Users.id).where(
-                Users.phone_country_code == country_code,
-                Users.phone_number == phone_number,
+        return (
+            await self._session.scalar(
+                select(Users.id).where(
+                    Users.phone_country_code == country_code,
+                    Users.phone_number == phone_number,
+                )
             )
-        ) is not None
+            is not None
+        )
 
     def add_user(self, user: Users) -> None:
         """Stage user in the current unit of work."""
@@ -156,11 +160,7 @@ class RegistrationRepository:
 
     async def get_for_update(self, challenge_id: uuid.UUID) -> OtpChallenges | None:
         """Load and lock an OTP challenge for verification."""
-        statement = (
-            select(OtpChallenges)
-            .where(OtpChallenges.id == challenge_id)
-            .with_for_update()
-        )
+        statement = select(OtpChallenges).where(OtpChallenges.id == challenge_id).with_for_update()
         return (await self._session.scalars(statement)).first()
 
 

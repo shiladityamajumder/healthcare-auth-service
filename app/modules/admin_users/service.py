@@ -12,6 +12,7 @@ from app.core.logging import get_logger
 from app.core.pagination import PaginationParams, PaginationResult
 from app.db.uow import SQLAlchemyUnitOfWork
 from app.models.enums import UserStatus
+from app.models.identity import Users
 from app.modules.admin_users.repositories import AdminUserRepository
 from app.modules.admin_users.schemas import (
     AdminLogoutAllRequest,
@@ -41,7 +42,7 @@ class AdminUsersService:
         """Return a page of users with effective authorization claims."""
         async with self._uow:
             repository = AdminUserRepository(self._uow.session)
-            page: PaginationResult = await repository.list(
+            page: PaginationResult[Users] = await repository.list(
                 pagination=pagination,
                 search=search,
                 status=status,
@@ -54,11 +55,11 @@ class AdminUsersService:
                     user_id=user.id,
                     now=now,
                 )
-                items.append(UserResponse.model_validate(
-                    public_user_data(
-                        user, roles=claims.roles, permissions=claims.permissions
+                items.append(
+                    UserResponse.model_validate(
+                        public_user_data(user, roles=claims.roles, permissions=claims.permissions)
                     )
-                ))
+                )
             return AdminUserListResponse(users=items), page.pagination
 
     async def get_user(self, *, user_id: uuid.UUID) -> UserResponse:
@@ -73,10 +74,8 @@ class AdminUsersService:
                 now=utc_now(),
             )
             return UserResponse.model_validate(
-                    public_user_data(
-                        user, roles=claims.roles, permissions=claims.permissions
-                    )
-                )
+                public_user_data(user, roles=claims.roles, permissions=claims.permissions)
+            )
 
     async def update_status(
         self,
@@ -112,10 +111,8 @@ class AdminUsersService:
                 now=utc_now(),
             )
             response = UserResponse.model_validate(
-                    public_user_data(
-                        user, roles=claims.roles, permissions=claims.permissions
-                    )
-                )
+                public_user_data(user, roles=claims.roles, permissions=claims.permissions)
+            )
         logger.info(
             "Security audit event",
             extra={

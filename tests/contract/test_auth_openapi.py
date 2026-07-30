@@ -52,32 +52,44 @@ def test_vertical_identity_routes_and_security_contract_are_exposed() -> None:
     assert security_schemes["BearerAuth"]["scheme"] == "bearer"
 
 
-def test_auth_metadata_headers_are_explicit_and_non_authoritative() -> None:
+def test_auth_metadata_headers_are_narrow_and_non_authoritative() -> None:
     schema = create_app().openapi()
+    rate_limited = schema["paths"]["/api/v1/auth/login/phone/request-otp"]["post"]
     login = schema["paths"]["/api/v1/auth/login/password"]["post"]
     protected = schema["paths"]["/api/v1/auth/sessions"]["get"]
 
-    login_headers = {item["name"]: item for item in login["parameters"] if item["in"] == "header"}
-    protected_headers = {
-        item["name"]: item for item in protected["parameters"] if item["in"] == "header"
-    }
+    def headers(operation: dict[str, object]) -> dict[str, dict[str, object]]:
+        parameters = operation.get("parameters", [])
+        assert isinstance(parameters, list)
+        return {
+            item["name"]: item
+            for item in parameters
+            if isinstance(item, dict) and item.get("in") == "header"
+        }
 
-    for header_name in (
+    rate_headers = headers(rate_limited)
+    login_headers = headers(login)
+    protected_headers = headers(protected)
+
+    assert set(rate_headers) == {"X-Client-ID", "X-Device-ID"}
+    assert set(login_headers) == {
         "X-Client-ID",
-        "X-Client-Version",
         "X-Platform",
         "X-Device-ID",
         "X-Device-Type",
-        "X-Device-Name",
-        "X-User-ID",
-        "X-Session-ID",
-        "Idempotency-Key",
-    ):
-        assert header_name in login_headers
-        assert login_headers[header_name]["required"] is False
+    }
+    assert set(protected_headers) == {"X-Device-ID", "X-User-ID", "X-Session-ID"}
+
+    for operation_headers in (rate_headers, login_headers, protected_headers):
+        assert all(item["required"] is False for item in operation_headers.values())
 
     assert "consistency assertion" in protected_headers["X-User-ID"]["description"].lower()
     assert "consistency assertion" in protected_headers["X-Session-ID"]["description"].lower()
+
+    # Swagger obtains Authorization through its BearerAuth Authorize dialog,
+    # not through a duplicated free-text header parameter.
+    assert protected["security"] == [{"BearerAuth": []}]
+    assert "security" not in login
 
 
 def test_auth_operations_publish_unified_error_responses() -> None:

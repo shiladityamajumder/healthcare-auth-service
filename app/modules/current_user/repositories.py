@@ -29,7 +29,7 @@ class CurrentUserRepository:
         statement = select(Users).where(Users.id == user_id)
         if for_update:
             statement = statement.with_for_update()
-        return await self._session.scalar(statement)
+        return (await self._session.scalars(statement)).first()
 
     async def authorization_claims(
         self,

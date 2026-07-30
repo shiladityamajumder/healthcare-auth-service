@@ -1,23 +1,23 @@
 """File: app/modules/password_management/routes.py
 Password recovery, change, and initial-password endpoints."""
 
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
+from app.auth.identity.canonical import ChannelIdentityPayload, generic_identity
 from app.auth.request_context.dependencies import (
     AuthRateLimitsDep,
-    AuthRequestContextDep,
     AuthRuntimeDep,
     CurrentUserDep,
+    RateLimitRequestContextDep,
+    SessionCreationRequestContextDep,
 )
-from app.auth.identity.canonical import generic_identity
 from app.common.response import APIResponse, APIResponseModel
 from app.core.di import PostgresUOWDep
 from app.models.enums import OTPPurpose
 from app.modules.password_management.openapi import RESPONSES, TAG
-from app.modules.password_management.service import PasswordManagementService
 from app.modules.password_management.schemas import (
     ChangePasswordRequest,
     ForgotPasswordRequest,
@@ -28,6 +28,7 @@ from app.modules.password_management.schemas import (
     TokenPairResponse,
     VerifyResetOtpRequest,
 )
+from app.modules.password_management.service import PasswordManagementService
 from app.utils.debug import debug
 
 router = APIRouter(
@@ -41,7 +42,11 @@ def get_password_management_service(
     uow: PostgresUOWDep,
     runtime: AuthRuntimeDep,
 ) -> PasswordManagementService:
-    """Build the request-scoped password-management service."""
+    """Build password management from FastAPI-managed dependencies.
+
+    Constructor injection shares one request transaction and keeps password,
+    token, OTP, and notification adapters explicit for isolated testing.
+    """
     return PasswordManagementService(
         uow=uow,
         settings=runtime.settings,
@@ -66,14 +71,15 @@ PasswordManagementServiceDep = Annotated[
 )
 async def forgot_password(
     payload: ForgotPasswordRequest,
-    context: AuthRequestContextDep,
+    context: RateLimitRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: PasswordManagementServiceDep,
 ) -> JSONResponse:
     """Issue a generic-response password-reset challenge."""
     await rate_limits.password_reset(
         context=context,
-        identity=generic_identity(payload),
+        # Pydantic validates these channel-aware fields before this boundary.
+        identity=generic_identity(cast(ChannelIdentityPayload, payload)),
     )
     debug("Password reset challenge requested", request_id=context.request_id)
     return APIResponse.success(data=await service.forgot(payload))
@@ -86,7 +92,7 @@ async def forgot_password(
 )
 async def verify_password_reset_otp(
     payload: VerifyResetOtpRequest,
-    context: AuthRequestContextDep,
+    context: RateLimitRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: PasswordManagementServiceDep,
 ) -> JSONResponse:
@@ -98,7 +104,7 @@ async def verify_password_reset_otp(
     )
     await rate_limits.otp_verify(
         context=context,
-        identity=generic_identity(payload),
+        identity=generic_identity(cast(ChannelIdentityPayload, payload)),
         purpose=purpose,
     )
     result = await service.verify_reset_otp(payload)
@@ -113,7 +119,7 @@ async def verify_password_reset_otp(
 )
 async def reset_password(
     payload: ResetPasswordWithTokenRequest,
-    context: AuthRequestContextDep,
+    context: SessionCreationRequestContextDep,
     service: PasswordManagementServiceDep,
 ) -> JSONResponse:
     """Set the new password, revoke existing sessions, and issue a new session."""
@@ -133,7 +139,7 @@ async def reset_password(
 )
 async def change_password(
     payload: ChangePasswordRequest,
-    context: AuthRequestContextDep,
+    context: SessionCreationRequestContextDep,
     principal: CurrentUserDep,
     service: PasswordManagementServiceDep,
 ) -> JSONResponse:
@@ -154,7 +160,7 @@ async def change_password(
 )
 async def set_password(
     payload: SetPasswordRequest,
-    context: AuthRequestContextDep,
+    context: SessionCreationRequestContextDep,
     principal: CurrentUserDep,
     service: PasswordManagementServiceDep,
 ) -> JSONResponse:

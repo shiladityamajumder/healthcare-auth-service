@@ -16,6 +16,7 @@ from app.auth.workflows.notifications import AuthNotificationGateway, Notificati
 from app.auth.workflows.otp import IssuedOTP, OTPService
 from app.auth.workflows.session_tokens import SessionTokenIssuer
 from app.common.exceptions import AuthenticationError, InvalidCredentialsError
+from app.common.schemas import DeviceContext
 from app.core.config import AppSettings
 from app.db.uow import SQLAlchemyUnitOfWork
 from app.models.enums import OTPChannel, OTPPurpose
@@ -51,7 +52,7 @@ class _LoginBase:
         *,
         user: Users,
         repository: LoginRepository,
-        payload: object,
+        payload: DeviceContext,
         context: AuthRequestContext,
         auth_method: str,
     ) -> TokenPairResponse:
@@ -148,11 +149,11 @@ class PasswordLoginService(_LoginBase):
         result: TokenPairResponse | None = None
         async with self._uow:
             repository = LoginRepository(self._uow.session)
-            user = (
-                await repository.get_by_email(email, for_update=True)
-                if email is not None
-                else await repository.get_by_phone(*phone, for_update=True)
-            )
+            if email is not None:
+                user = await repository.get_by_email(email, for_update=True)
+            else:
+                assert phone is not None
+                user = await repository.get_by_phone(phone[0], phone[1], for_update=True)
             identifier_hash = self._hashing.identifier_hash(identifier)
             if user is None:
                 await self._passwords.verify_dummy(payload.password)
@@ -213,9 +214,7 @@ class PasswordLoginService(_LoginBase):
         if not password_valid:
             failed_count = repository.increment_failed_login_count(user)
             if failed_count >= self._settings.LOGIN_MAX_FAILED_ATTEMPTS:
-                user.locked_until = now + timedelta(
-                    minutes=self._settings.LOGIN_LOCKOUT_MINUTES
-                )
+                user.locked_until = now + timedelta(minutes=self._settings.LOGIN_LOCKOUT_MINUTES)
             self._record_attempt(
                 repository=repository,
                 user=user,
@@ -290,11 +289,11 @@ class PhoneOtpLoginService(_LoginBase):
         self._notifications = NotificationDispatcher(notifications)
 
     def _otp_response(self, issued: IssuedOTP) -> OtpChallengeResponse:
-        expose = (
-            self._settings.OTP_DEV_EXPOSE_CODE
-            and self._settings.ENVIRONMENT.value
-            in {"local", "development", "testing"}
-        )
+        expose = self._settings.OTP_DEV_EXPOSE_CODE and self._settings.ENVIRONMENT.value in {
+            "local",
+            "development",
+            "testing",
+        }
         return OtpChallengeResponse(
             challenge_id=issued.challenge.id,
             expires_at=issued.challenge.expires_at,
@@ -309,25 +308,27 @@ class PhoneOtpLoginService(_LoginBase):
             payload.phone_number,
         )
         destination = phone_destination(country, phone)
-        should_deliver = False
         async with self._uow:
             repository = LoginRepository(self._uow.session)
-            user = await repository.get_by_phone(country, phone)
-            should_deliver = user is not None and AccountAccessPolicy.is_active(user)
+            # When delivery is enabled, load the user here and set
+            # ``should_deliver`` only for an active account.
             issued = await self._otp.issue(
                 repository=repository,
                 channel=OTPChannel.SMS.value,
                 destination=destination,
                 purpose=OTPPurpose.LOGIN_PHONE.value,
             )
-        if should_deliver:
-            await self._notifications.send_otp(
-                channel=OTPChannel.SMS.value,
-                destination=destination,
-                code=issued.code,
-                purpose=OTPPurpose.LOGIN_PHONE.value,
-                expires_in_seconds=self._settings.OTP_TTL_SECONDS,
-            )
+        # External SMS delivery intentionally remains paused. The OTP is still
+        # issued and persisted, so uncomment this block when the provider is
+        # configured and delivery should be enabled.
+        # if should_deliver:
+        #     await self._notifications.send_otp(
+        #         channel=OTPChannel.SMS.value,
+        #         destination=destination,
+        #         code=issued.code,
+        #         purpose=OTPPurpose.LOGIN_PHONE.value,
+        #         expires_in_seconds=self._settings.OTP_TTL_SECONDS,
+        #     )
         return self._otp_response(issued)
 
     async def verify(
@@ -350,8 +351,7 @@ class PhoneOtpLoginService(_LoginBase):
                 challenge_id=payload.challenge_id,
                 channel=OTPChannel.SMS.value,
                 destination=destination,
-                purpose=OTPPurpose.LOGIN_PHONE.value,
-                accepted_purposes={
+                purpose={
                     OTPPurpose.LOGIN_PHONE.value,
                     OTPPurpose.LOGIN.value,
                 },

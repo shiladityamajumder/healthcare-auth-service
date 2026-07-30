@@ -6,19 +6,24 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from app.auth.request_context.dependencies import AuthRateLimitsDep, AuthRequestContextDep, AuthRuntimeDep
 from app.auth.identity.canonical import email_identity
+from app.auth.request_context.dependencies import (
+    AuthRateLimitsDep,
+    AuthRuntimeDep,
+    RateLimitRequestContextDep,
+    SessionCreationRequestContextDep,
+)
 from app.common.response import APIResponse, APIResponseModel
 from app.core.di import PostgresUOWDep
 from app.models.enums import OTPPurpose
 from app.modules.email_verification.openapi import RESPONSES, TAG
-from app.modules.email_verification.service import EmailVerificationService
 from app.modules.email_verification.schemas import (
     EmailVerificationConfirmRequest,
     EmailVerificationRequest,
     OtpChallengeResponse,
     TokenPairResponse,
 )
+from app.modules.email_verification.service import EmailVerificationService
 from app.utils.debug import debug
 
 router = APIRouter(
@@ -32,7 +37,11 @@ def get_email_verification_service(
     uow: PostgresUOWDep,
     runtime: AuthRuntimeDep,
 ) -> EmailVerificationService:
-    """Build the request-scoped email-verification service."""
+    """Build email verification from FastAPI-managed dependencies.
+
+    Constructor injection shares one transaction and keeps token, OTP, and
+    notification adapters explicit and independently testable.
+    """
     return EmailVerificationService(
         uow=uow,
         settings=runtime.settings,
@@ -56,7 +65,7 @@ EmailVerificationDep = Annotated[
 )
 async def request_email_verification(
     payload: EmailVerificationRequest,
-    context: AuthRequestContextDep,
+    context: RateLimitRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: EmailVerificationDep,
 ) -> JSONResponse:
@@ -77,7 +86,7 @@ async def request_email_verification(
 )
 async def verify_email(
     payload: EmailVerificationConfirmRequest,
-    context: AuthRequestContextDep,
+    context: SessionCreationRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: EmailVerificationDep,
 ) -> JSONResponse:

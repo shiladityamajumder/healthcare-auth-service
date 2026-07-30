@@ -110,6 +110,17 @@ Authorization bearer token
 
 This prevents spoofed identity headers from escalating privileges.
 
+Routes inject one of three narrow request-context profiles instead of exposing
+every possible metadata header on every operation:
+
+- anonymous rate limits use client and stable-device identifiers;
+- session creation/rotation additionally uses platform and device type;
+- protected routes use optional device, user, and session consistency assertions.
+
+The bearer token is declared as the OpenAPI `BearerAuth` security scheme, so
+Swagger collects it through **Authorize** and FastAPI resolves it before the
+service is called. Metadata headers never replace that signed token.
+
 ## Registration flows
 
 ### Email and password

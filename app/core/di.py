@@ -4,7 +4,7 @@ FastAPI dependency providers for the PostgreSQL transaction boundary."""
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,21 +16,22 @@ from app.db.uow import SQLAlchemyUnitOfWork
 
 
 def get_app_settings(request: Request) -> AppSettings:
-    return request.app.state.settings
+    """Inject the process-wide validated settings into request providers."""
+    return cast(AppSettings, request.app.state.settings)
 
 
 def get_database(request: Request) -> PostgreSQLDatabase:
+    """Inject the initialized database adapter or fail before route logic."""
     database = getattr(request.app.state, "database", None)
     if database is None:
-        raise InfrastructureUnavailableError(
-            "PostgreSQL infrastructure has not completed startup."
-        )
-    return database
+        raise InfrastructureUnavailableError("PostgreSQL infrastructure has not completed startup.")
+    return cast(PostgreSQLDatabase, database)
 
 
 async def get_postgres_session(
     database: Annotated[PostgreSQLDatabase, Depends(get_database)],
 ) -> AsyncIterator[AsyncSession]:
+    """Give one database session to all dependencies in the request graph."""
     async with database.session() as session:
         yield session
 
@@ -38,6 +39,7 @@ async def get_postgres_session(
 async def get_postgres_uow(
     session: Annotated[AsyncSession, Depends(get_postgres_session)],
 ) -> AsyncIterator[SQLAlchemyUnitOfWork]:
+    """Inject a request-scoped transaction boundary and roll back leftovers."""
     uow = SQLAlchemyUnitOfWork(session)
     try:
         yield uow

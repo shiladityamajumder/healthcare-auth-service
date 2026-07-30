@@ -75,9 +75,7 @@ class TokenManagementService:
                 pending_error = RefreshTokenReuseError()
             elif session.revoked_at is not None or session.expires_at <= now:
                 pending_error = SessionRevokedError()
-            elif session.refresh_token_hash != self._hashing.token_hash(
-                payload.refresh_token
-            ):
+            elif session.refresh_token_hash != self._hashing.token_hash(payload.refresh_token):
                 await repository.revoke_family(
                     family_id=session.token_family_id,
                     revoked_at=now,
@@ -87,9 +85,7 @@ class TokenManagementService:
             else:
                 user = await repository.get_user(user_id, for_update=True)
                 if user is None:
-                    pending_error = AuthenticationError(
-                        "The refresh token is invalid."
-                    )
+                    pending_error = AuthenticationError("The refresh token is invalid.")
                 else:
                     try:
                         AccountAccessPolicy.ensure_login_allowed(user)
@@ -114,9 +110,7 @@ class TokenManagementService:
                             permissions=authz.permissions,
                             auth_methods=["refresh_token"],
                         )
-                        session.refresh_token_hash = self._hashing.token_hash(
-                            refresh.token
-                        )
+                        session.refresh_token_hash = self._hashing.token_hash(refresh.token)
                         session.expires_at = refresh.expires_at
                         session.last_seen_at = now
                         session.ip_address = context.ip_address

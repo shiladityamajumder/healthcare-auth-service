@@ -216,23 +216,20 @@ DELETE /api/v1/admin/users/{user_id}/roles/{user_role_id}
 
 ## Header contract and trust model
 
-OpenAPI documents these headers where relevant:
+OpenAPI exposes only headers used by each endpoint:
 
-```text
-Authorization: Bearer <signed-access-token>
-X-Request-ID: <uuid>
-X-Correlation-ID: <uuid>
-X-Client-ID: <application-id>
-X-Client-Version: <version>
-X-Platform: web|android|ios|service
-X-Device-ID: <stable-device-id>
-X-Device-Type: <device-type>
-X-Device-Name: <display-name>
-X-User-ID: <uuid>
-X-Session-ID: <uuid>
-Idempotency-Key: <unique-key>
-User-Agent: <client-user-agent>
-```
+- Rate-limited anonymous operations: `X-Client-ID`, `X-Device-ID`.
+- Session-creating or token-rotating operations: `X-Client-ID`, `X-Platform`,
+  `X-Device-ID`, `X-Device-Type`.
+- Bearer-protected operations: `X-Device-ID`, `X-User-ID`, `X-Session-ID`.
+- `Authorization` is supplied through Swagger's **Authorize** dialog using
+  `Bearer <signed-access-token>`; it is not duplicated as a normal parameter.
+- `X-Request-ID`, `X-Correlation-ID`, and `User-Agent` are processed by shared
+  request infrastructure rather than repeated on every operation.
+
+`X-Client-Version`, `X-Device-Name`, and `Idempotency-Key` are intentionally
+not advertised until a workflow actually consumes them. Sending unused values
+would imply guarantees the service does not currently implement.
 
 Security rules:
 

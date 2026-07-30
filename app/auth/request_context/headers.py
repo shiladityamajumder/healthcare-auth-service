@@ -71,9 +71,7 @@ def get_auth_headers(
             alias="X-Platform",
             min_length=1,
             max_length=16,
-            description=(
-                "Client platform: web, android, ios, or service."
-            ),
+            description=("Client platform: web, android, ios, or service."),
         ),
     ] = None,
     x_device_id: Annotated[
@@ -106,8 +104,7 @@ def get_auth_headers(
         Header(
             alias="X-User-ID",
             description=(
-                "Optional access-token subject consistency assertion. "
-                "Never authoritative."
+                "Optional access-token subject consistency assertion. Never authoritative."
             ),
         ),
     ] = None,
@@ -116,8 +113,7 @@ def get_auth_headers(
         Header(
             alias="X-Session-ID",
             description=(
-                "Optional access-token session consistency assertion. "
-                "Never authoritative."
+                "Optional access-token session consistency assertion. Never authoritative."
             ),
         ),
     ] = None,
@@ -128,8 +124,7 @@ def get_auth_headers(
             min_length=8,
             max_length=128,
             description=(
-                "Client-generated key used to deduplicate supported "
-                "state-changing requests."
+                "Client-generated key used to deduplicate supported state-changing requests."
             ),
         ),
     ] = None,
@@ -155,13 +150,8 @@ def get_auth_headers(
         casefold=True,
     )
 
-    if (
-        platform is not None
-        and platform not in _ALLOWED_PLATFORMS
-    ):
-        raise ValidationError(
-            "X-Platform must be one of web, android, ios, or service."
-        )
+    if platform is not None and platform not in _ALLOWED_PLATFORMS:
+        raise ValidationError("X-Platform must be one of web, android, ios, or service.")
 
     return AuthHeaders(
         client_id=_clean_optional_header(
@@ -207,6 +197,127 @@ def get_auth_headers(
     )
 
 
+def get_rate_limit_headers(
+    x_client_id: Annotated[
+        str | None,
+        Header(
+            alias="X-Client-ID",
+            min_length=1,
+            max_length=128,
+            description="Optional client identifier used as a rate-limit dimension.",
+        ),
+    ] = None,
+    x_device_id: Annotated[
+        str | None,
+        Header(
+            alias="X-Device-ID",
+            min_length=1,
+            max_length=255,
+            description="Optional stable device identifier used as a rate-limit dimension.",
+        ),
+    ] = None,
+) -> AuthHeaders:
+    """Return only metadata consumed by anonymous rate-limited workflows."""
+    return get_auth_headers(
+        x_client_id=x_client_id,
+        x_device_id=x_device_id,
+    )
+
+
+def get_session_creation_headers(
+    x_client_id: Annotated[
+        str | None,
+        Header(
+            alias="X-Client-ID",
+            min_length=1,
+            max_length=128,
+            description="Optional client identifier used as a rate-limit dimension.",
+        ),
+    ] = None,
+    x_platform: Annotated[
+        str | None,
+        Header(
+            alias="X-Platform",
+            min_length=1,
+            max_length=16,
+            description=(
+                "Client platform: web, android, ios, or service; used as the "
+                "session device-type fallback."
+            ),
+        ),
+    ] = None,
+    x_device_id: Annotated[
+        str | None,
+        Header(
+            alias="X-Device-ID",
+            min_length=1,
+            max_length=255,
+            description=(
+                "Optional stable identifier used for rate limits and as the "
+                "session fallback when device_id is absent from the body."
+            ),
+        ),
+    ] = None,
+    x_device_type: Annotated[
+        str | None,
+        Header(
+            alias="X-Device-Type",
+            min_length=1,
+            max_length=32,
+            description=(
+                "Optional session device type used when device_type is absent from the body."
+            ),
+        ),
+    ] = None,
+) -> AuthHeaders:
+    """Return metadata consumed by workflows that issue or rotate a session."""
+    return get_auth_headers(
+        x_client_id=x_client_id,
+        x_platform=x_platform,
+        x_device_id=x_device_id,
+        x_device_type=x_device_type,
+    )
+
+
+def get_principal_assertion_headers(
+    x_device_id: Annotated[
+        str | None,
+        Header(
+            alias="X-Device-ID",
+            min_length=1,
+            max_length=255,
+            description=(
+                "Optional authenticated-session device consistency assertion. Never authoritative."
+            ),
+        ),
+    ] = None,
+    x_user_id: Annotated[
+        uuid.UUID | None,
+        Header(
+            alias="X-User-ID",
+            description=(
+                "Optional access-token subject consistency assertion. Never authoritative."
+            ),
+        ),
+    ] = None,
+    x_session_id: Annotated[
+        uuid.UUID | None,
+        Header(
+            alias="X-Session-ID",
+            description=(
+                "Optional access-token session consistency assertion. Never authoritative."
+            ),
+        ),
+    ] = None,
+) -> AuthHeaders:
+    """Return optional assertions checked only after bearer-token validation."""
+    return get_auth_headers(
+        x_device_id=x_device_id,
+        x_user_id=x_user_id,
+        x_session_id=x_session_id,
+    )
+
+
 def _clean_optional_header(
     value: str | None,
     *,
@@ -222,22 +333,13 @@ def _clean_optional_header(
     normalized = value.strip()
 
     if len(normalized) < min_length:
-        raise ValidationError(
-            f"{header_name} is shorter than the minimum allowed length."
-        )
+        raise ValidationError(f"{header_name} is shorter than the minimum allowed length.")
 
     if len(normalized) > max_length:
-        raise ValidationError(
-            f"{header_name} exceeds the maximum allowed length."
-        )
+        raise ValidationError(f"{header_name} exceeds the maximum allowed length.")
 
-    if any(
-        ord(character) < 32 or ord(character) == 127
-        for character in normalized
-    ):
-        raise ValidationError(
-            f"{header_name} contains invalid control characters."
-        )
+    if any(ord(character) < 32 or ord(character) == 127 for character in normalized):
+        raise ValidationError(f"{header_name} contains invalid control characters.")
 
     if casefold:
         normalized = normalized.casefold()
@@ -248,4 +350,7 @@ def _clean_optional_header(
 __all__ = [
     "AuthHeaders",
     "get_auth_headers",
+    "get_principal_assertion_headers",
+    "get_rate_limit_headers",
+    "get_session_creation_headers",
 ]

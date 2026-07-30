@@ -15,7 +15,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import Depends, Request
 from fastapi.security import (
@@ -32,6 +32,9 @@ from app.auth.request_context.context import AuthRequestContext
 from app.auth.request_context.headers import (
     AuthHeaders,
     get_auth_headers,
+    get_principal_assertion_headers,
+    get_rate_limit_headers,
+    get_session_creation_headers,
 )
 from app.auth.request_context.principals import UserPrincipal
 from app.auth.security.tokens import (
@@ -80,7 +83,7 @@ def get_auth_runtime(
             "Authentication infrastructure has not completed startup."
         )
 
-    return runtime
+    return cast(AuthRuntime, runtime)
 
 
 AuthRuntimeDep = Annotated[
@@ -92,6 +95,19 @@ AuthRuntimeDep = Annotated[
 AuthHeadersDep = Annotated[
     AuthHeaders,
     Depends(get_auth_headers),
+]
+
+RateLimitHeadersDep = Annotated[
+    AuthHeaders,
+    Depends(get_rate_limit_headers),
+]
+SessionCreationHeadersDep = Annotated[
+    AuthHeaders,
+    Depends(get_session_creation_headers),
+]
+PrincipalAssertionHeadersDep = Annotated[
+    AuthHeaders,
+    Depends(get_principal_assertion_headers),
 ]
 
 
@@ -120,6 +136,63 @@ def get_auth_request_context(
 AuthRequestContextDep = Annotated[
     AuthRequestContext,
     Depends(get_auth_request_context),
+]
+
+
+def get_rate_limit_request_context(
+    request: Request,
+    runtime: AuthRuntimeDep,
+    headers: RateLimitHeadersDep,
+) -> AuthRequestContext:
+    """Build context for anonymous workflows that only enforce rate limits."""
+    return AuthRequestContext.from_request(
+        request,
+        settings=runtime.settings,
+        headers=headers,
+    )
+
+
+RateLimitRequestContextDep = Annotated[
+    AuthRequestContext,
+    Depends(get_rate_limit_request_context),
+]
+
+
+def get_session_creation_request_context(
+    request: Request,
+    runtime: AuthRuntimeDep,
+    headers: SessionCreationHeadersDep,
+) -> AuthRequestContext:
+    """Build context for workflows that create or rotate device sessions."""
+    return AuthRequestContext.from_request(
+        request,
+        settings=runtime.settings,
+        headers=headers,
+    )
+
+
+SessionCreationRequestContextDep = Annotated[
+    AuthRequestContext,
+    Depends(get_session_creation_request_context),
+]
+
+
+def get_principal_request_context(
+    request: Request,
+    runtime: AuthRuntimeDep,
+    headers: PrincipalAssertionHeadersDep,
+) -> AuthRequestContext:
+    """Build context containing only bearer-principal consistency assertions."""
+    return AuthRequestContext.from_request(
+        request,
+        settings=runtime.settings,
+        headers=headers,
+    )
+
+
+PrincipalRequestContextDep = Annotated[
+    AuthRequestContext,
+    Depends(get_principal_request_context),
 ]
 
 
@@ -177,7 +250,7 @@ async def get_current_user_principal(
     ],
     database: DatabaseDep,
     runtime: AuthRuntimeDep,
-    context: AuthRequestContextDep,
+    context: PrincipalRequestContextDep,
 ) -> UserPrincipal:
     """Validate an access token and resolve its authenticated principal.
 
@@ -201,10 +274,7 @@ async def get_current_user_principal(
         AuthenticationError: If the token, claims, persisted session, account,
             or consistency assertions are invalid.
     """
-    if (
-        credentials is None
-        or credentials.scheme.casefold() != "bearer"
-    ):
+    if credentials is None or credentials.scheme.casefold() != "bearer":
         raise AuthenticationError()
 
     payload = runtime.tokens.decode(
@@ -261,9 +331,7 @@ async def get_current_user_principal(
             row = result.one_or_none()
 
             if row is None:
-                raise AuthenticationError(
-                    "The access session is expired or revoked."
-                )
+                raise AuthenticationError("The access session is expired or revoked.")
 
             session_record = row[0]
             user = row[1]
@@ -276,22 +344,15 @@ async def get_current_user_principal(
                 now=now,
             )
 
-            if (
-                runtime.settings
-                .AUTH_REFRESH_AUTHZ_ON_EACH_REQUEST
-            ):
+            if runtime.settings.AUTH_REFRESH_AUTHZ_ON_EACH_REQUEST:
                 claims = await load_authorization_claims(
                     session,
                     user_id=user_id,
                     now=now,
                 )
 
-                roles = frozenset(
-                    claims.roles
-                )
-                permissions = frozenset(
-                    claims.permissions
-                )
+                roles = frozenset(claims.roles)
+                permissions = frozenset(claims.permissions)
 
     return UserPrincipal(
         user_id=user_id,
@@ -328,18 +389,12 @@ def _uuid_claim(
     try:
         raw_value = payload[claim_name]
     except KeyError as exc:
-        raise AuthenticationError(
-            "The access token is invalid."
-        ) from exc
+        raise AuthenticationError("The access token is invalid.") from exc
 
     try:
-        return uuid.UUID(
-            str(raw_value)
-        )
+        return uuid.UUID(str(raw_value))
     except (TypeError, ValueError) as exc:
-        raise AuthenticationError(
-            "The access token is invalid."
-        ) from exc
+        raise AuthenticationError("The access token is invalid.") from exc
 
 
 def _string_set_claim(
@@ -383,9 +438,7 @@ def _string_tuple_claim(
         claim_name=claim_name,
     )
 
-    return tuple(
-        dict.fromkeys(values)
-    )
+    return tuple(dict.fromkeys(values))
 
 
 def _string_sequence_claim(
@@ -406,9 +459,7 @@ def _string_sequence_claim(
         AuthenticationError: If the claim is not a collection of nonblank
             strings.
     """
-    raw_value = payload.get(
-        claim_name
-    )
+    raw_value = payload.get(claim_name)
 
     if raw_value is None:
         return ()
@@ -417,32 +468,22 @@ def _string_sequence_claim(
         raw_value,
         (list, tuple, set, frozenset),
     ):
-        raise AuthenticationError(
-            "The access token contains invalid claims."
-        )
+        raise AuthenticationError("The access token contains invalid claims.")
 
     normalized_values: list[str] = []
 
     for item in raw_value:
         if not isinstance(item, str):
-            raise AuthenticationError(
-                "The access token contains invalid claims."
-            )
+            raise AuthenticationError("The access token contains invalid claims.")
 
         normalized = item.strip()
 
         if not normalized:
-            raise AuthenticationError(
-                "The access token contains invalid claims."
-            )
+            raise AuthenticationError("The access token contains invalid claims.")
 
-        normalized_values.append(
-            normalized
-        )
+        normalized_values.append(normalized)
 
-    return tuple(
-        normalized_values
-    )
+    return tuple(normalized_values)
 
 
 def _validate_identity_assertions(
@@ -461,21 +502,11 @@ def _validate_identity_assertions(
     Raises:
         AuthenticationError: If an assertion does not match the token.
     """
-    if (
-        context.asserted_user_id is not None
-        and context.asserted_user_id != user_id
-    ):
-        raise AuthenticationError(
-            "X-User-ID does not match the access token subject."
-        )
+    if context.asserted_user_id is not None and context.asserted_user_id != user_id:
+        raise AuthenticationError("X-User-ID does not match the access token subject.")
 
-    if (
-        context.asserted_session_id is not None
-        and context.asserted_session_id != session_id
-    ):
-        raise AuthenticationError(
-            "X-Session-ID does not match the access token session."
-        )
+    if context.asserted_session_id is not None and context.asserted_session_id != session_id:
+        raise AuthenticationError("X-Session-ID does not match the access token session.")
 
 
 def _validate_persisted_session(
@@ -505,28 +536,18 @@ def _validate_persisted_session(
         and session_record.device_id is not None
         and session_record.device_id != context.device_id
     ):
-        raise AuthenticationError(
-            "X-Device-ID does not match the authenticated session."
-        )
+        raise AuthenticationError("X-Device-ID does not match the authenticated session.")
 
-    session_invalid = (
-        session_record.revoked_at is not None
-        or session_record.expires_at <= now
-    )
+    session_invalid = session_record.revoked_at is not None or session_record.expires_at <= now
 
     account_invalid = (
         user.status != UserStatus.ACTIVE
         or user.account_closed_at is not None
-        or (
-            user.locked_until is not None
-            and user.locked_until > now
-        )
+        or (user.locked_until is not None and user.locked_until > now)
     )
 
     if session_invalid or account_invalid:
-        raise AuthenticationError(
-            "The access session is expired or revoked."
-        )
+        raise AuthenticationError("The access session is expired or revoked.")
 
 
 __all__ = [
@@ -535,10 +556,19 @@ __all__ = [
     "AuthRequestContextDep",
     "AuthRuntimeDep",
     "CurrentUserDep",
+    "PrincipalAssertionHeadersDep",
+    "PrincipalRequestContextDep",
+    "RateLimitHeadersDep",
+    "RateLimitRequestContextDep",
+    "SessionCreationHeadersDep",
+    "SessionCreationRequestContextDep",
     "TokenManagerDep",
     "get_auth_rate_limits",
     "get_auth_request_context",
     "get_auth_runtime",
     "get_current_user_principal",
+    "get_principal_request_context",
+    "get_rate_limit_request_context",
+    "get_session_creation_request_context",
     "get_token_manager",
 ]

@@ -29,7 +29,7 @@ class TokenRepository:
         statement = select(Sessions).where(Sessions.id == session_id)
         if for_update:
             statement = statement.with_for_update()
-        return await self._session.scalar(statement)
+        return (await self._session.scalars(statement)).first()
 
     async def get_user(
         self,
@@ -41,7 +41,7 @@ class TokenRepository:
         statement = select(Users).where(Users.id == user_id)
         if for_update:
             statement = statement.with_for_update()
-        return await self._session.scalar(statement)
+        return (await self._session.scalars(statement)).first()
 
     async def authorization_claims(
         self,
@@ -72,7 +72,7 @@ class TokenRepository:
             )
             .values(revoked_at=revoked_at, revoke_reason=reason)
         )
-        return int(result.rowcount or 0)
+        return int(getattr(result, "rowcount", 0) or 0)
 
     async def revoke_user_sessions(
         self,
@@ -92,7 +92,7 @@ class TokenRepository:
         result = await self._session.execute(
             statement.values(revoked_at=revoked_at, revoke_reason=reason)
         )
-        return int(result.rowcount or 0)
+        return int(getattr(result, "rowcount", 0) or 0)
 
 
 __all__ = ["TokenRepository"]

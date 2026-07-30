@@ -31,7 +31,7 @@ class AdminUserRepository:
         statement = select(Users).where(Users.id == user_id)
         if for_update:
             statement = statement.with_for_update()
-        return await self._session.scalar(statement)
+        return (await self._session.scalars(statement)).first()
 
     async def list(
         self,
@@ -62,7 +62,6 @@ class AdminUserRepository:
             params=pagination,
         )
 
-
     async def authorization_claims(
         self,
         *,
@@ -92,7 +91,7 @@ class AdminUserRepository:
             )
             .values(revoked_at=revoked_at, revoke_reason=reason)
         )
-        return int(result.rowcount or 0)
+        return int(getattr(result, "rowcount", 0) or 0)
 
 
 __all__ = ["AdminUserRepository"]

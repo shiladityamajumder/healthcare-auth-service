@@ -41,11 +41,8 @@ class SessionManagementRepository:
 
     async def get_for_update(self, session_id: uuid.UUID) -> Sessions | None:
         """Load and lock one user-owned session for revocation."""
-        return await self._session.scalar(
-            select(Sessions)
-            .where(Sessions.id == session_id)
-            .with_for_update()
-        )
+        statement = select(Sessions).where(Sessions.id == session_id).with_for_update()
+        return (await self._session.scalars(statement)).first()
 
 
 __all__ = ["SessionManagementRepository"]

@@ -29,7 +29,7 @@ class LoginRepository:
         statement = select(Users).where(Users.email_normalized == email)
         if for_update:
             statement = statement.with_for_update()
-        return await self._session.scalar(statement)
+        return (await self._session.scalars(statement)).first()
 
     async def get_by_phone(
         self,
@@ -45,7 +45,7 @@ class LoginRepository:
         )
         if for_update:
             statement = statement.with_for_update()
-        return await self._session.scalar(statement)
+        return (await self._session.scalars(statement)).first()
 
     def increment_failed_login_count(self, user: Users) -> int:
         """Increment failed login count in the current unit of work."""
@@ -135,7 +135,7 @@ class LoginRepository:
         purpose: str,
     ) -> OtpChallenges | None:
         """Load the latest for destination from persistence."""
-        return await self._session.scalar(
+        statement = (
             select(OtpChallenges)
             .where(
                 OtpChallenges.destination_hash == destination_hash,
@@ -144,6 +144,7 @@ class LoginRepository:
             .order_by(OtpChallenges.created_at.desc())
             .limit(1)
         )
+        return (await self._session.scalars(statement)).first()
 
     async def invalidate_active(
         self,
@@ -163,15 +164,12 @@ class LoginRepository:
             )
             .values(consumed_at=consumed_at)
         )
-        return int(result.rowcount or 0)
+        return int(getattr(result, "rowcount", 0) or 0)
 
     async def get_for_update(self, challenge_id: uuid.UUID) -> OtpChallenges | None:
         """Load and lock an OTP challenge for verification."""
-        return await self._session.scalar(
-            select(OtpChallenges)
-            .where(OtpChallenges.id == challenge_id)
-            .with_for_update()
-        )
+        statement = select(OtpChallenges).where(OtpChallenges.id == challenge_id).with_for_update()
+        return (await self._session.scalars(statement)).first()
 
 
 __all__ = ["LoginRepository"]

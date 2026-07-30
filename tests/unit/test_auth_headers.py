@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import uuid
 
+from app.auth.request_context.context import AuthRequestContext
+from app.auth.request_context.headers import AuthHeaders
+from app.main import create_app
 from fastapi.testclient import TestClient
 from starlette.requests import Request
-
-from app.main import create_app
-from app.auth.request_context.context import AuthRequestContext
 from tests.conftest import build_test_settings
 
 
@@ -62,13 +62,18 @@ def test_forwarded_for_is_used_only_for_trusted_proxy() -> None:
         "http_version": "1.1",
     }
     request = Request(scope)
-    untrusted = AuthRequestContext.from_request(request, build_test_settings())
+    untrusted = AuthRequestContext.from_request(
+        request,
+        settings=build_test_settings(),
+        headers=AuthHeaders(),
+    )
     trusted = AuthRequestContext.from_request(
         request,
-        build_test_settings(
+        settings=build_test_settings(
             TRUSTED_PROXY_ENABLED=True,
             TRUSTED_PROXY_CIDRS=["10.0.0.0/8"],
         ),
+        headers=AuthHeaders(),
     )
     assert untrusted.ip_address == "10.0.0.2"
     assert trusted.ip_address == "203.0.113.9"

@@ -6,8 +6,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-from app.auth.request_context.dependencies import AuthRateLimitsDep, AuthRequestContextDep, AuthRuntimeDep
 from app.auth.identity.canonical import email_identity, phone_identity
+from app.auth.request_context.dependencies import (
+    AuthRateLimitsDep,
+    AuthRuntimeDep,
+    RateLimitRequestContextDep,
+    SessionCreationRequestContextDep,
+)
 from app.common.response import APIResponse, APIResponseModel
 from app.core.di import PostgresUOWDep
 from app.models.enums import OTPPurpose
@@ -29,7 +34,11 @@ def get_password_login_service(
     uow: PostgresUOWDep,
     runtime: AuthRuntimeDep,
 ) -> PasswordLoginService:
-    """Build the request-scoped password-login service."""
+    """Build password login from FastAPI-managed dependencies.
+
+    Constructor injection shares one request transaction and makes each
+    security dependency replaceable in isolated service tests.
+    """
     return PasswordLoginService(
         uow=uow,
         settings=runtime.settings,
@@ -43,7 +52,7 @@ def get_phone_otp_login_service(
     uow: PostgresUOWDep,
     runtime: AuthRuntimeDep,
 ) -> PhoneOtpLoginService:
-    """Build the request-scoped phone-OTP login service."""
+    """Build phone-OTP login from the same explicit dependency graph."""
     return PhoneOtpLoginService(
         uow=uow,
         settings=runtime.settings,
@@ -71,7 +80,7 @@ PhoneOtpLoginDep = Annotated[
 )
 async def login_password(
     payload: PasswordLoginRequest,
-    context: AuthRequestContextDep,
+    context: SessionCreationRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: PasswordLoginDep,
 ) -> JSONResponse:
@@ -100,7 +109,7 @@ async def login_password(
 )
 async def request_phone_login_otp(
     payload: PhoneOtpLoginRequest,
-    context: AuthRequestContextDep,
+    context: RateLimitRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: PhoneOtpLoginDep,
 ) -> JSONResponse:
@@ -122,7 +131,7 @@ async def request_phone_login_otp(
 )
 async def verify_phone_login_otp(
     payload: PhoneOtpLoginVerifyRequest,
-    context: AuthRequestContextDep,
+    context: SessionCreationRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: PhoneOtpLoginDep,
 ) -> JSONResponse:

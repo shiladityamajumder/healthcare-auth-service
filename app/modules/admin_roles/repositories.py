@@ -39,7 +39,7 @@ class RoleRepository:
         )
         if for_update:
             statement = statement.with_for_update()
-        return await self._session.scalar(statement)
+        return (await self._session.scalars(statement)).first()
 
     async def code_exists(
         self,

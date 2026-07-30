@@ -25,16 +25,12 @@ class IdentityRequest(StrictModel):
     phone_number: str | None = Field(default=None, max_length=32)
 
     @model_validator(mode="after")
-    def validate_destination(self) -> "IdentityRequest":
+    def validate_destination(self) -> IdentityRequest:
         """Require the destination fields selected by the recovery channel."""
         if self.channel == "email" and self.email is None:
             raise ValueError("email is required for the email channel")
-        if self.channel == "sms" and (
-            not self.phone_country_code or not self.phone_number
-        ):
-            raise ValueError(
-                "phone_country_code and phone_number are required for SMS"
-            )
+        if self.channel == "sms" and (not self.phone_country_code or not self.phone_number):
+            raise ValueError("phone_country_code and phone_number are required for SMS")
         return self
 
 

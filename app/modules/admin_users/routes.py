@@ -41,7 +41,11 @@ AdminManagePrincipal = Annotated[
 
 
 def get_admin_users_service(uow: PostgresUOWDep) -> AdminUsersService:
-    """Build the request-scoped administrative user service."""
+    """Build the admin-user service with the request-scoped unit of work.
+
+    Explicit injection keeps authorization workflows free of hidden database
+    globals and gives tests control over commit and rollback behavior.
+    """
     return AdminUsersService(uow=uow)
 
 

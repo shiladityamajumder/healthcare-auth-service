@@ -39,7 +39,11 @@ RoleManagePrincipal = Annotated[
 
 
 def get_admin_roles_service(uow: PostgresUOWDep) -> AdminRolesService:
-    """Build the request-scoped role service."""
+    """Build the role service with the request-scoped unit of work.
+
+    Constructor injection keeps persistence explicit and lets tests provide a
+    controlled transaction without changing service code.
+    """
     return AdminRolesService(uow=uow)
 
 

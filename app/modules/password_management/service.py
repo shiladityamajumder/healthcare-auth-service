@@ -17,6 +17,7 @@ from app.auth.workflows.notifications import AuthNotificationGateway, Notificati
 from app.auth.workflows.otp import IssuedOTP, OTPService
 from app.auth.workflows.session_tokens import SessionTokenIssuer
 from app.common.exceptions import AuthenticationError, ConflictError, NotFoundError, ValidationError
+from app.common.schemas import DeviceContext
 from app.core.config import AppSettings
 from app.db.uow import SQLAlchemyUnitOfWork
 from app.models.enums import OTPChannel, OTPPurpose
@@ -25,6 +26,7 @@ from app.modules.password_management.repositories import PasswordRepository
 from app.modules.password_management.schemas import (
     ChangePasswordRequest,
     ForgotPasswordRequest,
+    IdentityRequest,
     OtpChallengeResponse,
     ResetPasswordProofResponse,
     ResetPasswordWithTokenRequest,
@@ -45,18 +47,19 @@ class _ResolvedIdentity:
     phone_number: str | None = None
 
 
-def _resolve_identity(payload: object) -> _ResolvedIdentity:
-    channel = str(getattr(payload, "channel"))
+def _resolve_identity(payload: IdentityRequest) -> _ResolvedIdentity:
+    """Normalize the email or phone destination selected by the request."""
+    channel = payload.channel
     if channel == OTPChannel.EMAIL.value:
-        email_value = getattr(payload, "email", None)
+        email_value = payload.email
         if email_value is None:
             raise ValidationError("Email is required.")
         email = normalize_email(str(email_value))
         return _ResolvedIdentity(channel=channel, destination=email, email=email)
     if channel == OTPChannel.SMS.value:
         country, phone = normalize_phone(
-            str(getattr(payload, "phone_country_code", "") or ""),
-            str(getattr(payload, "phone_number", "") or ""),
+            payload.phone_country_code or "",
+            payload.phone_number or "",
         )
         return _ResolvedIdentity(
             channel=channel,
@@ -109,11 +112,11 @@ class PasswordManagementService:
         )
 
     def _otp_response(self, issued: IssuedOTP) -> OtpChallengeResponse:
-        expose = (
-            self._settings.OTP_DEV_EXPOSE_CODE
-            and self._settings.ENVIRONMENT.value
-            in {"local", "development", "testing"}
-        )
+        expose = self._settings.OTP_DEV_EXPOSE_CODE and self._settings.ENVIRONMENT.value in {
+            "local",
+            "development",
+            "testing",
+        }
         return OtpChallengeResponse(
             challenge_id=issued.challenge.id,
             expires_at=issued.challenge.expires_at,
@@ -126,7 +129,7 @@ class PasswordManagementService:
         *,
         user: Users,
         repository: PasswordRepository,
-        payload: object,
+        payload: DeviceContext,
         context: AuthRequestContext,
         auth_method: str,
     ) -> TokenPairResponse:
@@ -159,25 +162,27 @@ class PasswordManagementService:
         """Issue a generic password-reset challenge without account enumeration."""
         identity = _resolve_identity(payload)
         purpose = self._reset_purpose(identity.channel)
-        should_deliver = False
         async with self._uow:
             repository = PasswordRepository(self._uow.session)
-            user = await self._get_identity_user(repository, identity)
-            should_deliver = user is not None and AccountAccessPolicy.is_active(user)
+            # When delivery is enabled, resolve the user here and set
+            # ``should_deliver`` only for an active account.
             issued = await self._otp.issue(
                 repository=repository,
                 channel=identity.channel,
                 destination=identity.destination,
                 purpose=purpose,
             )
-        if should_deliver:
-            await self._notifications.send_otp(
-                channel=identity.channel,
-                destination=identity.destination,
-                code=issued.code,
-                purpose=purpose,
-                expires_in_seconds=self._settings.OTP_TTL_SECONDS,
-            )
+        # External email/SMS delivery intentionally remains paused. The OTP is
+        # still issued and persisted, so uncomment this block after the chosen
+        # notification provider is configured and delivery should be enabled.
+        # if should_deliver:
+        #     await self._notifications.send_otp(
+        #         channel=identity.channel,
+        #         destination=identity.destination,
+        #         code=issued.code,
+        #         purpose=purpose,
+        #         expires_in_seconds=self._settings.OTP_TTL_SECONDS,
+        #     )
         return self._otp_response(issued)
 
     async def verify_reset_otp(
@@ -196,8 +201,7 @@ class PasswordManagementService:
                 challenge_id=payload.challenge_id,
                 channel=identity.channel,
                 destination=identity.destination,
-                purpose=purpose,
-                accepted_purposes={purpose, OTPPurpose.PASSWORD_RESET.value},
+                purpose={purpose, OTPPurpose.PASSWORD_RESET.value},
                 code=payload.code,
             )
             user = await self._get_identity_user(
@@ -222,9 +226,7 @@ class PasswordManagementService:
                         user_id=user.id,
                         challenge_id=payload.challenge_id,
                         channel=identity.channel,
-                        destination_hash=self._hashing.destination_hash(
-                            identity.destination
-                        ),
+                        destination_hash=self._hashing.destination_hash(identity.destination),
                     )
                     response = ResetPasswordProofResponse(
                         reset_token=proof.token,

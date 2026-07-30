@@ -48,11 +48,11 @@ class EmailVerificationService:
         self._issuer = SessionTokenIssuer(tokens=tokens, hashing=hashing)
 
     def _otp_response(self, issued: IssuedOTP) -> OtpChallengeResponse:
-        expose = (
-            self._settings.OTP_DEV_EXPOSE_CODE
-            and self._settings.ENVIRONMENT.value
-            in {"local", "development", "testing"}
-        )
+        expose = self._settings.OTP_DEV_EXPOSE_CODE and self._settings.ENVIRONMENT.value in {
+            "local",
+            "development",
+            "testing",
+        }
         return OtpChallengeResponse(
             challenge_id=issued.challenge.id,
             expires_at=issued.challenge.expires_at,
@@ -66,25 +66,27 @@ class EmailVerificationService:
     ) -> OtpChallengeResponse:
         """Validate the destination and issue the workflow challenge."""
         email = normalize_email(str(payload.email))
-        should_deliver = False
         async with self._uow:
             repository = EmailVerificationRepository(self._uow.session)
-            user = await repository.get_user_by_email(email)
-            should_deliver = bool(user and user.email_verified_at is None)
+            # When delivery is enabled, load the user here and set
+            # ``should_deliver`` only for an unverified account.
             issued = await self._otp.issue(
                 repository=repository,
                 channel=OTPChannel.EMAIL.value,
                 destination=email,
                 purpose=OTPPurpose.VERIFY_EMAIL.value,
             )
-        if should_deliver:
-            await self._notifications.send_otp(
-                channel=OTPChannel.EMAIL.value,
-                destination=email,
-                code=issued.code,
-                purpose=OTPPurpose.VERIFY_EMAIL.value,
-                expires_in_seconds=self._settings.OTP_TTL_SECONDS,
-            )
+        # External email delivery intentionally remains paused. The OTP is
+        # still issued and persisted, so uncomment this block after the email
+        # provider is configured and delivery should be enabled.
+        # if should_deliver:
+        #     await self._notifications.send_otp(
+        #         channel=OTPChannel.EMAIL.value,
+        #         destination=email,
+        #         code=issued.code,
+        #         purpose=OTPPurpose.VERIFY_EMAIL.value,
+        #         expires_in_seconds=self._settings.OTP_TTL_SECONDS,
+        #     )
         return self._otp_response(issued)
 
     async def confirm(
@@ -108,9 +110,7 @@ class EmailVerificationService:
             )
             user = await repository.get_user_by_email(email, for_update=True)
             if not verification.valid or user is None or user.email_verified_at is not None:
-                pending_error = AuthenticationError(
-                    "The verification code is invalid or expired."
-                )
+                pending_error = AuthenticationError("The verification code is invalid or expired.")
             else:
                 try:
                     AccountAccessPolicy.ensure_login_allowed(user, allow_pending=True)

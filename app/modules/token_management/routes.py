@@ -8,9 +8,9 @@ from fastapi.responses import JSONResponse
 
 from app.auth.request_context.dependencies import (
     AuthRateLimitsDep,
-    AuthRequestContextDep,
     AuthRuntimeDep,
     CurrentUserDep,
+    SessionCreationRequestContextDep,
     TokenManagerDep,
 )
 from app.common.exceptions import NotFoundError
@@ -34,7 +34,11 @@ def get_token_management_service(
     uow: PostgresUOWDep,
     runtime: AuthRuntimeDep,
 ) -> TokenManagementService:
-    """Build the request-scoped token-management service."""
+    """Build the service from FastAPI-managed request dependencies.
+
+    Constructor injection keeps security adapters explicit and reuses the
+    request-scoped unit of work instead of opening hidden transactions.
+    """
     return TokenManagementService(
         uow=uow,
         hashing=runtime.hashing,
@@ -68,7 +72,7 @@ async def jwks(tokens: TokenManagerDep) -> JSONResponse:
 )
 async def refresh_token(
     payload: RefreshTokenRequest,
-    context: AuthRequestContextDep,
+    context: SessionCreationRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: TokenManagementServiceDep,
 ) -> JSONResponse:

@@ -39,7 +39,11 @@ UserRoleManagePrincipal = Annotated[
 
 
 def get_admin_user_roles_service(uow: PostgresUOWDep) -> AdminUserRolesService:
-    """Build the request-scoped user-role service."""
+    """Build the user-role service with the request-scoped unit of work.
+
+    Explicit injection makes assignment transactions easy to test and keeps
+    route code responsible only for HTTP concerns.
+    """
     return AdminUserRolesService(uow=uow)
 
 
@@ -61,9 +65,7 @@ async def list_user_roles(
 ) -> JSONResponse:
     """Return global and scoped assignments for one user."""
     _ = principal
-    return APIResponse.success(
-        data=await service.list_assignments(user_id=user_id)
-    )
+    return APIResponse.success(data=await service.list_assignments(user_id=user_id))
 
 
 @router.post(

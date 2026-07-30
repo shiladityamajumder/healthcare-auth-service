@@ -23,7 +23,7 @@ class AssignUserRoleRequest(StrictModel):
     is_active: bool = True
 
     @model_validator(mode="after")
-    def validate_scope_and_window(self) -> "AssignUserRoleRequest":
+    def validate_scope_and_window(self) -> AssignUserRoleRequest:
         """Validate role scope completeness and validity dates."""
         if (self.scope_type is None) != (self.scope_id is None):
             raise ValueError("scope_type and scope_id must be supplied together")
@@ -46,7 +46,7 @@ class UpdateUserRoleRequest(StrictModel):
     is_active: bool | None = None
 
     @model_validator(mode="after")
-    def validate_update(self) -> "UpdateUserRoleRequest":
+    def validate_update(self) -> UpdateUserRoleRequest:
         """Validate assignment update fields, scope, and validity dates."""
         if not self.model_fields_set:
             raise ValueError("at least one assignment field must be supplied")

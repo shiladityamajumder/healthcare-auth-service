@@ -60,10 +60,7 @@ class AdminUserRolesService:
                 raise NotFoundError("The user was not found.")
             records = await repository.list_for_user(user_id)
             return UserRoleListResponse(
-                assignments=[
-                    assignment_response(assignment, role)
-                    for assignment, role in records
-                ]
+                assignments=[assignment_response(assignment, role) for assignment, role in records]
             )
 
     async def assign(

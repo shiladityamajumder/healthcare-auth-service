@@ -43,24 +43,24 @@ def request_uuid(value: str | None) -> uuid.UUID | None:
 class AuthRequestContext:
     """Immutable request metadata supplied to authentication workflows."""
 
-    ip_address: str | None
-    user_agent: str | None
+    ip_address: str | None = None
+    user_agent: str | None = None
 
-    request_id: str | None
-    correlation_id: str | None
+    request_id: str | None = None
+    correlation_id: str | None = None
 
-    client_id: str | None
-    client_version: str | None
-    platform: str | None
+    client_id: str | None = None
+    client_version: str | None = None
+    platform: str | None = None
 
-    device_id: str | None
-    device_type: str | None
-    device_name: str | None
+    device_id: str | None = None
+    device_type: str | None = None
+    device_name: str | None = None
 
-    asserted_user_id: uuid.UUID | None
-    asserted_session_id: uuid.UUID | None
+    asserted_user_id: uuid.UUID | None = None
+    asserted_session_id: uuid.UUID | None = None
 
-    idempotency_key: str | None
+    idempotency_key: str | None = None
 
     @classmethod
     def from_request(

@@ -33,9 +33,7 @@ class CurrentUserService:
                 raise NotFoundError("The user was not found.")
             claims = await users.authorization_claims(user_id=user.id, now=utc_now())
             return UserResponse.model_validate(
-                public_user_data(
-                    user, roles=claims.roles, permissions=claims.permissions
-                )
+                public_user_data(user, roles=claims.roles, permissions=claims.permissions)
             )
 
     async def update(
@@ -57,9 +55,7 @@ class CurrentUserService:
                 user.timezone = str(updates["timezone"])
             claims = await users.authorization_claims(user_id=user.id, now=utc_now())
             return UserResponse.model_validate(
-                public_user_data(
-                    user, roles=claims.roles, permissions=claims.permissions
-                )
+                public_user_data(user, roles=claims.roles, permissions=claims.permissions)
             )
 
     async def roles(self, *, user_id: uuid.UUID) -> UserRolesResponse:
