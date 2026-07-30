@@ -1,5 +1,17 @@
 """File: app/modules/admin_users/service.py
-Administrative user application service."""
+
+Purpose:
+Owns administrative user listing, detail projection, status transitions, and
+global session-revocation use cases.
+
+Dependency flow:
+AdminUsersServiceDep
+-> request-scoped SQLAlchemyUnitOfWork
+-> AdminUserRepository on the shared session
+-> invariant checks and ORM mutations
+-> unit-of-work commit/rollback
+-> response contract
+"""
 
 from __future__ import annotations
 

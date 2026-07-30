@@ -1,5 +1,14 @@
 """File: app/core/filters.py
-    Allow-listed SQLAlchemy filtering helpers for MySQL and SQL Server.
+
+Purpose:
+Builds validated, allow-listed SQLAlchemy filter expressions without exposing
+arbitrary columns or operators to callers.
+
+Dependency flow:
+Validated filter specification
+-> allow-listed column and operator resolution
+-> SQLAlchemy expression
+-> repository Select statement
 """
 
 from __future__ import annotations

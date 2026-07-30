@@ -1,5 +1,15 @@
 """File: app/modules/session_management/schemas.py
-User-session response contracts owned by this module."""
+
+Purpose:
+Defines non-sensitive active-session inventory and current-session indicators
+returned to authenticated users.
+
+Dependency flow:
+Session ORM projection
+-> strict session response models
+-> route response_model validation
+-> API envelope
+"""
 
 from __future__ import annotations
 

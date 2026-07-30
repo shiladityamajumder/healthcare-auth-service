@@ -1,5 +1,15 @@
 """File: app/auth/request_context/headers.py
-Typed authentication and client metadata headers.
+
+Purpose:
+Defines validated, narrowly composed FastAPI header profiles for rate limits,
+session creation, and authenticated-principal consistency checks.
+
+Dependency flow:
+HTTP headers
+-> FastAPI Header validation
+-> typed header dataclass dependency
+-> AuthRequestContext construction
+-> workflow or principal dependency
 
 These headers contain request metadata, not authentication credentials.
 

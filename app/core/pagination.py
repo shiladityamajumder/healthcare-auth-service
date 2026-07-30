@@ -1,5 +1,15 @@
 """File: app/core/pagination.py
-    Typed offset-pagination primitives for relational repositories.
+
+Purpose:
+Provides validated offset pagination and total-count helpers for SQLAlchemy
+repositories.
+
+Dependency flow:
+Route query parameters
+-> PaginationParams
+-> repository Select and AsyncSession
+-> PaginationResult
+-> response PaginationMeta
 """
 
 from __future__ import annotations

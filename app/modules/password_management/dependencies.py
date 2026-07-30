@@ -1,4 +1,16 @@
-"""Dependency composition for password lifecycle endpoints."""
+"""File: app/modules/password_management/dependencies.py
+
+Purpose:
+Re-exports public request/rate-limit dependencies, composes sensitive
+authenticated access, and constructs the password service.
+
+Dependency flow:
+FastAPI route parameter
+-> workflow context/rate limit or PasswordSensitiveAccess
+-> AuthRuntimeDep and PostgresUOWDep
+-> PasswordManagementServiceDep
+-> password/OTP/session workflow
+"""
 
 from typing import Annotated
 
@@ -33,12 +45,15 @@ def get_password_management_service(
     )
 
 
+# FastAPI constructs one password service from the cached unit of work and
+# process-wide password, OTP, token, hashing, and notification primitives.
 PasswordManagementServiceDep = Annotated[
     PasswordManagementService,
     Depends(get_password_management_service),
 ]
 
-# Authenticated password mutations use the sensitive API protection tier.
+# Resolves the bearer principal/session and sensitive API limit for change/set
+# operations; recovery routes use workflow-specific public limits instead.
 PasswordSensitiveAccess = Annotated[
     UserPrincipal,
     Depends(secure_route(RouteSecurityPolicy(rate_limit=RateLimitPolicy.SENSITIVE))),

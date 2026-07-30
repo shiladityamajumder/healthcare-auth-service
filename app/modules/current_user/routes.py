@@ -1,5 +1,17 @@
 """File: app/modules/current_user/routes.py
-Authenticated current-user endpoints."""
+
+Purpose:
+Defines ``/users/me`` authenticated profile, preference, role, and permission
+endpoints.
+
+Dependency flow:
+HTTP request
+-> FastAPI route
+-> CurrentUserReadAccess or CurrentUserWriteAccess
+-> CurrentUserServiceDep
+-> service/repository/unit of work
+-> APIResponse
+"""
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
@@ -34,7 +46,11 @@ async def get_current_user(
     principal: CurrentUserReadAccess,
     service: CurrentUserServiceDep,
 ) -> JSONResponse:
-    """Return authenticated identity details and effective authorization."""
+    """Return authenticated identity details and effective authorization.
+
+    ``CurrentUserReadAccess`` validates the bearer principal/session and applies
+    the standard authenticated API limit.
+    """
     return APIResponse.success(data=await service.get(user_id=principal.user_id))
 
 
@@ -48,7 +64,11 @@ async def update_current_user(
     principal: CurrentUserWriteAccess,
     service: CurrentUserServiceDep,
 ) -> JSONResponse:
-    """Update locale or timezone without changing login identifiers."""
+    """Update locale or timezone without changing login identifiers.
+
+    ``CurrentUserWriteAccess`` supplies the authenticated user's identifier and
+    applies the sensitive mutation limit.
+    """
     return APIResponse.success(
         data=await service.update(user_id=principal.user_id, payload=payload)
     )
@@ -63,7 +83,11 @@ async def get_current_user_roles(
     principal: CurrentUserReadAccess,
     service: CurrentUserServiceDep,
 ) -> JSONResponse:
-    """Return effective active role codes."""
+    """Return effective active role codes for the authenticated caller.
+
+    Current-user read access validates the principal before claims are loaded
+    from current database state.
+    """
     return APIResponse.success(data=await service.roles(user_id=principal.user_id))
 
 
@@ -76,7 +100,10 @@ async def get_current_user_permissions(
     principal: CurrentUserReadAccess,
     service: CurrentUserServiceDep,
 ) -> JSONResponse:
-    """Return effective active permission codes."""
+    """Return effective active permission codes for the authenticated caller.
+
+    ``CurrentUserReadAccess`` protects and rate-limits this self-service read.
+    """
     return APIResponse.success(data=await service.permissions(user_id=principal.user_id))
 
 

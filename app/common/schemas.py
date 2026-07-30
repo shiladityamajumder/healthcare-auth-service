@@ -1,5 +1,13 @@
 """File: app/common/schemas.py
-Shared Pydantic primitives used by API modules.
+
+Purpose:
+Defines strict shared Pydantic bases and reusable device-context input fields.
+
+Dependency flow:
+HTTP input or service output
+-> StrictModel/DeviceContext validation
+-> owning module schema
+-> route or service
 
 Only transport-level base classes belong here. Endpoint request and response
 contracts remain inside their owning vertical module.

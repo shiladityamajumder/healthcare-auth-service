@@ -1,4 +1,16 @@
-"""Dependency composition for administrative user-role endpoints."""
+"""File: app/modules/admin_user_roles/dependencies.py
+
+Purpose:
+Composes user-role assignment access policies and constructs the request-scoped
+assignment service.
+
+Dependency flow:
+FastAPI route parameter
+-> UserRoleReadAccess/UserRoleManageAccess via secure_route()
+-> bearer principal, permission, and rate-limit validation
+-> PostgresUOWDep
+-> AdminUserRolesServiceDep
+"""
 
 from typing import Annotated
 
@@ -10,7 +22,7 @@ from app.auth.security_policy import RateLimitPolicy, RouteSecurityPolicy
 from app.core.di import PostgresUOWDep
 from app.modules.admin_user_roles.service import AdminUserRolesService
 
-# Assignment reads and mutations intentionally have different access policies.
+# Resolves the principal, user-role read claim, and admin-read limiter policy.
 UserRoleReadAccess = Annotated[
     UserPrincipal,
     Depends(
@@ -22,6 +34,7 @@ UserRoleReadAccess = Annotated[
         )
     ),
 ]
+# Assignment mutations require the separate manage claim and write policy.
 UserRoleManageAccess = Annotated[
     UserPrincipal,
     Depends(
@@ -40,6 +53,7 @@ def get_admin_user_roles_service(uow: PostgresUOWDep) -> AdminUserRolesService:
     return AdminUserRolesService(uow=uow)
 
 
+# FastAPI builds the assignment service from the cached request unit of work.
 AdminUserRolesServiceDep = Annotated[
     AdminUserRolesService,
     Depends(get_admin_user_roles_service),

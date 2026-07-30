@@ -1,5 +1,17 @@
 """File: app/modules/admin_user_roles/service.py
-User-role assignment application service."""
+
+Purpose:
+Owns administrative role-assignment listing, creation, update, and removal with
+user, role, scope, and validity invariants.
+
+Dependency flow:
+AdminUserRolesServiceDep
+-> request-scoped SQLAlchemyUnitOfWork
+-> UserRoleRepository on the shared session
+-> invariant checks and staged assignment changes
+-> unit-of-work commit/rollback
+-> response contract
+"""
 
 from __future__ import annotations
 
@@ -90,6 +102,8 @@ class AdminUserRolesService:
                 updated_by=actor_user_id,
             )
             repository.add(assignment)
+            # Flush materializes generated state for projection; transaction
+            # completion remains with the unit of work.
             await self._uow.flush()
             response = assignment_response(assignment, role)
         logger.info(

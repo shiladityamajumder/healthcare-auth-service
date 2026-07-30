@@ -1,5 +1,15 @@
 """File: tests/unit/test_auth_schemas.py
-Validation tests for endpoint contracts owned by vertical modules."""
+
+Purpose:
+Verifies non-obvious identity and administrative request validation owned by
+vertical module schemas.
+
+Dependency flow:
+Test payload
+-> Pydantic module schema
+-> normalized model or validation error
+-> contract assertion
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,16 @@
-"""Dependency composition for token, logout, and JWKS endpoints."""
+"""File: app/modules/token_management/dependencies.py
+
+Purpose:
+Re-exports token/request-context dependencies, composes authenticated logout
+access, and constructs the request-scoped token service.
+
+Dependency flow:
+FastAPI route parameter
+-> AuthRuntime/context/rate-limit or LogoutAccess dependency
+-> PostgresUOWDep
+-> TokenManagementServiceDep
+-> token/session workflow
+"""
 
 from typing import Annotated
 
@@ -30,12 +42,15 @@ def get_token_management_service(
     )
 
 
+# FastAPI constructs the service from runtime cryptography and the cached
+# request-scoped unit of work.
 TokenManagementServiceDep = Annotated[
     TokenManagementService,
     Depends(get_token_management_service),
 ]
 
-# Access-token logout operations require authentication and a sensitive budget.
+# Resolves a bearer principal and sensitive API limit for current-user logout
+# mutations; refresh-token logout uses its separate workflow-specific limit.
 LogoutAccess = Annotated[
     UserPrincipal,
     Depends(secure_route(RouteSecurityPolicy(rate_limit=RateLimitPolicy.SENSITIVE))),

@@ -1,5 +1,14 @@
 """File: app/auth/identity/normalization.py
-Authentication identity validation and normalization.
+
+Purpose:
+Validates and normalizes email addresses, country codes, and national phone
+numbers into the database-compatible identity form.
+
+Dependency flow:
+Schema/service identity input
+-> validation and normalization
+-> canonical database lookup value
+-> repository or canonical identity builder
 
 This module defines the canonical normalization rules used for email addresses,
 phone country codes, and national phone numbers.

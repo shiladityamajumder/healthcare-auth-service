@@ -1,5 +1,19 @@
 """File: app/modules/password_management/repositories.py
-SQLAlchemy persistence for password recovery and password lifecycle workflows."""
+
+Purpose:
+Implements identity/password history/session persistence and the password-reset
+OTP repository port.
+
+Dependency flow:
+PasswordManagementService inside SQLAlchemyUnitOfWork
+-> PasswordRepository with the shared AsyncSession
+-> user/history/session/OTP statements and row locks
+-> PostgreSQL identity tables
+-> ORM state returned or staged
+
+Password and session mutations remain inside one unit-of-work transaction;
+``flush``/staging here never substitutes for commit.
+"""
 
 from __future__ import annotations
 
@@ -25,7 +39,7 @@ class PasswordRepository:
         *,
         for_update: bool = False,
     ) -> Users | None:
-        """Load by id from persistence."""
+        """Load by ID, optionally locking credential state for mutation."""
         statement = select(Users).where(Users.id == user_id)
         if for_update:
             statement = statement.with_for_update()
@@ -37,7 +51,7 @@ class PasswordRepository:
         *,
         for_update: bool = False,
     ) -> Users | None:
-        """Load by email from persistence."""
+        """Load by normalized email, optionally locking recovery state."""
         statement = select(Users).where(Users.email_normalized == email)
         if for_update:
             statement = statement.with_for_update()
@@ -50,7 +64,7 @@ class PasswordRepository:
         *,
         for_update: bool = False,
     ) -> Users | None:
-        """Load by phone from persistence."""
+        """Load by normalized phone, optionally locking recovery state."""
         statement = select(Users).where(
             Users.phone_country_code == country_code,
             Users.phone_number == phone_number,

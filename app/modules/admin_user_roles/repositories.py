@@ -1,5 +1,19 @@
 """File: app/modules/admin_user_roles/repositories.py
-SQLAlchemy repository for user-role assignment administration."""
+
+Purpose:
+Implements user/active-role checks and user-owned role-assignment persistence
+for administrative workflows.
+
+Dependency flow:
+AdminUserRolesService inside SQLAlchemyUnitOfWork
+-> UserRoleRepository with the shared AsyncSession
+-> user/role/assignment-filtered statements
+-> PostgreSQL identity tables
+-> ORM assignments returned or staged
+
+Assignment lookup includes the target user identifier, preventing an
+assignment from being mutated through another user's route.
+"""
 
 from __future__ import annotations
 

@@ -1,5 +1,16 @@
 """File: app/db/uow.py
-Request-scoped SQLAlchemy transaction boundary."""
+
+Purpose:
+Owns one request-scoped SQLAlchemy transaction and is the sole service-layer
+commit/rollback boundary.
+
+Dependency flow:
+PostgresUOWDep
+-> SQLAlchemyUnitOfWork.__aenter__()
+-> shared AsyncSession passed to repositories
+-> explicit service commit or context rollback
+-> transaction/session cleanup
+"""
 
 from __future__ import annotations
 

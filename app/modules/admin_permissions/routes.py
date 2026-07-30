@@ -1,5 +1,17 @@
 """File: app/modules/admin_permissions/routes.py
-Permission-protected permission and role-policy endpoints."""
+
+Purpose:
+Defines ``/admin/permissions`` CRUD and ``/admin/roles/{role_id}/permissions``
+policy endpoints.
+
+Dependency flow:
+HTTP request
+-> FastAPI route
+-> PermissionReadAccess or PermissionManageAccess
+-> AdminPermissionsServiceDep
+-> service/repository/unit of work
+-> APIResponse
+"""
 
 from __future__ import annotations
 
@@ -46,7 +58,12 @@ async def list_permissions(
     principal: PermissionReadAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
-    """Return all active permission definitions."""
+    """Return all active permission definitions.
+
+    ``PermissionReadAccess`` enforces bearer authentication, permission-read
+    authorization, and the admin-read rate limit.
+    """
+    # Resolution enforces authentication, read permission, and rate limiting.
     _ = principal
     return APIResponse.success(data=await service.list_permissions())
 
@@ -62,7 +79,11 @@ async def create_permission(
     principal: PermissionManageAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
-    """Create one permission master record."""
+    """Create one permission master record.
+
+    ``PermissionManageAccess`` protects the mutation and the service preserves
+    active permission-code uniqueness.
+    """
     result = await service.create(
         payload=payload,
         actor_user_id=principal.user_id,
@@ -80,7 +101,8 @@ async def get_permission(
     principal: PermissionReadAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
-    """Return one active permission master record."""
+    """Return one active permission protected by ``PermissionReadAccess``."""
+    # The service needs only the resource ID; the dependency already secured access.
     _ = principal
     return APIResponse.success(data=await service.get(permission_id=permission_id))
 
@@ -96,7 +118,11 @@ async def update_permission(
     principal: PermissionManageAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
-    """Update selected fields on an active permission."""
+    """Update selected fields on an active permission.
+
+    The manage access dependency authorizes and rate-limits the request before
+    the service applies uniqueness checks.
+    """
     return APIResponse.success(
         data=await service.update(
             permission_id=permission_id,
@@ -116,7 +142,10 @@ async def delete_permission(
     principal: PermissionManageAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
-    """Soft-delete one permission master record."""
+    """Soft-delete one permission master record.
+
+    ``PermissionManageAccess`` protects this administrative write operation.
+    """
     return APIResponse.success(
         data=await service.delete(
             permission_id=permission_id,
@@ -135,7 +164,12 @@ async def get_role_permissions(
     principal: PermissionReadAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
-    """Return a role's complete active permission set."""
+    """Return a role's complete active permission set.
+
+    Read access is permission-protected; inactive role or permission records
+    are excluded by the repository/service flow.
+    """
+    # The principal is resolved for route protection, not service input.
     _ = principal
     return APIResponse.success(data=await service.role_permissions(role_id=role_id))
 
@@ -151,7 +185,11 @@ async def replace_role_permissions(
     principal: PermissionManageAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
-    """Atomically replace every permission mapping for a role."""
+    """Atomically replace every permission mapping for a role.
+
+    Manage access is enforced before the unit-of-work transaction replaces the
+    complete mapping set.
+    """
     return APIResponse.success(
         data=await service.replace_role_permissions(
             role_id=role_id,

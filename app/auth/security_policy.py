@@ -1,4 +1,14 @@
-"""Declarative security metadata for FastAPI routes.
+"""File: app/auth/security_policy.py
+
+Purpose:
+Defines immutable declarative metadata for route authentication,
+authorization claims, and generic API rate-limit selection.
+
+Dependency flow:
+Module dependency alias
+-> RouteSecurityPolicy construction and normalization
+-> secure_route()
+-> per-request security dependency
 
 Policies describe authentication, authorization, and generic API rate limits
 without wrapping route functions or hiding their signatures from FastAPI.

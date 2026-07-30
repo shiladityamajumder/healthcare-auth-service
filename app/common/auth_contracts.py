@@ -1,5 +1,13 @@
 """File: app/common/auth_contracts.py
-Reusable, transport-safe response contracts shared by identity modules.
+
+Purpose:
+Defines transport-safe response contracts reused unchanged by identity modules.
+
+Dependency flow:
+Module service or presentation helper
+-> shared StrictModel response type
+-> route response_model validation
+-> canonical API envelope
 
 Only stable response envelopes that are genuinely identical across multiple
 vertical slices belong here. Each module continues to own its request models

@@ -1,5 +1,15 @@
 """File: tests/integration/test_auth_postgres_mapping.py
-Opt-in contract test for the externally migrated PostgreSQL schema."""
+
+Purpose:
+Provides an opt-in integration check for required externally migrated identity
+tables in PostgreSQL.
+
+Dependency flow:
+Integration environment URL
+-> PostgreSQLDatabase
+-> bounded schema verification query
+-> table-contract assertion
+"""
 
 from __future__ import annotations
 

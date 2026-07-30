@@ -1,4 +1,14 @@
-"""Translate SQLAlchemy identity models into policy-owned immutable state.
+"""File: app/auth/authorization/model_adapters.py
+
+Purpose:
+Copies runtime ORM values into immutable state objects accepted by account and
+password-history policies.
+
+Dependency flow:
+Service-loaded Users ORM instance
+-> model adapter
+-> immutable policy state
+-> framework-independent policy validation
 
 Pylance correctly treats class-level SQLAlchemy attributes as ``Mapped[T]``
 descriptors when performing structural protocol checks. Application code reads

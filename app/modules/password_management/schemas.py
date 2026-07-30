@@ -1,5 +1,15 @@
 """File: app/modules/password_management/schemas.py
-Password lifecycle contracts owned by this module."""
+
+Purpose:
+Defines mutually exclusive recovery identities, reset proofs, and authenticated
+password change/set contracts.
+
+Dependency flow:
+HTTP body or service proof result
+-> Pydantic identity/password/device validation
+-> password route/service
+-> response-model serialization
+"""
 
 from __future__ import annotations
 

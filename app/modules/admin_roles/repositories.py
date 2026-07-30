@@ -1,5 +1,19 @@
 """File: app/modules/admin_roles/repositories.py
-SQLAlchemy repository for role administration."""
+
+Purpose:
+Implements active-role lookup, uniqueness checks, and ORM staging for role
+administration.
+
+Dependency flow:
+AdminRolesService inside SQLAlchemyUnitOfWork
+-> RoleRepository with the shared AsyncSession
+-> active/soft-delete-aware SQLAlchemy statements
+-> PostgreSQL roles table
+-> ORM entities returned or staged
+
+``add()`` stages ORM state only; transaction completion belongs to the unit of
+work.
+"""
 
 from __future__ import annotations
 

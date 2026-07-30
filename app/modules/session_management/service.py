@@ -1,5 +1,16 @@
 """File: app/modules/session_management/service.py
-User session inventory and revocation application service."""
+
+Purpose:
+Owns authenticated session inventory and ownership-safe targeted revocation.
+
+Dependency flow:
+SessionManagementServiceDep and UserPrincipal identifiers
+-> request-scoped SQLAlchemyUnitOfWork
+-> SessionManagementRepository on the shared session
+-> ownership check and optional revocation mutation
+-> unit-of-work commit/rollback
+-> response contract
+"""
 
 from __future__ import annotations
 

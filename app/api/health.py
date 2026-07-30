@@ -1,5 +1,16 @@
 """File: app/api/health.py
-Liveness, readiness and bounded PostgreSQL diagnostics."""
+
+Purpose:
+Defines the ``/health`` liveness, readiness, and bounded PostgreSQL diagnostic
+endpoints.
+
+Dependency flow:
+HTTP health request
+-> FastAPI route
+-> app.state settings/PostgreSQL infrastructure
+-> bounded readiness or deep-health probe
+-> APIResponse
+"""
 
 from __future__ import annotations
 
@@ -15,11 +26,17 @@ router = APIRouter(prefix="/health", tags=["Health"])
 
 @router.get("/live", summary="Process liveness")
 async def liveness() -> JSONResponse:
+    """Return public process liveness without probing external dependencies."""
     return APIResponse.success(data={"status": "alive"})
 
 
 @router.get("/ready", summary="Traffic readiness")
 async def readiness(request: Request) -> JSONResponse:
+    """Return public readiness after a bounded PostgreSQL/schema check.
+
+    The route reads lifespan-owned infrastructure from ``app.state``; request
+    context is not authentication or authorization.
+    """
     if not getattr(request.app.state, "ready", False):
         return APIResponse.error(
             error_code="SERVICE_NOT_READY",
@@ -64,6 +81,11 @@ async def readiness(request: Request) -> JSONResponse:
 
 @router.get("/deep", summary="Detailed bounded dependency diagnostics")
 async def deep_health(request: Request) -> JSONResponse:
+    """Return detailed bounded database diagnostics when explicitly enabled.
+
+    This public diagnostic is hidden with a not-found response when deep health
+    is disabled by configuration.
+    """
     settings: AppSettings = request.app.state.settings
     if not settings.DEEP_HEALTH_ENABLED:
         return APIResponse.error(

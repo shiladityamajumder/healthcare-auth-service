@@ -1,5 +1,15 @@
 """File: app/modules/admin_users/openapi.py
-OpenAPI metadata for administrative user endpoints."""
+
+Purpose:
+Exports the tag and shared authentication error metadata for administrative
+user routes.
+
+Dependency flow:
+Admin user route declaration
+-> TAG and RESPONSES
+-> FastAPI router metadata
+-> generated OpenAPI schema
+"""
 
 from typing import Any, cast
 

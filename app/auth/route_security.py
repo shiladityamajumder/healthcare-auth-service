@@ -1,4 +1,17 @@
-"""Composable FastAPI dependencies for declarative route security."""
+"""File: app/auth/route_security.py
+
+Purpose:
+Builds composable FastAPI dependencies from declarative authentication,
+authorization, and generic rate-limit policies.
+
+Dependency flow:
+Module Annotated access alias
+-> secure_route(RouteSecurityPolicy)
+-> required or optional principal resolution
+-> permission/role validation
+-> APIRateLimits enforcement
+-> UserPrincipal returned to the route
+"""
 
 from __future__ import annotations
 
@@ -32,6 +45,7 @@ def get_api_rate_limits(runtime: AuthRuntimeDep) -> APIRateLimits:
     )
 
 
+# FastAPI builds this request-safe facade over process-wide limiter resources.
 APIRateLimitsDep = Annotated[
     APIRateLimits,
     Depends(get_api_rate_limits),
@@ -55,6 +69,9 @@ def secure_route(policy: RouteSecurityPolicy) -> SecurityDependency:
             context: PrincipalRequestContextDep,
             rate_limits: APIRateLimitsDep,
         ) -> UserPrincipal:
+            """Resolve and enforce a required-principal route policy."""
+            # Authentication resolves first; authorization evaluates the fresh
+            # principal, and rate limiting runs before route business logic.
             _authorize(policy=policy, principal=principal)
             await rate_limits.enforce(
                 policy=policy.rate_limit,
@@ -75,6 +92,9 @@ def secure_route(policy: RouteSecurityPolicy) -> SecurityDependency:
         context: RateLimitRequestContextDep,
         rate_limits: APIRateLimitsDep,
     ) -> UserPrincipal | None:
+        """Enforce a public policy with optional authenticated enrichment."""
+        # Absence remains anonymous, while an invalid supplied token already
+        # failed inside OptionalUserDep and cannot downgrade to public access.
         if principal is not None:
             _authorize(policy=policy, principal=principal)
         await rate_limits.enforce(

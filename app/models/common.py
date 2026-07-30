@@ -1,5 +1,14 @@
 """File: app/models/common.py
-Shared SQLAlchemy model helpers for PostgreSQL enum columns."""
+
+Purpose:
+Provides the shared PostgreSQL enum-column mapping used by identity ORM models.
+
+Dependency flow:
+Identity StrEnum type
+-> enum_column()
+-> schema-qualified non-creating PostgreSQL ENUM
+-> ORM mapped column
+"""
 
 from __future__ import annotations
 

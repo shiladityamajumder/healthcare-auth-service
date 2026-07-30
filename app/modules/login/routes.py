@@ -1,5 +1,16 @@
 """File: app/modules/login/routes.py
-Password and phone-OTP login endpoints."""
+
+Purpose:
+Defines public ``/auth/login`` password and phone-OTP authentication endpoints.
+
+Dependency flow:
+HTTP request
+-> typed rate-limit/session request context
+-> AuthRateLimitsDep
+-> PasswordLoginDep or PhoneOtpLoginDep
+-> credential/OTP/session service transaction
+-> APIResponse
+"""
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
@@ -38,7 +49,11 @@ async def login_password(
     rate_limits: AuthRateLimitsDep,
     service: PasswordLoginDep,
 ) -> JSONResponse:
-    """Authenticate a password identity and create a device session."""
+    """Authenticate a password identity and create a device session.
+
+    This public route applies the canonical identity login limit before the
+    service verifies credentials, account policy, and session creation.
+    """
     if payload.channel == "email":
         assert payload.email is not None
         identity = email_identity(payload.email)
@@ -67,7 +82,11 @@ async def request_phone_login_otp(
     rate_limits: AuthRateLimitsDep,
     service: PhoneOtpLoginDep,
 ) -> JSONResponse:
-    """Issue a login challenge for an existing verified phone identity."""
+    """Issue a login challenge for an existing verified phone identity.
+
+    The route is public and purpose-rate-limited; request context supplies
+    limiter metadata, not authentication or authorization.
+    """
     identity = phone_identity(payload.phone_country_code, payload.phone_number)
     await rate_limits.otp_request(
         context=context,
@@ -89,7 +108,11 @@ async def verify_phone_login_otp(
     rate_limits: AuthRateLimitsDep,
     service: PhoneOtpLoginDep,
 ) -> JSONResponse:
-    """Consume a phone login challenge and issue a token pair."""
+    """Consume a phone login challenge and issue a token pair.
+
+    The purpose-specific OTP verification limit runs before the service locks
+    and consumes the one-time challenge and creates the session.
+    """
     identity = phone_identity(payload.phone_country_code, payload.phone_number)
     await rate_limits.otp_verify(
         context=context,

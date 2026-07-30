@@ -1,5 +1,14 @@
 """File: app/auth/request_context/context.py
-Immutable authentication request metadata.
+
+Purpose:
+Builds immutable request metadata from trusted connection information and the
+specific validated header profile selected by a route dependency.
+
+Dependency flow:
+FastAPI Request and typed header dependency
+-> trusted-proxy/IP and metadata normalization
+-> AuthRequestContext
+-> authentication workflow, principal validation, or rate limiting
 
 This module converts trusted connection information and validated authentication
 headers into a request-scoped context consumed by authentication workflows.

@@ -1,5 +1,15 @@
 """File: tests/unit/test_auth_security.py
-Unit tests for password, hashing, and JWT security primitives."""
+
+Purpose:
+Verifies password, HMAC/OTP, JWT/JWKS, token binding, and log-redaction security
+primitives.
+
+Dependency flow:
+Deterministic test settings and inputs
+-> security manager/helper
+-> cryptographic output or verification path
+-> security invariant assertion
+"""
 
 from __future__ import annotations
 
@@ -31,6 +41,7 @@ def auth_settings() -> AppSettings:
 
 @pytest.mark.asyncio
 async def test_password_hash_is_verified_and_rejects_wrong_password() -> None:
+    """Protect Argon2 verification for correct and incorrect credentials."""
     manager = PasswordManager(auth_settings())
     password_hash = await manager.hash("StrongPassword!123")
     assert await manager.verify(password_hash, "StrongPassword!123") is True
@@ -38,6 +49,7 @@ async def test_password_hash_is_verified_and_rejects_wrong_password() -> None:
 
 
 def test_access_token_has_expected_type_and_subject() -> None:
+    """Require access tokens to carry the expected type and identity claims."""
     manager = TokenManager(auth_settings())
     user_id = uuid.uuid4()
     session_id = uuid.uuid4()
@@ -55,6 +67,7 @@ def test_access_token_has_expected_type_and_subject() -> None:
 
 
 def test_password_reset_proof_is_bound_to_challenge_and_token_type() -> None:
+    """Keep reset proofs bound to their challenge and non-access token type."""
     manager = TokenManager(auth_settings())
     user_id = uuid.uuid4()
     challenge_id = uuid.uuid4()
@@ -80,6 +93,7 @@ def test_password_reset_proof_is_bound_to_challenge_and_token_type() -> None:
 
 
 def test_rs256_access_token_and_jwks_round_trip() -> None:
+    """Verify configured RSA signing and public JWKS verification metadata."""
     private_key = rsa.generate_private_key(public_exponent=65_537, key_size=2_048)
     private_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
@@ -121,6 +135,7 @@ def test_rs256_access_token_and_jwks_round_trip() -> None:
 
 
 def test_authentication_secrets_are_redacted_from_structured_logs() -> None:
+    """Prevent authentication secrets from surviving structured log redaction."""
     sanitized = sanitize_log_value(
         {
             "client_secret": "sk_sensitive",
@@ -136,6 +151,7 @@ def test_authentication_secrets_are_redacted_from_structured_logs() -> None:
 
 
 def test_otp_hash_verification_uses_challenge_binding() -> None:
+    """Ensure an OTP digest cannot be replayed against another challenge ID."""
     hashing = SecureHashing(auth_settings())
     challenge_id = uuid.uuid4()
     expected = hashing.otp_hash(challenge_id, "123456")

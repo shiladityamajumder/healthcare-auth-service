@@ -1,5 +1,15 @@
 """File: tests/contract/test_module_architecture.py
-Contract tests that prevent authentication layers from collapsing again."""
+
+Purpose:
+Protects vertical-module ownership and prevents removed authentication business
+layers or inactive feature configuration from returning.
+
+Dependency flow:
+Repository Python source tree
+-> path and AST inspection
+-> allowed architecture rules
+-> contract assertions
+"""
 
 from __future__ import annotations
 

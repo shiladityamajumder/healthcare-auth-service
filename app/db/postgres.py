@@ -1,5 +1,16 @@
 """File: app/db/postgres.py
-Process-wide PostgreSQL engine and request-scoped session lifecycle."""
+
+Purpose:
+Owns the process-wide PostgreSQL engine/session factory and yields isolated
+request-scoped AsyncSession instances.
+
+Dependency flow:
+Validated database settings
+-> process-wide async engine/sessionmaker
+-> DatabaseDep session context
+-> SQLAlchemyUnitOfWork and repositories
+-> session close; engine disposal at shutdown
+"""
 
 from __future__ import annotations
 

@@ -1,5 +1,18 @@
 """File: app/modules/admin_permissions/repositories.py
-SQLAlchemy repository for permission and role-policy administration."""
+
+Purpose:
+Implements active permission/role lookups, uniqueness checks, and atomic
+role-permission mapping replacement over SQLAlchemy.
+
+Dependency flow:
+AdminPermissionsService inside SQLAlchemyUnitOfWork
+-> PermissionRepository with the shared AsyncSession
+-> active/soft-delete-aware statements
+-> PostgreSQL permission and mapping tables
+-> ORM entities or staged mapping changes
+
+Deletes and additions remain uncommitted until the owning unit of work exits.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,15 @@
-"""File: tests/unit/test_auth_rate_limits.py"""
+"""File: tests/unit/test_auth_rate_limits.py
+
+Purpose:
+Verifies core counters, privacy-preserving authentication/API keys, per-route
+switches, and public-policy consistency.
+
+Dependency flow:
+Test context/principal
+-> AuthRateLimits or APIRateLimits
+-> recording/in-memory RateLimiter
+-> key and decision assertions
+"""
 
 from __future__ import annotations
 
@@ -18,6 +29,7 @@ from tests.conftest import build_test_settings
 
 @pytest.mark.asyncio
 async def test_in_memory_rate_limiter_blocks_after_limit() -> None:
+    """Require the development/test backend to enforce its fixed window."""
     limiter = InMemoryRateLimiter()
     await enforce_rate_limit(limiter, keys=["login:test"], limit=2, window_seconds=60)
     await enforce_rate_limit(limiter, keys=["login:test"], limit=2, window_seconds=60)
@@ -42,6 +54,7 @@ class RecordingLimiter:
 
 @pytest.mark.asyncio
 async def test_auth_rate_limit_keys_do_not_contain_raw_identity() -> None:
+    """Ensure workflow limiter storage never receives raw identity or IP values."""
     settings = build_test_settings()
     limiter = RecordingLimiter()
     policy = AuthRateLimits(
@@ -66,6 +79,7 @@ async def test_auth_rate_limit_keys_do_not_contain_raw_identity() -> None:
 
 @pytest.mark.asyncio
 async def test_api_rate_limits_hash_principal_and_origin_dimensions() -> None:
+    """Require generic API limits to hash every available security dimension."""
     settings = build_test_settings()
     limiter = RecordingLimiter()
     policy = APIRateLimits(
@@ -103,6 +117,7 @@ async def test_api_rate_limits_hash_principal_and_origin_dimensions() -> None:
 
 @pytest.mark.asyncio
 async def test_api_rate_limit_none_is_an_explicit_per_route_switch() -> None:
+    """Protect the explicit route-level opt-out from backend counter writes."""
     settings = build_test_settings()
     limiter = RecordingLimiter()
     policy = APIRateLimits(

@@ -1,11 +1,26 @@
 """File: app/auth/workflows/rate_limits.py
-Authentication-specific rate-limit policy and key construction.
+
+Purpose:
+Applies workflow-specific login, registration, OTP, password-reset, refresh,
+and refresh-token logout rate-limit policies.
+
+Dependency flow:
+Public authentication route
+-> AuthRateLimits method selected by workflow
+-> normalized operation/identity/request dimensions
+-> domain-separated SecureHashing
+-> core RateLimiter
+-> service execution or RateLimitError
 
 This module converts authentication operations and request metadata into
 bounded, privacy-preserving rate-limit keys.
 
 The generic rate-limit backend and enforcement mechanism remain in
 ``app.core.rate_limiting``.
+
+These policies remain workflow-specific because their strongest keys include
+validated payload identity, OTP purpose, or token fingerprints that a generic
+route dependency cannot infer safely.
 """
 
 from __future__ import annotations
@@ -255,6 +270,8 @@ class AuthRateLimits:
         value: str,
     ) -> str:
         """Create one privacy-preserving rate-limit key."""
+        # Backend storage receives only a namespace-separated digest, never the
+        # submitted identity, token fingerprint, address, or device identifier.
         digest = self._hashing.digest(
             value,
             namespace=f"rate-limit:{dimension}",

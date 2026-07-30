@@ -1,5 +1,15 @@
 """File: app/modules/admin_user_roles/schemas.py
-User-role assignment request and response contracts."""
+
+Purpose:
+Defines global/scoped user-role assignment inputs, validity-window rules, and
+assignment response contracts.
+
+Dependency flow:
+HTTP body or service result
+-> Pydantic scope/window validation
+-> assignment route/service
+-> response-model serialization
+"""
 
 from __future__ import annotations
 

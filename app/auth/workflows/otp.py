@@ -1,5 +1,15 @@
 """File: app/auth/workflows/otp.py
-Reusable OTP challenge generation and verification infrastructure.
+
+Purpose:
+Coordinates bounded OTP issuance, hashed persistence, row-locked verification,
+attempt tracking, expiry, and one-time consumption.
+
+Dependency flow:
+Owning service transaction and OTP repository port
+-> OTPService issue/verify
+-> SecureHashing and OTP policy checks
+-> repository lock/update operations
+-> issued or verified challenge result
 
 The service coordinates OTP issuance and verification. Each vertical
 authentication module supplies a repository implementation through
@@ -185,6 +195,8 @@ class OTPService:
             normalized_destination
         )
 
+        # Serialize issuance per destination/purpose before cooldown and resend
+        # counters are evaluated.
         await repository.acquire_issue_lock(
             destination_hash=destination_hash,
             purpose=normalized_purpose,
@@ -244,6 +256,7 @@ class OTPService:
                 ),
             )
 
+        # A newly issued challenge supersedes every still-active predecessor.
         await repository.invalidate_active(
             destination_hash=destination_hash,
             purpose=normalized_purpose,
@@ -324,6 +337,8 @@ class OTPService:
             purpose
         )
 
+        # The repository lock makes attempts, blocking, expiry, and consumption
+        # atomic across concurrent verification requests.
         challenge = await repository.get_for_update(
             challenge_id
         )
@@ -397,6 +412,7 @@ class OTPService:
                 failure=OTPFailure.MISMATCH,
             )
 
+        # Successful verification permanently consumes the one-time challenge.
         challenge.consumed_at = now
 
         return OTPVerification(

@@ -1,4 +1,14 @@
-"""File: tests/unit/test_uow.py"""
+"""File: tests/unit/test_uow.py
+
+Purpose:
+Verifies request-scoped unit-of-work commit and rollback ownership.
+
+Dependency flow:
+Fake AsyncSession transaction
+-> SQLAlchemyUnitOfWork context
+-> success/failure/commit-failure path
+-> commit and rollback assertions
+"""
 
 from __future__ import annotations
 

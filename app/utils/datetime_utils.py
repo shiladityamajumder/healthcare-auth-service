@@ -1,5 +1,13 @@
 """File: app/utils/datetime_utils.py
-Timezone-aware datetime utilities.
+
+Purpose:
+Provides timezone-aware creation, validation, conversion, and comparison
+helpers used across persistence and application workflows.
+
+Dependency flow:
+Settings timezone or aware datetime
+-> validation and UTC/application-zone conversion
+-> service, model type, or response metadata consumer
 
 The configured application timezone is the authoritative timezone for
 application-facing dates and times. UTC remains the canonical timezone for

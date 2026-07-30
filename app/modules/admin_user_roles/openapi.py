@@ -1,5 +1,15 @@
 """File: app/modules/admin_user_roles/openapi.py
-OpenAPI metadata for administrative user-role assignment endpoints."""
+
+Purpose:
+Exports the tag and authentication error metadata for user-role assignment
+route declarations.
+
+Dependency flow:
+User-role route declaration
+-> TAG and RESPONSES
+-> FastAPI router metadata
+-> generated OpenAPI schema
+"""
 
 from typing import Any, cast
 

@@ -1,5 +1,15 @@
 """File: app/core/rate_limiting.py
-Replaceable rate-limiting backends and enforcement helpers.
+
+Purpose:
+Defines replaceable rate-limit backends and the shared enforcement mechanism
+used by authentication and generic API policies.
+
+Dependency flow:
+Workflow or route-policy keys and limits
+-> enforce_rate_limit()
+-> configured disabled, in-memory, or Redis backend
+-> counter decisions
+-> success or RateLimitError
 
 This module provides a shared asynchronous rate-limiting abstraction with
 three implementations:
@@ -13,7 +23,7 @@ uses the process-wide client created by ``app.db.redis_client.RedisClient``.
 The application lifespan remains responsible for closing that shared client.
 
 Authentication-specific key construction and policy selection belong in
-``app.auth.rate_limits``. This module only manages counters, windows, backend
+``app.auth.workflows.rate_limits``. This module only manages counters, windows, backend
 selection, and enforcement.
 """
 

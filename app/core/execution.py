@@ -1,5 +1,14 @@
 """File: app/core/execution.py
-    Execution primitives for observable, bounded asynchronous operations.
+
+Purpose:
+Provides observable timeout and retry primitives for bounded asynchronous
+infrastructure operations.
+
+Dependency flow:
+Infrastructure awaitable
+-> timeout/retry policy
+-> sanitized structured logging
+-> result or typed timeout failure
 """
 
 from __future__ import annotations

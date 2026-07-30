@@ -1,5 +1,14 @@
 """File: app/modules/login/openapi.py
-OpenAPI metadata for login endpoints."""
+
+Purpose:
+Exports the tag and authentication error metadata for public login routes.
+
+Dependency flow:
+Login route declaration
+-> TAG and RESPONSES
+-> FastAPI router metadata
+-> generated OpenAPI schema
+"""
 
 from typing import Any, cast
 

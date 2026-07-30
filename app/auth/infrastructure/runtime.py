@@ -1,5 +1,15 @@
 """File: app/auth/infrastructure/runtime.py
-Process-wide authentication infrastructure container.
+
+Purpose:
+Holds immutable process-wide authentication primitives created during FastAPI
+startup and safely reused by request dependencies.
+
+Dependency flow:
+AppSettings and lifespan-owned limiter
+-> build_auth_runtime()
+-> AuthRuntime stored on app.state
+-> AuthRuntimeDep
+-> request-scoped workflow/service construction
 
 The runtime stores reusable authentication infrastructure that is safe to
 share across requests. Request-scoped business services, repositories,

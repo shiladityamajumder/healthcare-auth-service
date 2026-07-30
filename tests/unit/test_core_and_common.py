@@ -1,5 +1,15 @@
 """File: tests/unit/test_core_and_common.py
-Grouped unit tests for common contracts and core utilities."""
+
+Purpose:
+Verifies canonical responses/exceptions, pagination/filter/sort helpers,
+bounded execution, and trace-context parsing.
+
+Dependency flow:
+Test input
+-> common contract or core utility
+-> result/exception
+-> behavioral assertion
+"""
 
 from __future__ import annotations
 

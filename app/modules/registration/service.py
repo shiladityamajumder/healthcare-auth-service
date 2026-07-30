@@ -1,5 +1,17 @@
 """File: app/modules/registration/service.py
-Registration application services for email/password and phone/OTP flows."""
+
+Purpose:
+Owns duplicate-safe account creation, initial active-role assignment,
+email/password setup, phone OTP consumption, and first-session issuance.
+
+Dependency flow:
+EmailPasswordRegistrationDep or PhoneOtpRegistrationDep
+-> validation/password/OTP components
+-> request-scoped SQLAlchemyUnitOfWork
+-> RegistrationRepository and role/claim loading
+-> SessionTokenIssuer or verification challenge
+-> commit/rollback and registration response
+"""
 
 from __future__ import annotations
 
@@ -157,6 +169,8 @@ class _RegistrationWriter:
         if password_hash:
             repository.add_password_history(user_id=user.id, password_hash=password_hash)
         repository.assign_roles(user_id=user.id, roles=roles)
+        # Flush materializes pending account, role, and history state for later
+        # workflow steps; it does not commit the registration transaction.
         await self._uow.flush()
         return user
 
@@ -404,6 +418,8 @@ class PhoneOtpRegistrationService(_RegistrationBase):
         try:
             async with self._uow:
                 repository = RegistrationRepository(self._uow.session)
+                # Consume and validate the locked OTP before account creation so
+                # a replayed challenge can never create another phone identity.
                 verification = await self._otp.verify(
                     repository=repository,
                     challenge_id=payload.challenge_id,
@@ -416,6 +432,8 @@ class PhoneOtpRegistrationService(_RegistrationBase):
                     code=payload.code,
                 )
                 OtpVerificationPolicy.require_valid(verification)
+                # Recheck uniqueness inside the same transaction that inserts
+                # the account; the database constraint remains the race guard.
                 if await repository.phone_exists(country, phone):
                     raise IdentityAlreadyExistsError(
                         "An account with this country code and phone number is already registered.",

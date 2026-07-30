@@ -1,5 +1,15 @@
 """File: tests/unit/test_auth_policy.py
-Unit tests for shared authentication policies and normalization."""
+
+Purpose:
+Verifies shared identity normalization, password policy, token-type separation,
+and hashing namespace invariants.
+
+Dependency flow:
+Test input
+-> authentication policy/security helper
+-> normalized result or expected rejection
+-> invariant assertion
+"""
 
 from __future__ import annotations
 

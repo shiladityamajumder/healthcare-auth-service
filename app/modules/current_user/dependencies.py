@@ -1,4 +1,16 @@
-"""Dependency composition for authenticated current-user endpoints."""
+"""File: app/modules/current_user/dependencies.py
+
+Purpose:
+Composes current-user authentication/rate-limit policies and constructs the
+request-scoped profile service.
+
+Dependency flow:
+FastAPI route parameter
+-> CurrentUserReadAccess/CurrentUserWriteAccess via secure_route()
+-> bearer principal and standard/sensitive rate limit
+-> PostgresUOWDep
+-> CurrentUserServiceDep
+"""
 
 from typing import Annotated
 
@@ -20,16 +32,19 @@ def get_current_user_service(uow: PostgresUOWDep) -> CurrentUserService:
     return CurrentUserService(uow=uow)
 
 
+# FastAPI constructs one service around the cached request unit of work.
 CurrentUserServiceDep = Annotated[
     CurrentUserService,
     Depends(get_current_user_service),
 ]
 
-# Profile mutations receive a tighter budget than ordinary account reads.
+# Resolves the authenticated bearer principal and applies the standard API
+# limit; no additional permission claim is required for self-service reads.
 CurrentUserReadAccess = Annotated[
     UserPrincipal,
     Depends(secure_route(RouteSecurityPolicy(rate_limit=RateLimitPolicy.STANDARD))),
 ]
+# Self-service mutations retain authentication but use the sensitive API tier.
 CurrentUserWriteAccess = Annotated[
     UserPrincipal,
     Depends(secure_route(RouteSecurityPolicy(rate_limit=RateLimitPolicy.SENSITIVE))),

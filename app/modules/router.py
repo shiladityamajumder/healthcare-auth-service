@@ -1,5 +1,14 @@
 """File: app/modules/router.py
-Version-independent registry of vertical identity modules."""
+
+Purpose:
+Registers every vertical identity module on one version-independent router.
+
+Dependency flow:
+Module-owned APIRouters
+-> modules router registry
+-> app.api.v1 router
+-> FastAPI application
+"""
 
 from __future__ import annotations
 

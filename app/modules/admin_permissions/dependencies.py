@@ -1,4 +1,16 @@
-"""Dependency composition for permission administration endpoints."""
+"""File: app/modules/admin_permissions/dependencies.py
+
+Purpose:
+Composes permission/role-policy access controls and the request-scoped
+administration service.
+
+Dependency flow:
+FastAPI route parameter
+-> PermissionReadAccess/PermissionManageAccess via secure_route()
+-> bearer principal, permission, and rate-limit validation
+-> PostgresUOWDep
+-> AdminPermissionsServiceDep
+"""
 
 from typing import Annotated
 
@@ -10,7 +22,8 @@ from app.auth.security_policy import RateLimitPolicy, RouteSecurityPolicy
 from app.core.di import PostgresUOWDep
 from app.modules.admin_permissions.service import AdminPermissionsService
 
-# These aliases make read and mutation security explicit in route signatures.
+# Resolves the bearer principal, permission-read claim, and admin-read rate
+# policy for each protected request.
 PermissionReadAccess = Annotated[
     UserPrincipal,
     Depends(
@@ -22,6 +35,7 @@ PermissionReadAccess = Annotated[
         )
     ),
 ]
+# Permission and mapping mutations use the manage claim and write policy.
 PermissionManageAccess = Annotated[
     UserPrincipal,
     Depends(
@@ -44,6 +58,7 @@ def get_admin_permissions_service(uow: PostgresUOWDep) -> AdminPermissionsServic
     return AdminPermissionsService(uow=uow)
 
 
+# FastAPI constructs one service around the cached request unit of work.
 AdminPermissionsServiceDep = Annotated[
     AdminPermissionsService,
     Depends(get_admin_permissions_service),

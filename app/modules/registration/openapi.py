@@ -1,5 +1,14 @@
 """File: app/modules/registration/openapi.py
-OpenAPI metadata for registration endpoints."""
+
+Purpose:
+Exports the tag and authentication error metadata for registration routes.
+
+Dependency flow:
+Registration route declaration
+-> TAG and RESPONSES
+-> FastAPI router metadata
+-> generated OpenAPI schema
+"""
 
 from typing import Any, cast
 

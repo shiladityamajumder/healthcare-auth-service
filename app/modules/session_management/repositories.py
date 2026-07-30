@@ -1,5 +1,19 @@
 """File: app/modules/session_management/repositories.py
-SQLAlchemy persistence for user session inventory and revocation."""
+
+Purpose:
+Implements active session inventory and row-locked session lookup for safe
+user-owned revocation.
+
+Dependency flow:
+SessionManagementService inside SQLAlchemyUnitOfWork
+-> SessionManagementRepository with the shared AsyncSession
+-> user-owned active-session filters or FOR UPDATE lookup
+-> PostgreSQL sessions table
+-> ORM sessions returned to the service
+
+The service verifies ownership after the locked lookup before staging
+revocation; commit remains with the unit of work.
+"""
 
 from __future__ import annotations
 

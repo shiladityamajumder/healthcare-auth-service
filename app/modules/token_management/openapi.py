@@ -1,5 +1,15 @@
 """File: app/modules/token_management/openapi.py
-OpenAPI metadata for token and logout endpoints."""
+
+Purpose:
+Exports the tag and authentication error metadata for token, JWKS, and logout
+routes.
+
+Dependency flow:
+Token route declaration
+-> TAG and RESPONSES
+-> FastAPI router metadata
+-> generated OpenAPI schema
+"""
 
 from typing import Any, cast
 

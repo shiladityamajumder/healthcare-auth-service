@@ -1,4 +1,16 @@
-"""Dependency composition for session-management endpoints."""
+"""File: app/modules/session_management/dependencies.py
+
+Purpose:
+Composes authenticated session read/revocation policies and constructs the
+request-scoped session service.
+
+Dependency flow:
+FastAPI route parameter
+-> SessionReadAccess/SessionRevokeAccess via secure_route()
+-> bearer principal and standard/sensitive rate limit
+-> PostgresUOWDep
+-> SessionManagementServiceDep
+"""
 
 from typing import Annotated
 
@@ -18,16 +30,18 @@ def get_session_management_service(
     return SessionManagementService(uow=uow)
 
 
+# FastAPI constructs the service from the cached request unit of work.
 SessionManagementServiceDep = Annotated[
     SessionManagementService,
     Depends(get_session_management_service),
 ]
 
-# Revocation writes are more tightly limited than session-list reads.
+# Session inventory resolves a bearer principal and the standard API limit.
 SessionReadAccess = Annotated[
     UserPrincipal,
     Depends(secure_route(RouteSecurityPolicy(rate_limit=RateLimitPolicy.STANDARD))),
 ]
+# Revocation keeps the same authentication checks with the sensitive limit.
 SessionRevokeAccess = Annotated[
     UserPrincipal,
     Depends(secure_route(RouteSecurityPolicy(rate_limit=RateLimitPolicy.SENSITIVE))),

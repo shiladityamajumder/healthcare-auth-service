@@ -1,5 +1,14 @@
 """File: app/models/identity.py
-SQLAlchemy mappings for the externally managed identity schema.
+
+Purpose:
+Maps users, credentials, roles, permissions, sessions, tokens, OTP challenges,
+and audit records in the externally managed ``identity`` schema.
+
+Dependency flow:
+Repository AsyncSession operation
+-> identity ORM mapping and relationships
+-> externally migrated PostgreSQL tables
+-> mapped entities returned to services
 
 These mappings represent the existing PostgreSQL ``identity`` schema. Schema
 creation and migrations remain owned by the external migration process.

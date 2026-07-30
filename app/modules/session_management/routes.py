@@ -1,5 +1,17 @@
 """File: app/modules/session_management/routes.py
-User session inventory and revocation endpoints."""
+
+Purpose:
+Defines ``/auth/sessions`` authenticated inventory and targeted revocation
+endpoints.
+
+Dependency flow:
+HTTP request
+-> FastAPI route
+-> SessionReadAccess or SessionRevokeAccess
+-> SessionManagementServiceDep
+-> service/repository/unit of work
+-> APIResponse
+"""
 
 import uuid
 
@@ -27,7 +39,11 @@ async def list_sessions(
     principal: SessionReadAccess,
     service: SessionManagementServiceDep,
 ) -> JSONResponse:
-    """Return active sessions and identify the current session."""
+    """Return active sessions and identify the current session.
+
+    ``SessionReadAccess`` authenticates the caller and applies the standard API
+    rate limit before user-owned sessions are queried.
+    """
     return APIResponse.success(
         data=await service.list_active(
             user_id=principal.user_id,
@@ -46,7 +62,11 @@ async def revoke_session(
     principal: SessionRevokeAccess,
     service: SessionManagementServiceDep,
 ) -> JSONResponse:
-    """Revoke only a session owned by the authenticated user."""
+    """Revoke only a session owned by the authenticated user.
+
+    ``SessionRevokeAccess`` applies strict principal validation and the
+    sensitive limit; the service rejects missing or foreign sessions.
+    """
     return APIResponse.success(
         data=await service.revoke(
             user_id=principal.user_id,

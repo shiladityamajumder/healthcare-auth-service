@@ -1,5 +1,16 @@
 """File: app/modules/token_management/routes.py
-Refresh-token rotation, logout, and JWKS endpoints."""
+
+Purpose:
+Defines ``/auth`` JWKS publication, refresh-token rotation, and refresh/access
+token logout endpoints.
+
+Dependency flow:
+HTTP request
+-> route-specific token, context, rate-limit, or LogoutAccess dependency
+-> TokenManagementServiceDep where persistence is required
+-> token/session service and unit of work
+-> APIResponse
+"""
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
@@ -33,7 +44,11 @@ router = APIRouter(prefix="/auth", tags=[TAG], responses=RESPONSES)
     summary="Publish active JWT verification keys",
 )
 async def jwks(tokens: TokenManagerDep) -> JSONResponse:
-    """Publish public RS256 keys without exposing private key material."""
+    """Publish configured public RS256 verification keys.
+
+    This public endpoint resolves ``TokenManagerDep`` only; it never returns
+    private key material and reports not found when no JWKS keys are configured.
+    """
     keys = tokens.public_jwks()
     if not keys:
         raise NotFoundError("JWKS is available only when RS256 is configured.")
@@ -51,7 +66,11 @@ async def refresh_token(
     rate_limits: AuthRateLimitsDep,
     service: TokenManagementServiceDep,
 ) -> JSONResponse:
-    """Rotate the refresh token and reject token-family reuse."""
+    """Rotate a valid refresh token and reject token-family reuse.
+
+    The endpoint is refresh-token protected by the service/token manager;
+    ``AuthRateLimitsDep`` applies the payload-aware refresh fingerprint limit.
+    """
     await rate_limits.refresh(
         context=context,
         token_fingerprint=payload.refresh_token[-32:],
@@ -76,7 +95,11 @@ async def logout(
     rate_limits: AuthRateLimitsDep,
     service: TokenManagementServiceDep,
 ) -> JSONResponse:
-    """Revoke the session identified by a valid refresh token."""
+    """Revoke the session identified by a valid refresh token.
+
+    This route does not require an access principal. Token validation occurs in
+    the service and the specialized logout limiter keys the token fingerprint.
+    """
     await rate_limits.logout(
         context=context,
         token_fingerprint=payload.refresh_token[-32:],
@@ -93,7 +116,11 @@ async def logout_others(
     principal: LogoutAccess,
     service: TokenManagementServiceDep,
 ) -> JSONResponse:
-    """Preserve the current session and revoke all remaining sessions."""
+    """Preserve the authenticated current session and revoke all others.
+
+    ``LogoutAccess`` validates the bearer principal/session and applies the
+    sensitive API limit before the service performs user-owned revocation.
+    """
     return APIResponse.success(
         data=await service.logout_others(
             user_id=principal.user_id,
@@ -111,7 +138,11 @@ async def logout_all(
     principal: LogoutAccess,
     service: TokenManagementServiceDep,
 ) -> JSONResponse:
-    """Revoke every active session, including the current one."""
+    """Revoke every active session for the authenticated user.
+
+    ``LogoutAccess`` protects and rate-limits this access-token-authenticated
+    mutation; the principal user identifier scopes the update.
+    """
     return APIResponse.success(data=await service.logout_all(user_id=principal.user_id))
 
 

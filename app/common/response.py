@@ -1,5 +1,15 @@
 """File: app/common/response.py
-Canonical external API response envelope.
+
+Purpose:
+Builds the canonical success/error envelope and response metadata returned to
+API clients.
+
+Dependency flow:
+Route result or exception handler
+-> APIResponse.success() or APIResponse.error()
+-> request/correlation context and optional pagination
+-> JSON-safe encoding
+-> JSONResponse
 
 This module defines the stable JSON response contract exposed to API clients.
 All timestamps are generated through the shared datetime utility to preserve

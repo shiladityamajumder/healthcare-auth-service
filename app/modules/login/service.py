@@ -1,5 +1,17 @@
 """File: app/modules/login/service.py
-Password and phone-OTP login application services."""
+
+Purpose:
+Owns password and phone-OTP authentication, account policy checks, login
+attempt state, and first-class device session/token issuance.
+
+Dependency flow:
+PasswordLoginDep or PhoneOtpLoginDep
+-> request-scoped SQLAlchemyUnitOfWork
+-> LoginRepository and password/OTP policy components
+-> authorization claims and SessionTokenIssuer
+-> staged audit/session mutations
+-> commit/rollback and token response
+"""
 
 from __future__ import annotations
 
@@ -57,6 +69,7 @@ class _LoginBase:
         context: AuthRequestContext,
         auth_method: str,
     ) -> TokenPairResponse:
+        """Load current claims and stage a session/token pair in the active transaction."""
         claims = await repository.authorization_claims(user_id=user.id, now=utc_now())
         user_dto = UserResponse.model_validate(
             public_user_data(
@@ -92,6 +105,7 @@ class _LoginBase:
         failure_code: str | None,
         context: AuthRequestContext,
     ) -> None:
+        """Stage a privacy-preserving login audit record in the current transaction."""
         repository.add_login_attempt(
             user_id=user.id if user is not None else None,
             identifier_hash=identifier_hash,
@@ -157,6 +171,8 @@ class PasswordLoginService(_LoginBase):
                 user = await repository.get_by_phone(phone[0], phone[1], for_update=True)
             identifier_hash = self._hashing.identifier_hash(identifier)
             if user is None:
+                # Run a real Argon2 verification path for unknown identities to
+                # reduce timing differences that could reveal account existence.
                 await self._passwords.verify_dummy(payload.password)
                 self._record_attempt(
                     repository=repository,
@@ -176,6 +192,7 @@ class PasswordLoginService(_LoginBase):
                     context=context,
                     verified_channel=verified_channel,
                 )
+        # Raise only after the unit of work commits attempt/lockout state.
         if pending_error is not None:
             raise pending_error
         assert result is not None
@@ -191,6 +208,7 @@ class PasswordLoginService(_LoginBase):
         context: AuthRequestContext,
         verified_channel: str,
     ) -> tuple[TokenPairResponse | None, InvalidCredentialsError | None]:
+        """Validate credentials/account state and stage audit/session mutations."""
         now = utc_now()
         if user.password_hash:
             password_valid = await self._passwords.verify(
@@ -290,6 +308,7 @@ class PhoneOtpLoginService(_LoginBase):
         self._notifications = NotificationDispatcher(notifications)
 
     def _otp_response(self, issued: IssuedOTP) -> OtpChallengeResponse:
+        """Project challenge metadata with environment-gated development code exposure."""
         expose = self._settings.OTP_DEV_EXPOSE_CODE and self._settings.ENVIRONMENT.value in {
             "local",
             "development",
@@ -347,6 +366,8 @@ class PhoneOtpLoginService(_LoginBase):
         result: TokenPairResponse | None = None
         async with self._uow:
             repository = LoginRepository(self._uow.session)
+            # OTP verification locks and consumes the challenge before session
+            # issuance can succeed.
             verification = await self._otp.verify(
                 repository=repository,
                 challenge_id=payload.challenge_id,
@@ -404,6 +425,8 @@ class PhoneOtpLoginService(_LoginBase):
                         context=context,
                         auth_method="otp",
                     )
+        # Preserve failed-attempt audit mutations before returning a uniform
+        # credential error to the client.
         if pending_error is not None:
             raise pending_error
         assert result is not None

@@ -1,5 +1,17 @@
 """File: app/modules/admin_users/routes.py
-Permission-protected administrative user endpoints."""
+
+Purpose:
+Defines ``/admin/users`` permission-protected list, detail, status, and global
+session-revocation endpoints.
+
+Dependency flow:
+HTTP request
+-> FastAPI route
+-> AdminUserReadAccess or AdminUserManageAccess
+-> AdminUsersServiceDep
+-> service/repository/unit of work
+-> APIResponse
+"""
 
 from __future__ import annotations
 
@@ -46,7 +58,12 @@ async def list_users(
     search: Annotated[str | None, Query(min_length=2, max_length=320)] = None,
     status_filter: Annotated[UserStatus | None, Query(alias="status")] = None,
 ) -> JSONResponse:
-    """Return a filtered, deterministic page of identities."""
+    """Return a filtered, deterministic page of identities.
+
+    ``AdminUserReadAccess`` authenticates the caller, requires
+    ``identity.users.read``, and applies the administrative read limit.
+    """
+    # Resolution enforces authentication, user-read permission, and rate limiting.
     _ = principal
     data, pagination = await service.list_users(
         pagination=PaginationParams(limit=limit, offset=offset),
@@ -66,7 +83,12 @@ async def get_user(
     principal: AdminUserReadAccess,
     service: AdminUsersServiceDep,
 ) -> JSONResponse:
-    """Return one identity visible to an authorized administrator."""
+    """Return one identity visible to an authorized administrator.
+
+    Access is protected by ``AdminUserReadAccess`` before the service loads the
+    requested user.
+    """
+    # The service needs only user_id after the dependency secures the request.
     _ = principal
     return APIResponse.success(data=await service.get_user(user_id=user_id))
 
@@ -82,7 +104,11 @@ async def update_user_status(
     principal: AdminUserManageAccess,
     service: AdminUsersServiceDep,
 ) -> JSONResponse:
-    """Activate, suspend, lock, or close a user account."""
+    """Activate, suspend, lock, or close a user account.
+
+    ``AdminUserManageAccess`` enforces manage permission and the admin-write
+    limit; the service preserves status-transition invariants.
+    """
     return APIResponse.success(
         data=await service.update_status(
             user_id=user_id,
@@ -103,7 +129,11 @@ async def logout_user_from_all_devices(
     principal: AdminUserManageAccess,
     service: AdminUsersServiceDep,
 ) -> JSONResponse:
-    """Administratively revoke every active session for a user."""
+    """Administratively revoke every active session for a user.
+
+    The manage access dependency protects this mutation, while the service
+    requires the supplied administrative reason.
+    """
     return APIResponse.success(
         data=await service.logout_all(
             user_id=user_id,

@@ -1,5 +1,15 @@
 """File: app/modules/registration/schemas.py
-Registration request and response contracts owned by this module."""
+
+Purpose:
+Defines email/password and phone/OTP registration inputs, initial role lists,
+device metadata, and registration responses.
+
+Dependency flow:
+HTTP body or service result
+-> Pydantic identity/role/device validation
+-> registration route/service
+-> response-model serialization
+"""
 
 from __future__ import annotations
 

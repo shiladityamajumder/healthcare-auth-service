@@ -1,4 +1,16 @@
-"""Dependency composition for email and phone registration endpoints."""
+"""File: app/modules/registration/dependencies.py
+
+Purpose:
+Re-exports public registration context/rate-limit dependencies and constructs
+email/password and phone/OTP registration services.
+
+Dependency flow:
+FastAPI route parameter
+-> RateLimitRequestContext or SessionCreationRequestContext
+-> AuthRuntimeDep and PostgresUOWDep
+-> EmailPasswordRegistrationDep or PhoneOtpRegistrationDep
+-> account/role/OTP/session workflow
+"""
 
 from typing import Annotated
 
@@ -53,10 +65,14 @@ def get_phone_registration_service(
     )
 
 
+# FastAPI builds the email service from the cached request unit of work and
+# process-wide password, OTP, token, and notification primitives.
 EmailPasswordRegistrationDep = Annotated[
     EmailPasswordRegistrationService,
     Depends(get_email_registration_service),
 ]
+# The phone service shares the same transaction/runtime boundaries and verifies
+# the one-time challenge before it creates an account.
 PhoneOtpRegistrationDep = Annotated[
     PhoneOtpRegistrationService,
     Depends(get_phone_registration_service),

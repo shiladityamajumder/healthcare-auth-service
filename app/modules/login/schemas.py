@@ -1,5 +1,15 @@
 """File: app/modules/login/schemas.py
-Password and phone-OTP login contracts owned by this module."""
+
+Purpose:
+Defines mutually exclusive password identities and phone-OTP request/
+verification contracts with optional device metadata.
+
+Dependency flow:
+HTTP body
+-> Pydantic identity/device validation
+-> login route/service
+-> shared token/user response contracts
+"""
 
 from __future__ import annotations
 

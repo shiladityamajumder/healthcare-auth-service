@@ -1,5 +1,15 @@
 """File: app/modules/email_verification/openapi.py
-OpenAPI metadata for email verification endpoints."""
+
+Purpose:
+Exports the tag and authentication error metadata for email-verification
+routes.
+
+Dependency flow:
+Email-verification route declaration
+-> TAG and RESPONSES
+-> FastAPI router metadata
+-> generated OpenAPI schema
+"""
 
 from typing import Any, cast
 

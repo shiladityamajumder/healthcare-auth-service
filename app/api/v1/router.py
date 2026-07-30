@@ -1,5 +1,14 @@
 """File: app/api/v1/router.py
-API version-one router registry."""
+
+Purpose:
+Registers all vertical module routers beneath the version-one API router.
+
+Dependency flow:
+Application composition
+-> version-one APIRouter
+-> modules router registry
+-> module route trees
+"""
 
 from __future__ import annotations
 

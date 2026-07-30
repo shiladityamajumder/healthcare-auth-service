@@ -1,5 +1,15 @@
 """File: app/modules/admin_users/schemas.py
-Administrative user request and response contracts."""
+
+Purpose:
+Defines validated administrative user list, status-change, and logout request
+and response contracts.
+
+Dependency flow:
+HTTP body/query or service result
+-> strict Pydantic validation
+-> admin user route/service
+-> response-model serialization
+"""
 
 from __future__ import annotations
 

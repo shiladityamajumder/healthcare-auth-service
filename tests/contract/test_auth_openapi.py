@@ -1,4 +1,15 @@
-"""File: tests/contract/test_auth_openapi.py"""
+"""File: tests/contract/test_auth_openapi.py
+
+Purpose:
+Protects authentication OpenAPI, header exposure, route-method, and declarative
+security-policy contracts.
+
+Dependency flow:
+create_app(test settings)
+-> generated OpenAPI or recursive APIRoute tree
+-> dependency/security metadata inspection
+-> architectural assertions
+"""
 
 from __future__ import annotations
 
@@ -48,6 +59,7 @@ EXPECTED_IDENTITY_PATHS = {
 
 
 def test_vertical_identity_routes_and_security_contract_are_exposed() -> None:
+    """Protect the public route inventory and Swagger bearer scheme."""
     schema = create_app().openapi()
     paths = set(schema["paths"])
 
@@ -60,6 +72,7 @@ def test_vertical_identity_routes_and_security_contract_are_exposed() -> None:
 
 
 def test_auth_metadata_headers_are_narrow_and_non_authoritative() -> None:
+    """Keep header profiles minimal and prevent metadata from acting as auth."""
     schema = create_app().openapi()
     rate_limited = schema["paths"]["/api/v1/auth/login/phone/request-otp"]["post"]
     login = schema["paths"]["/api/v1/auth/login/password"]["post"]
@@ -100,6 +113,7 @@ def test_auth_metadata_headers_are_narrow_and_non_authoritative() -> None:
 
 
 def test_auth_operations_publish_unified_error_responses() -> None:
+    """Require documented error envelopes for authentication operations."""
     schema = create_app().openapi()
     operation = schema["paths"]["/api/v1/auth/login/password"]["post"]
     for status_code in (
@@ -118,6 +132,7 @@ def test_auth_operations_publish_unified_error_responses() -> None:
 
 
 def test_password_and_role_paths_publish_expected_methods() -> None:
+    """Protect the intended HTTP methods on password and RBAC resources."""
     schema = create_app().openapi()
     paths = schema["paths"]
 
@@ -130,7 +145,11 @@ def test_password_and_role_paths_publish_expected_methods() -> None:
 
 
 def test_every_bearer_protected_module_route_has_declarative_security() -> None:
-    """Prevent new protected endpoints from bypassing composed route policy."""
+    """Prevent protected endpoints from bypassing composed route policy.
+
+    FastAPI's included routers are lazy in this version, so the recursive
+    dependency tree is inspected for both the bearer resolver and policy marker.
+    """
     protected_route_names: list[str] = []
 
     for route in _iter_api_routes(modules_router.routes):
@@ -145,6 +164,7 @@ def test_every_bearer_protected_module_route_has_declarative_security() -> None:
 
 
 def test_route_security_uses_risk_based_rate_limit_profiles() -> None:
+    """Protect representative read/write route assignments to risk tiers."""
     policies: dict[str, RouteSecurityPolicy] = {}
 
     for route in _iter_api_routes(modules_router.routes):

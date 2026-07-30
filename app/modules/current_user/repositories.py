@@ -1,5 +1,18 @@
 """File: app/modules/current_user/repositories.py
-SQLAlchemy persistence for current-user profile and authorization workflows."""
+
+Purpose:
+Implements user-by-identifier lookup and effective authorization-claim loading
+for current-user workflows.
+
+Dependency flow:
+CurrentUserService inside SQLAlchemyUnitOfWork
+-> CurrentUserRepository with the shared AsyncSession
+-> user/authorization SQLAlchemy queries
+-> PostgreSQL identity tables
+-> ORM user or AuthorizationClaims
+
+ORM mutations are committed only when the owning unit-of-work context exits.
+"""
 
 from __future__ import annotations
 
@@ -25,7 +38,7 @@ class CurrentUserRepository:
         *,
         for_update: bool = False,
     ) -> Users | None:
-        """Load by id from persistence."""
+        """Load by ID, optionally locking the profile for a self-service update."""
         statement = select(Users).where(Users.id == user_id)
         if for_update:
             statement = statement.with_for_update()

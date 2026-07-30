@@ -1,5 +1,15 @@
 """File: app/modules/session_management/openapi.py
-OpenAPI metadata for session management endpoints."""
+
+Purpose:
+Exports the tag and authentication error metadata for session-management
+routes.
+
+Dependency flow:
+Session route declaration
+-> TAG and RESPONSES
+-> FastAPI router metadata
+-> generated OpenAPI schema
+"""
 
 from typing import Any, cast
 

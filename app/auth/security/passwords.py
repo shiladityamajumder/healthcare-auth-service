@@ -1,5 +1,15 @@
 """File: app/auth/security/passwords.py
-Security primitives for password policy and Argon2id processing.
+
+Purpose:
+Validates password policy and performs Argon2id hash, verification, and rehash
+checks without blocking the async event loop.
+
+Dependency flow:
+Service-supplied password value
+-> PasswordManager policy validation
+-> worker-thread Argon2id operation
+-> hash/verification result
+-> service transaction decision
 
 Password hashing and verification are CPU- and memory-intensive operations.
 They are executed in worker threads so the application's asynchronous event

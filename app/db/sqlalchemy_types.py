@@ -1,5 +1,15 @@
 """File: app/db/sqlalchemy_types.py
-Cross-dialect UTC datetime types and audit-column factories.
+
+Purpose:
+Defines UTC-normalizing SQLAlchemy datetime types and consistent audit-column
+factories.
+
+Dependency flow:
+Aware application datetime
+-> UTCDateTime bind conversion
+-> database column
+-> aware UTC result conversion
+-> ORM model/service
 
 Application timestamps originate in the timezone configured through
 ``AppSettings.TIMEZONE``. Before persistence, timestamps are normalized to

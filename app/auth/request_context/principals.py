@@ -1,5 +1,14 @@
 """File: app/auth/request_context/principals.py
-Authenticated request principal types.
+
+Purpose:
+Defines the immutable authenticated identity and authorization state passed to
+protected routes and authorization dependencies.
+
+Dependency flow:
+Verified access-token/session/account state
+-> UserPrincipal
+-> route-security or authorization dependency
+-> protected route/service identifiers
 
 A principal represents identity and authorization information that has already
 been validated from a signed access token and, when configured, the persisted

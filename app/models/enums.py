@@ -1,5 +1,13 @@
 """File: app/models/enums.py
-Identity-domain enum values aligned with the database contract.
+
+Purpose:
+Defines identity-domain string enums that must remain aligned with persisted
+PostgreSQL values and API contracts.
+
+Dependency flow:
+Database/API string value
+-> typed identity enum
+-> ORM mapping, validation, and policy comparisons
 
 The string values in this module may be persisted in PostgreSQL or included in
 internal application contracts. Existing names and values must not be renamed

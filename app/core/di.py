@@ -1,5 +1,17 @@
 """File: app/core/di.py
-FastAPI dependency providers for the PostgreSQL transaction boundary."""
+
+Purpose:
+Exposes settings, PostgreSQL sessions, and request-scoped units of work as
+typed FastAPI dependency aliases.
+
+Dependency flow:
+FastAPI request
+-> application state
+-> PostgreSQLDatabase.session()
+-> SQLAlchemyUnitOfWork
+-> module service dependency
+-> service-owned transaction; cleanup rolls back leftovers
+"""
 
 from __future__ import annotations
 
@@ -48,9 +60,13 @@ async def get_postgres_uow(
             await uow.rollback()
 
 
+# These aliases let FastAPI cache one settings/database/session chain per request.
 SettingsDep = Annotated[AppSettings, Depends(get_app_settings)]
 DatabaseDep = Annotated[PostgreSQLDatabase, Depends(get_database)]
 PostgresSessionDep = Annotated[AsyncSession, Depends(get_postgres_session)]
+
+# Services enter this transaction boundary explicitly; the provider rolls back
+# only an active transaction left behind during dependency cleanup.
 PostgresUOWDep = Annotated[SQLAlchemyUnitOfWork, Depends(get_postgres_uow)]
 
 

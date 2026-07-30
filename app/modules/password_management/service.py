@@ -1,5 +1,17 @@
 """File: app/modules/password_management/service.py
-Password recovery, change, and initial-password application service."""
+
+Purpose:
+Owns recovery OTP issuance/proof consumption, password history enforcement,
+credential replacement, and session rotation/revocation.
+
+Dependency flow:
+PasswordManagementServiceDep
+-> password/reset-token/account policy components
+-> request-scoped SQLAlchemyUnitOfWork
+-> PasswordRepository and OTPService
+-> password history plus session mutations
+-> commit/rollback and response contract
+"""
 
 from __future__ import annotations
 
@@ -102,6 +114,7 @@ class PasswordManagementService:
         *,
         for_update: bool = False,
     ) -> Users | None:
+        """Load the user selected by the already normalized recovery identity."""
         if identity.email is not None:
             return await repository.get_by_email(identity.email, for_update=for_update)
         assert identity.phone_country_code is not None
@@ -113,6 +126,7 @@ class PasswordManagementService:
         )
 
     def _otp_response(self, issued: IssuedOTP) -> OtpChallengeResponse:
+        """Project reset challenge metadata with gated development code exposure."""
         expose = self._settings.OTP_DEV_EXPOSE_CODE and self._settings.ENVIRONMENT.value in {
             "local",
             "development",
@@ -134,6 +148,7 @@ class PasswordManagementService:
         context: AuthRequestContext,
         auth_method: str,
     ) -> TokenPairResponse:
+        """Load current claims and stage the sole post-password-change session."""
         authz = await repository.authorization_claims(user_id=user.id, now=utc_now())
         user_dto = UserResponse.model_validate(
             public_user_data(
@@ -197,6 +212,8 @@ class PasswordManagementService:
         response: ResetPasswordProofResponse | None = None
         async with self._uow:
             repository = PasswordRepository(self._uow.session)
+            # Verification row-locks and consumes the OTP before a reset proof
+            # can be signed, preserving the challenge's one-time property.
             verification = await self._otp.verify(
                 repository=repository,
                 challenge_id=payload.challenge_id,
@@ -262,6 +279,8 @@ class PasswordManagementService:
         }
         async with self._uow:
             repository = PasswordRepository(self._uow.session)
+            # Lock the consumed challenge so concurrent reset-proof redemption
+            # cannot update the same account twice.
             challenge = await repository.get_for_update(challenge_id)
             now = utc_now()
             if (
@@ -294,6 +313,8 @@ class PasswordManagementService:
             repository.update_password_hash(user, new_hash)
             repository.reset_failed_login_count(user)
             repository.add_password_history(user_id=user.id, password_hash=new_hash)
+            # Revoke older sessions before issuing the sole replacement session
+            # within this transaction.
             await repository.revoke_user_sessions(
                 user_id=user.id,
                 revoked_at=now,
@@ -339,6 +360,8 @@ class PasswordManagementService:
             new_hash = await self._passwords.hash(payload.new_password)
             repository.update_password_hash(user, new_hash)
             repository.add_password_history(user_id=user.id, password_hash=new_hash)
+            # A credential change invalidates all existing sessions before the
+            # replacement token pair is staged.
             await repository.revoke_user_sessions(
                 user_id=user.id,
                 revoked_at=utc_now(),
@@ -375,6 +398,8 @@ class PasswordManagementService:
             new_hash = await self._passwords.hash(payload.new_password)
             repository.update_password_hash(user, new_hash)
             repository.add_password_history(user_id=user.id, password_hash=new_hash)
+            # Initial password setup also rotates sessions to bind future access
+            # to the newly established credential state.
             await repository.revoke_user_sessions(
                 user_id=user.id,
                 revoked_at=utc_now(),
@@ -390,6 +415,7 @@ class PasswordManagementService:
 
     @staticmethod
     def _reset_purpose(channel: str) -> str:
+        """Map the validated recovery channel to its purpose-specific OTP value."""
         if channel == OTPChannel.EMAIL.value:
             return OTPPurpose.PASSWORD_RESET_EMAIL.value
         return OTPPurpose.PASSWORD_RESET_PHONE.value

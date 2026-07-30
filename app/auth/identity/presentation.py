@@ -1,5 +1,13 @@
 """File: app/auth/identity/presentation.py
-Safe presentation helpers for authentication identities.
+
+Purpose:
+Builds masked identity values and public user projections for authorized API
+responses and notification workflows.
+
+Dependency flow:
+Normalized identity or Users ORM instance
+-> masking/public projection helper
+-> response schema or notification-safe value
 
 This module creates masked identity values suitable for API responses,
 notifications, account-recovery responses, support workflows, and security

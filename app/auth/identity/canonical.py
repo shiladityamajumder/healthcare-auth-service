@@ -1,5 +1,14 @@
 """File: app/auth/identity/canonical.py
-Canonical authentication identity construction.
+
+Purpose:
+Builds stable canonical email, phone, and channel-aware identity strings for
+security workflows.
+
+Dependency flow:
+Validated identity input
+-> normalization helper
+-> canonical identity string
+-> lookup, duplicate check, OTP, audit, or rate-limit consumer
 
 This module converts email, phone, and channel-aware identity inputs into
 stable canonical strings.

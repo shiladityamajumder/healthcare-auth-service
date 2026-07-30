@@ -1,5 +1,16 @@
 """File: app/modules/admin_roles/routes.py
-Permission-protected RBAC role endpoints."""
+
+Purpose:
+Defines ``/admin/roles`` permission-protected RBAC role CRUD endpoints.
+
+Dependency flow:
+HTTP request
+-> FastAPI route
+-> RoleReadAccess or RoleManageAccess
+-> AdminRolesServiceDep
+-> service/repository/unit of work
+-> APIResponse
+"""
 
 from __future__ import annotations
 
@@ -39,7 +50,12 @@ async def list_roles(
     principal: RoleReadAccess,
     service: AdminRolesServiceDep,
 ) -> JSONResponse:
-    """Return all active RBAC roles."""
+    """Return all active RBAC roles.
+
+    ``RoleReadAccess`` authenticates the caller and enforces role-read
+    permission plus the administrative read limit.
+    """
+    # Resolution enforces authentication, role-read permission, and rate limiting.
     _ = principal
     return APIResponse.success(data=await service.list_roles())
 
@@ -55,7 +71,11 @@ async def create_role(
     principal: RoleManageAccess,
     service: AdminRolesServiceDep,
 ) -> JSONResponse:
-    """Create a non-system RBAC role."""
+    """Create a non-system RBAC role.
+
+    ``RoleManageAccess`` protects the mutation; the service rejects duplicate
+    active role codes.
+    """
     result = await service.create(payload=payload, actor_user_id=principal.user_id)
     return APIResponse.success(data=result, status_code=status.HTTP_201_CREATED)
 
@@ -70,7 +90,8 @@ async def get_role(
     principal: RoleReadAccess,
     service: AdminRolesServiceDep,
 ) -> JSONResponse:
-    """Return one active role."""
+    """Return one active role protected by ``RoleReadAccess``."""
+    # The dependency secures this read even though the service needs only role_id.
     _ = principal
     return APIResponse.success(data=await service.get(role_id=role_id))
 
@@ -86,7 +107,11 @@ async def update_role(
     principal: RoleManageAccess,
     service: AdminRolesServiceDep,
 ) -> JSONResponse:
-    """Update a role while preserving system-role invariants."""
+    """Update a role while preserving system-role invariants.
+
+    The manage dependency protects the route and the service prevents forbidden
+    changes to system-owned roles.
+    """
     return APIResponse.success(
         data=await service.update(
             role_id=role_id,
@@ -106,7 +131,11 @@ async def delete_role(
     principal: RoleManageAccess,
     service: AdminRolesServiceDep,
 ) -> JSONResponse:
-    """Soft-delete a custom role."""
+    """Soft-delete a custom role.
+
+    ``RoleManageAccess`` authorizes the caller; system roles remain protected
+    by the service invariant.
+    """
     return APIResponse.success(
         data=await service.delete(
             role_id=role_id,

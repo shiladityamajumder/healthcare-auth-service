@@ -1,4 +1,15 @@
-"""File: tests/unit/test_auth_otp.py"""
+"""File: tests/unit/test_auth_otp.py
+
+Purpose:
+Verifies OTP purpose binding, expiry, attempt blocking, and single-use
+consumption invariants.
+
+Dependency flow:
+In-memory OTP repository and test settings
+-> OTPService issue/verify
+-> challenge-state mutation
+-> security assertions
+"""
 
 from __future__ import annotations
 
@@ -51,6 +62,7 @@ def challenge_for(
 
 @pytest.mark.asyncio
 async def test_otp_purpose_mismatch_cannot_authenticate() -> None:
+    """Prevent a valid challenge from crossing workflow-purpose boundaries."""
     settings = build_test_settings()
     hashing = SecureHashing(settings)
     service = OTPService(settings=settings, hashing=hashing)
@@ -69,6 +81,7 @@ async def test_otp_purpose_mismatch_cannot_authenticate() -> None:
 
 @pytest.mark.asyncio
 async def test_otp_is_single_use() -> None:
+    """Require successful verification to consume the challenge permanently."""
     settings = build_test_settings()
     hashing = SecureHashing(settings)
     service = OTPService(settings=settings, hashing=hashing)
@@ -96,6 +109,7 @@ async def test_otp_is_single_use() -> None:
 
 @pytest.mark.asyncio
 async def test_otp_blocks_after_maximum_attempts() -> None:
+    """Require failed attempts to block a challenge at the configured maximum."""
     settings = build_test_settings(OTP_MAX_ATTEMPTS=2)
     hashing = SecureHashing(settings)
     service = OTPService(settings=settings, hashing=hashing)
@@ -124,6 +138,7 @@ async def test_otp_blocks_after_maximum_attempts() -> None:
 
 @pytest.mark.asyncio
 async def test_expired_otp_is_consumed() -> None:
+    """Require expiry detection to consume the unusable challenge state."""
     settings = build_test_settings()
     hashing = SecureHashing(settings)
     service = OTPService(settings=settings, hashing=hashing)

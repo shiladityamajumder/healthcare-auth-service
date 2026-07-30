@@ -1,5 +1,17 @@
 """File: app/main.py
-FastAPI composition root for the pharmacy identity service."""
+
+Purpose:
+Builds the FastAPI application and registers lifecycle, middleware, routers,
+exception handlers, and the root response.
+
+Dependency flow:
+Process startup
+-> create_app()
+-> lifespan-managed infrastructure on app.state
+-> middleware and versioned/health routers
+-> centralized exception handlers
+-> FastAPI application
+"""
 
 from __future__ import annotations
 
@@ -54,6 +66,7 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
 
     @app.get("/", tags=["System"], summary="Service descriptor")
     async def root() -> JSONResponse:
+        """Return the public service descriptor and configured discovery links."""
         return APIResponse.success(
             data={
                 "service": resolved.PROJECT_NAME,

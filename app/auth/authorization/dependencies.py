@@ -1,5 +1,15 @@
 """File: app/auth/authorization/dependencies.py
-FastAPI authorization dependencies.
+
+Purpose:
+Creates reusable FastAPI dependencies that authorize an already authenticated
+principal by required roles or permissions.
+
+Dependency flow:
+Route Annotated alias
+-> CurrentUserDep
+-> authenticated UserPrincipal
+-> role or permission set comparison
+-> principal returned or AuthorizationError
 
 These dependencies consume an already authenticated ``UserPrincipal`` and
 enforce role or permission requirements.
@@ -51,6 +61,7 @@ def require_permissions(
             Depends(get_current_user_principal),
         ],
     ) -> UserPrincipal:
+        """Return the principal only when every required permission is present."""
         missing = normalized.difference(
             principal.permissions
         )
@@ -93,6 +104,7 @@ def require_roles(
             Depends(get_current_user_principal),
         ],
     ) -> UserPrincipal:
+        """Return the principal only when every required role is present."""
         missing = normalized.difference(
             principal.roles
         )

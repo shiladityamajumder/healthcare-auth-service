@@ -1,5 +1,15 @@
 """File: app/core/middleware.py
-    Pure-ASGI middleware for context, security, limits, and observability.
+
+Purpose:
+Registers pure-ASGI request context, security-header, body-limit, CORS, and
+observability middleware.
+
+Dependency flow:
+ASGI request scope/messages
+-> ordered middleware stack
+-> request/correlation context and transport guards
+-> FastAPI route
+-> response headers and access log
 """
 
 from __future__ import annotations

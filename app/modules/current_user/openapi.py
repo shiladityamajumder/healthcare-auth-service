@@ -1,5 +1,14 @@
 """File: app/modules/current_user/openapi.py
-OpenAPI metadata for current-user endpoints."""
+
+Purpose:
+Exports the tag and authentication error metadata for current-user routes.
+
+Dependency flow:
+Current-user route declaration
+-> TAG and RESPONSES
+-> FastAPI router metadata
+-> generated OpenAPI schema
+"""
 
 from typing import Any, cast
 

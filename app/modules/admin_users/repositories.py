@@ -1,5 +1,19 @@
 """File: app/modules/admin_users/repositories.py
-SQLAlchemy repositories for administrative user workflows."""
+
+Purpose:
+Implements SQLAlchemy reads, pagination, authorization-claim loading, and
+session revocation for administrative user workflows.
+
+Dependency flow:
+AdminUsersService inside SQLAlchemyUnitOfWork
+-> AdminUserRepository with the shared AsyncSession
+-> filtered SQLAlchemy statements
+-> PostgreSQL identity tables
+-> ORM entities/counts returned to the service
+
+Repository methods flush no transaction here; commit and rollback remain with
+the request-scoped unit of work.
+"""
 
 from __future__ import annotations
 

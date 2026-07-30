@@ -1,5 +1,17 @@
 """File: app/modules/email_verification/service.py
-Email-verification application service."""
+
+Purpose:
+Owns email-verification OTP issuance/consumption, account verification state,
+and optional first-session token issuance.
+
+Dependency flow:
+EmailVerificationDep
+-> request-scoped SQLAlchemyUnitOfWork
+-> EmailVerificationRepository and OTPService
+-> account policy and authorization-claim checks
+-> optional SessionTokenIssuer/notification boundary
+-> commit/rollback and response contract
+"""
 
 from __future__ import annotations
 
@@ -49,6 +61,7 @@ class EmailVerificationService:
         self._issuer = SessionTokenIssuer(tokens=tokens, hashing=hashing)
 
     def _otp_response(self, issued: IssuedOTP) -> OtpChallengeResponse:
+        """Project an issued challenge and expose its code only in allowed environments."""
         expose = self._settings.OTP_DEV_EXPOSE_CODE and self._settings.ENVIRONMENT.value in {
             "local",
             "development",
@@ -101,6 +114,8 @@ class EmailVerificationService:
         result: TokenPairResponse | None = None
         async with self._uow:
             repository = EmailVerificationRepository(self._uow.session)
+            # Verification locks and consumes the challenge before account state
+            # is changed or a session can be issued.
             verification = await self._otp.verify(
                 repository=repository,
                 challenge_id=payload.challenge_id,
@@ -130,6 +145,7 @@ class EmailVerificationService:
                         payload=payload,
                         context=context,
                     )
+        # Raise after the transaction preserves OTP attempt/consumption state.
         if pending_error is not None:
             raise pending_error
         assert result is not None
@@ -143,6 +159,7 @@ class EmailVerificationService:
         payload: EmailVerificationConfirmRequest,
         context: AuthRequestContext,
     ) -> TokenPairResponse:
+        """Load current claims and stage the verified user's first session."""
         claims = await repository.authorization_claims(user_id=user.id, now=utc_now())
         user_dto = UserResponse.model_validate(
             public_user_data(

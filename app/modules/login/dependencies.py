@@ -1,4 +1,16 @@
-"""Dependency composition for password and phone-OTP login endpoints."""
+"""File: app/modules/login/dependencies.py
+
+Purpose:
+Re-exports public login context/rate-limit dependencies and constructs password
+and phone-OTP login services.
+
+Dependency flow:
+FastAPI route parameter
+-> RateLimitRequestContext or SessionCreationRequestContext
+-> AuthRuntimeDep and PostgresUOWDep
+-> PasswordLoginDep or PhoneOtpLoginDep
+-> credential/OTP and session workflow
+"""
 
 from typing import Annotated
 
@@ -43,10 +55,14 @@ def get_phone_otp_login_service(
     )
 
 
+# FastAPI builds the password service from the cached unit of work and shared
+# password/token/authentication runtime primitives.
 PasswordLoginDep = Annotated[
     PasswordLoginService,
     Depends(get_password_login_service),
 ]
+# The phone service shares the same request transaction and receives OTP plus
+# notification components from AuthRuntime.
 PhoneOtpLoginDep = Annotated[
     PhoneOtpLoginService,
     Depends(get_phone_otp_login_service),

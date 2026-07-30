@@ -1,5 +1,15 @@
 """File: app/db/redis_client.py
-Asynchronous Redis client lifecycle adapter.
+
+Purpose:
+Owns the process-wide Redis connection pool, shared client, and bounded
+connectivity checks used by Redis-backed infrastructure.
+
+Dependency flow:
+Validated Redis settings
+-> lifespan creates RedisClient
+-> connect()/health_check()
+-> shared rate-limit backend client
+-> close() during shutdown
 
 This module owns one process-wide asynchronous Redis client and its connection
 pool. The client is created during FastAPI startup, shared by Redis-dependent

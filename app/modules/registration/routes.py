@@ -1,5 +1,17 @@
 """File: app/modules/registration/routes.py
-Registration HTTP endpoints."""
+
+Purpose:
+Defines public ``/auth/register`` email/password and phone/OTP registration
+endpoints.
+
+Dependency flow:
+HTTP request
+-> typed rate-limit/session request context
+-> AuthRateLimitsDep
+-> EmailPasswordRegistrationDep or PhoneOtpRegistrationDep
+-> account/role/OTP/session service transaction
+-> APIResponse
+"""
 
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
@@ -44,7 +56,11 @@ async def register_email(
     rate_limits: AuthRateLimitsDep,
     service: EmailPasswordRegistrationDep,
 ) -> JSONResponse:
-    """Create an email identity with one or more validated initial roles."""
+    """Create an email identity with one or more validated initial roles.
+
+    This public endpoint applies canonical-email registration limits before the
+    service checks duplicates, roles, password policy, and verification state.
+    """
     await rate_limits.registration(
         context=context,
         identity=email_identity(payload.email),
@@ -65,7 +81,11 @@ async def request_phone_registration_otp(
     rate_limits: AuthRateLimitsDep,
     service: PhoneOtpRegistrationDep,
 ) -> JSONResponse:
-    """Issue a bounded phone-registration OTP challenge."""
+    """Issue a bounded phone-registration OTP challenge.
+
+    Request context supplies public rate-limit dimensions only; no metadata
+    header authenticates or authorizes this route.
+    """
     identity = phone_identity(payload.phone_country_code, payload.phone_number)
     await rate_limits.otp_request(
         context=context,
@@ -88,7 +108,11 @@ async def verify_phone_registration_otp(
     rate_limits: AuthRateLimitsDep,
     service: PhoneOtpRegistrationDep,
 ) -> JSONResponse:
-    """Consume a phone OTP and create the user and first session atomically."""
+    """Consume a phone OTP and atomically create the user and first session.
+
+    The OTP verification limiter runs first; the service then consumes the
+    locked one-time challenge before account persistence and token issuance.
+    """
     identity = phone_identity(payload.phone_country_code, payload.phone_number)
     await rate_limits.otp_verify(
         context=context,

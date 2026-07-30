@@ -1,5 +1,14 @@
 """File: app/core/logging.py
-Structured, queue-backed, sensitive-data-aware logging configuration.
+
+Purpose:
+Configures queue-backed structured logging and central sensitive-value
+redaction for application and infrastructure events.
+
+Dependency flow:
+Application event and named context
+-> logger adapter and sanitization
+-> queue handler/listener
+-> configured output formatter
 
 This is the existing logging foundation with authentication-specific redaction
 keys and token-pattern protection added. Request bodies and identity secrets

@@ -1,5 +1,17 @@
 """File: app/api/exception_handlers.py
-Central HTTP translation for application, framework, and database errors."""
+
+Purpose:
+Translates application, framework, and database exceptions into the canonical
+external error envelope without exposing unsafe internal details.
+
+Dependency flow:
+Route/service/infrastructure exception
+-> registered FastAPI exception handler
+-> safe status-code and error-code mapping
+-> APIResponse.error()
+-> request/correlation metadata
+-> JSONResponse
+"""
 
 from __future__ import annotations
 
@@ -135,6 +147,7 @@ async def http_exception_handler(request: Request, exc: Exception) -> JSONRespon
 
 
 async def sqlalchemy_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Map database failures without returning SQL or driver details."""
     if isinstance(exc, StaleDataError):
         status_code = status.HTTP_409_CONFLICT
         error_code = "CONCURRENT_UPDATE_CONFLICT"
@@ -170,6 +183,7 @@ async def sqlalchemy_exception_handler(request: Request, exc: Exception) -> JSON
 
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Log the internal failure and return a deliberately generic response."""
     logger.error(
         "Unhandled application exception",
         extra={

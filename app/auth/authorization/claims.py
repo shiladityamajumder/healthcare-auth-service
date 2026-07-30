@@ -1,5 +1,13 @@
 """File: app/auth/authorization/claims.py
-Load effective role and permission claims from PostgreSQL.
+
+Purpose:
+Loads effective active global role and permission claims from PostgreSQL.
+
+Dependency flow:
+Authenticated user identifier and AsyncSession
+-> active assignment/role/permission queries
+-> AuthorizationClaims
+-> principal refresh or service response
 
 This module contains the SQL-backed claim loader used by authentication module
 services and request authentication dependencies.

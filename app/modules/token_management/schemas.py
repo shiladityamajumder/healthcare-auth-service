@@ -1,5 +1,14 @@
 """File: app/modules/token_management/schemas.py
-Refresh-token rotation and logout contracts owned by this module."""
+
+Purpose:
+Defines refresh/logout inputs and public JWKS response contracts.
+
+Dependency flow:
+HTTP body or TokenManager JWKS output
+-> strict Pydantic validation
+-> token route/service
+-> response-model serialization
+"""
 
 from __future__ import annotations
 

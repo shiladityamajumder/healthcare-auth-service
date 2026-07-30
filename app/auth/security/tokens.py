@@ -1,5 +1,15 @@
 """File: app/auth/security/tokens.py
-Security primitives for signed authentication tokens.
+
+Purpose:
+Creates and verifies signed access, refresh, and password-reset JWTs and
+publishes configured RSA public keys as JWKS.
+
+Dependency flow:
+Validated settings and workflow claims
+-> TokenManager encode/decode
+-> fixed algorithm/key registry and claim checks
+-> token string or verified claim mapping
+-> session/workflow dependency
 
 This module creates and verifies JWT access, refresh, and password-reset
 tokens. It also publishes configured RSA verification keys in JWKS-compatible

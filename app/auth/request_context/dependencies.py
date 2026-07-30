@@ -1,5 +1,16 @@
 """File: app/auth/request_context/dependencies.py
-FastAPI dependencies for authentication request resolution.
+
+Purpose:
+Resolves authentication runtime state, narrow request-context profiles, bearer
+tokens, persisted sessions, and required or optional user principals.
+
+Dependency flow:
+FastAPI request and selected header alias
+-> AuthRuntimeDep and AuthRequestContext
+-> HTTPBearer token verification
+-> persisted session/account validation
+-> refreshed authorization claims when configured
+-> UserPrincipal
 
 This module resolves process-wide authentication infrastructure, validated
 request metadata, bearer access tokens, persisted sessions, and authenticated
@@ -86,25 +97,31 @@ def get_auth_runtime(
     return cast(AuthRuntime, runtime)
 
 
+# Resolves the lifespan-created runtime from app.state once per request graph.
 AuthRuntimeDep = Annotated[
     AuthRuntime,
     Depends(get_auth_runtime),
 ]
 
 
+# Full metadata is retained for compatibility; routes should prefer one of the
+# narrower header profiles below.
 AuthHeadersDep = Annotated[
     AuthHeaders,
     Depends(get_auth_headers),
 ]
 
+# Exposes only anonymous limiter dimensions in endpoint validation and OpenAPI.
 RateLimitHeadersDep = Annotated[
     AuthHeaders,
     Depends(get_rate_limit_headers),
 ]
+# Adds device/platform metadata required when a workflow creates a session.
 SessionCreationHeadersDep = Annotated[
     AuthHeaders,
     Depends(get_session_creation_headers),
 ]
+# Exposes only optional assertions checked against authoritative token/session data.
 PrincipalAssertionHeadersDep = Annotated[
     AuthHeaders,
     Depends(get_principal_assertion_headers),
@@ -133,6 +150,7 @@ def get_auth_request_context(
     )
 
 
+# Builds the compatibility context from the complete metadata header profile.
 AuthRequestContextDep = Annotated[
     AuthRequestContext,
     Depends(get_auth_request_context),
@@ -152,6 +170,7 @@ def get_rate_limit_request_context(
     )
 
 
+# Builds anonymous request metadata for workflow-specific rate-limit keys only.
 RateLimitRequestContextDep = Annotated[
     AuthRequestContext,
     Depends(get_rate_limit_request_context),
@@ -171,6 +190,7 @@ def get_session_creation_request_context(
     )
 
 
+# Builds request and device metadata consumed during session issuance/rotation.
 SessionCreationRequestContextDep = Annotated[
     AuthRequestContext,
     Depends(get_session_creation_request_context),
@@ -190,6 +210,7 @@ def get_principal_request_context(
     )
 
 
+# Builds assertion metadata used while validating a bearer principal.
 PrincipalRequestContextDep = Annotated[
     AuthRequestContext,
     Depends(get_principal_request_context),
@@ -210,6 +231,7 @@ def get_token_manager(
     return runtime.tokens
 
 
+# Resolves the shared token manager without constructing it per request.
 TokenManagerDep = Annotated[
     TokenManager,
     Depends(get_token_manager),
@@ -237,6 +259,7 @@ def get_auth_rate_limits(
     )
 
 
+# Builds a lightweight workflow facade over the shared limiter and hashing key.
 AuthRateLimitsDep = Annotated[
     AuthRateLimits,
     Depends(get_auth_rate_limits),
@@ -310,6 +333,8 @@ async def get_current_user_principal(
         claim_name="amr",
     )
 
+    # A valid JWT is insufficient when per-request session checks are enabled;
+    # persisted revocation, expiry, ownership, device, and account state win.
     if runtime.settings.AUTH_CHECK_SESSION_ON_EACH_REQUEST:
         async with database.session() as session:
             statement = (
@@ -344,6 +369,8 @@ async def get_current_user_principal(
                 now=now,
             )
 
+            # Replace token snapshots with current database claims so role or
+            # permission revocation takes effect without waiting for JWT expiry.
             if runtime.settings.AUTH_REFRESH_AUTHZ_ON_EACH_REQUEST:
                 claims = await load_authorization_claims(
                     session,
@@ -363,6 +390,8 @@ async def get_current_user_principal(
     )
 
 
+# Resolves a required bearer principal after token, session, account, and
+# optional assertion validation.
 CurrentUserDep = Annotated[
     UserPrincipal,
     Depends(get_current_user_principal),
@@ -395,6 +424,7 @@ async def get_optional_user_principal(
     )
 
 
+# Allows credentials to be absent but applies the full strict chain when present.
 OptionalUserDep = Annotated[
     UserPrincipal | None,
     Depends(get_optional_user_principal),

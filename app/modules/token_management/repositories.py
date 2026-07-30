@@ -1,5 +1,19 @@
 """File: app/modules/token_management/repositories.py
-SQLAlchemy persistence for refresh-token and logout workflows."""
+
+Purpose:
+Implements row-locked session lookup, user/authorization loading, token-family
+revocation, and user-wide session revocation.
+
+Dependency flow:
+TokenManagementService inside SQLAlchemyUnitOfWork
+-> TokenRepository with the shared AsyncSession
+-> session/user/family-filtered SQLAlchemy statements
+-> PostgreSQL identity tables
+-> locked ORM state or mutation counts
+
+Revocation updates are staged in the active transaction and committed only by
+the unit of work.
+"""
 
 from __future__ import annotations
 
@@ -25,7 +39,7 @@ class TokenRepository:
         *,
         for_update: bool = False,
     ) -> Sessions | None:
-        """Load session from persistence."""
+        """Load a session, optionally locking it for token rotation/revocation."""
         statement = select(Sessions).where(Sessions.id == session_id)
         if for_update:
             statement = statement.with_for_update()
@@ -37,7 +51,7 @@ class TokenRepository:
         *,
         for_update: bool = False,
     ) -> Users | None:
-        """Load user from persistence."""
+        """Load a user, optionally locking account state during refresh."""
         statement = select(Users).where(Users.id == user_id)
         if for_update:
             statement = statement.with_for_update()

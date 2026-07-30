@@ -1,5 +1,14 @@
 """File: app/core/config.py
-Central, immutable configuration for the authentication service.
+
+Purpose:
+Defines and validates immutable process configuration, including cross-field
+security and infrastructure requirements.
+
+Dependency flow:
+Environment variables and optional .env file
+-> AppSettings field/cross-field validation
+-> cached get_settings()
+-> lifespan and request dependency providers
 
 The service reads configuration from environment variables and one optional
 ``.env`` file. Pydantic validates individual values and cross-field security

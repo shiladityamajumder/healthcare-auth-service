@@ -1,5 +1,17 @@
 """File: app/modules/admin_user_roles/routes.py
-Permission-protected user-role assignment endpoints."""
+
+Purpose:
+Defines ``/admin/users/{user_id}/roles`` permission-protected assignment list,
+create, update, and removal endpoints.
+
+Dependency flow:
+HTTP request
+-> FastAPI route
+-> UserRoleReadAccess or UserRoleManageAccess
+-> AdminUserRolesServiceDep
+-> service/repository/unit of work
+-> APIResponse
+"""
 
 from __future__ import annotations
 
@@ -40,7 +52,12 @@ async def list_user_roles(
     principal: UserRoleReadAccess,
     service: AdminUserRolesServiceDep,
 ) -> JSONResponse:
-    """Return global and scoped assignments for one user."""
+    """Return global and scoped assignments for one user.
+
+    ``UserRoleReadAccess`` enforces authentication, assignment-read permission,
+    and the administrative read limit.
+    """
+    # The dependency protects the read; the service is scoped by target user_id.
     _ = principal
     return APIResponse.success(data=await service.list_assignments(user_id=user_id))
 
@@ -57,7 +74,11 @@ async def assign_user_role(
     principal: UserRoleManageAccess,
     service: AdminUserRolesServiceDep,
 ) -> JSONResponse:
-    """Create one global or scoped role assignment."""
+    """Create one global or scoped role assignment.
+
+    Manage access protects the mutation; the service validates the target user,
+    active role, scope, and validity window.
+    """
     result = await service.assign(
         user_id=user_id,
         payload=payload,
@@ -78,7 +99,11 @@ async def update_user_role(
     principal: UserRoleManageAccess,
     service: AdminUserRolesServiceDep,
 ) -> JSONResponse:
-    """Update assignment scope, validity, or active state."""
+    """Update assignment scope, validity, or active state.
+
+    ``UserRoleManageAccess`` protects the route and ownership-filtered repository
+    lookup prevents cross-user assignment updates.
+    """
     return APIResponse.success(
         data=await service.update(
             user_id=user_id,
@@ -100,7 +125,11 @@ async def remove_user_role(
     principal: UserRoleManageAccess,
     service: AdminUserRolesServiceDep,
 ) -> JSONResponse:
-    """Delete one explicit role assignment."""
+    """Delete one explicit role assignment.
+
+    The manage dependency runs before an ownership-filtered assignment is
+    deleted within the unit-of-work transaction.
+    """
     return APIResponse.success(
         data=await service.remove(
             user_id=user_id,

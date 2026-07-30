@@ -1,5 +1,16 @@
 """File: app/modules/email_verification/routes.py
-Email verification HTTP endpoints."""
+
+Purpose:
+Defines public ``/auth/email-verification`` OTP request and confirmation
+endpoints.
+
+Dependency flow:
+HTTP request
+-> typed request-context and AuthRateLimits dependencies
+-> EmailVerificationDep
+-> OTP/account/session service transaction
+-> APIResponse
+"""
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
@@ -40,7 +51,11 @@ async def request_email_verification(
     rate_limits: AuthRateLimitsDep,
     service: EmailVerificationDep,
 ) -> JSONResponse:
-    """Issue or resend an email-verification challenge."""
+    """Issue or resend an email-verification challenge.
+
+    This public route uses request context only for OTP rate limiting; it does
+    not treat metadata headers as authentication or authorization.
+    """
     await rate_limits.otp_request(
         context=context,
         identity=email_identity(payload.email),
@@ -61,7 +76,11 @@ async def verify_email(
     rate_limits: AuthRateLimitsDep,
     service: EmailVerificationDep,
 ) -> JSONResponse:
-    """Consume the email OTP and activate the verified identity."""
+    """Consume the email OTP and activate the verified identity.
+
+    The public confirmation route applies the purpose-specific OTP verification
+    limit, then atomically consumes the challenge and may issue a first session.
+    """
     await rate_limits.otp_verify(
         context=context,
         identity=email_identity(payload.email),

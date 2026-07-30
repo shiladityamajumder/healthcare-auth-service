@@ -1,5 +1,14 @@
 """File: app/auth/workflows/notifications.py
-Authentication notification integration boundary.
+
+Purpose:
+Defines the authentication notification port and the currently disabled
+delivery gateway used by OTP-producing workflows.
+
+Dependency flow:
+Authentication service after persistence decision
+-> AuthNotificationGateway
+-> NotificationDispatcher implementation
+-> external provider when configured, otherwise disabled boundary
 
 External delivery remains intentionally disabled until the platform
 notification service is connected.

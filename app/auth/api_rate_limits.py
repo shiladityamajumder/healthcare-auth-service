@@ -1,4 +1,17 @@
-"""Risk-based rate limits for authenticated and general API routes."""
+"""File: app/auth/api_rate_limits.py
+
+Purpose:
+Applies risk-based generic API limits using privacy-preserving request and
+principal dimensions.
+
+Dependency flow:
+secure_route() dependency
+-> APIRateLimits.enforce()
+-> configured RateLimitPolicy values
+-> domain-separated hashed keys
+-> shared core RateLimiter
+-> success or RateLimitError
+"""
 
 from __future__ import annotations
 

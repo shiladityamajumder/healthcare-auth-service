@@ -1,5 +1,14 @@
 """File: app/core/sorting.py
-    Allow-listed SQLAlchemy sorting helpers.
+
+Purpose:
+Builds deterministic SQLAlchemy ordering from validated, allow-listed sort
+fields and directions.
+
+Dependency flow:
+Requested sort terms
+-> allow-listed column resolution
+-> deterministic SQLAlchemy order clauses
+-> repository Select statement
 """
 
 from __future__ import annotations

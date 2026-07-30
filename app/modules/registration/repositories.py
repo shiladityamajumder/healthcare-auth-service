@@ -1,5 +1,19 @@
 """File: app/modules/registration/repositories.py
-SQLAlchemy persistence for registration workflows."""
+
+Purpose:
+Implements duplicate identity checks, account/password/role/session staging,
+authorization loading, and the registration OTP repository port.
+
+Dependency flow:
+Registration service inside SQLAlchemyUnitOfWork
+-> RegistrationRepository with the shared AsyncSession
+-> identity/role/session/OTP statements and row locks
+-> PostgreSQL identity tables
+-> ORM state returned or staged
+
+Repository additions and ``flush`` only stage/obtain database values; the
+request-scoped unit of work remains the commit and rollback owner.
+"""
 
 from __future__ import annotations
 

@@ -1,5 +1,17 @@
 """File: app/modules/admin_roles/service.py
-Role administration application service."""
+
+Purpose:
+Owns active-role CRUD use cases, uniqueness checks, and system-role mutation
+invariants.
+
+Dependency flow:
+AdminRolesServiceDep
+-> request-scoped SQLAlchemyUnitOfWork
+-> RoleRepository on the shared session
+-> invariant checks and staged ORM changes
+-> unit-of-work commit/rollback
+-> role response contract
+"""
 
 from __future__ import annotations
 
@@ -67,6 +79,8 @@ class AdminRolesService:
                 updated_by=actor_user_id,
             )
             repository.add(role)
+            # Flush assigns database-generated state for the response while the
+            # unit of work retains commit control.
             await self._uow.flush()
             response = role_response(role)
         logger.info(

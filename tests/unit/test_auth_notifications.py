@@ -1,4 +1,14 @@
-"""File: tests/unit/test_auth_notifications.py"""
+"""File: tests/unit/test_auth_notifications.py
+
+Purpose:
+Verifies the deliberate fail-closed notification-delivery boundary.
+
+Dependency flow:
+Test notification call
+-> NotificationDispatcher
+-> disabled gateway
+-> expected infrastructure exception
+"""
 
 from __future__ import annotations
 

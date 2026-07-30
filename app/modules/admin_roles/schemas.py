@@ -1,5 +1,14 @@
 """File: app/modules/admin_roles/schemas.py
-Role administration request and response contracts."""
+
+Purpose:
+Defines strict role creation, partial-update, list, and detail contracts.
+
+Dependency flow:
+HTTP body or service result
+-> Pydantic field/model validation
+-> role route/service
+-> response-model serialization
+"""
 
 from __future__ import annotations
 

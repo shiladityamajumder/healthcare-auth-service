@@ -1,5 +1,19 @@
 """File: app/modules/email_verification/repositories.py
-SQLAlchemy persistence for email-verification workflows."""
+
+Purpose:
+Implements user/authorization/session persistence and the OTP repository port
+for email-verification workflows.
+
+Dependency flow:
+EmailVerificationService inside SQLAlchemyUnitOfWork
+-> EmailVerificationRepository with the shared AsyncSession
+-> user/session/OTP SQLAlchemy statements and row locks
+-> PostgreSQL identity tables
+-> ORM state returned or staged
+
+Advisory issue locking and ``FOR UPDATE`` verification serialize OTP state;
+transaction completion remains with the unit of work.
+"""
 
 from __future__ import annotations
 
@@ -25,7 +39,7 @@ class EmailVerificationRepository:
         *,
         for_update: bool = False,
     ) -> Users | None:
-        """Load user by email from persistence."""
+        """Load by normalized email, optionally locking verification state."""
         statement = select(Users).where(Users.email_normalized == email)
         if for_update:
             statement = statement.with_for_update()

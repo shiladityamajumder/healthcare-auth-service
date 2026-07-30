@@ -1,5 +1,15 @@
 """File: app/modules/current_user/schemas.py
-Current-user profile and authorization contracts owned by this module."""
+
+Purpose:
+Defines editable current-user preferences and effective role/permission
+response contracts.
+
+Dependency flow:
+HTTP body or service result
+-> strict Pydantic validation
+-> current-user route/service
+-> response-model serialization
+"""
 
 from __future__ import annotations
 

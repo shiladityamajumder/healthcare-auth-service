@@ -1,5 +1,14 @@
 """File: tests/conftest.py
-Shared deterministic configuration for offline tests."""
+
+Purpose:
+Provides deterministic settings helpers shared by offline tests.
+
+Dependency flow:
+Test case
+-> build_test_settings()
+-> validated AppSettings overrides
+-> isolated component/application construction
+"""
 
 from __future__ import annotations
 

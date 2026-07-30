@@ -1,5 +1,14 @@
 """File: app/auth/authorization/policies.py
-Authentication workflow policies without transport or persistence coupling.
+
+Purpose:
+Defines transport- and persistence-independent account, OTP, and password
+history invariants used by authentication workflows.
+
+Dependency flow:
+Service-owned immutable state and current time
+-> policy method
+-> invariant evaluation
+-> continuation or typed application exception
 
 This module contains reusable business rules used by login, OTP verification,
 password recovery, and password-management workflows.

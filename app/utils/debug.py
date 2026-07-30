@@ -1,5 +1,14 @@
 """File: app/utils/debug.py
-Development-only debug logging compatibility helper.
+
+Purpose:
+Provides a development-only debug helper that preserves central redaction and
+structured logging rules.
+
+Dependency flow:
+Explicit debug message and named context
+-> environment guard
+-> central logger/redaction pipeline
+-> development log output
 
 The original arbitrary ``print(*objects)`` utility could bypass redaction and
 leak prescription, patient, credential, or token data. This replacement emits

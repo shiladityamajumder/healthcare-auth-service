@@ -1,4 +1,15 @@
-"""File: tests/unit/test_auth_headers.py"""
+"""File: tests/unit/test_auth_headers.py
+
+Purpose:
+Verifies request identifiers, typed authentication metadata, and trusted-proxy
+client address handling.
+
+Dependency flow:
+Synthetic request or TestClient call
+-> middleware/header/context parsing
+-> AuthRequestContext or response headers
+-> security assertions
+"""
 
 from __future__ import annotations
 
@@ -13,6 +24,7 @@ from tests.conftest import build_test_settings
 
 
 def test_request_id_is_generated_and_returned() -> None:
+    """Require middleware to create and return missing request identifiers."""
     app = create_app(build_test_settings())
     response = TestClient(app).get("/health/live")
     assert response.status_code == 200
@@ -21,6 +33,7 @@ def test_request_id_is_generated_and_returned() -> None:
 
 
 def test_valid_request_and_correlation_ids_are_echoed() -> None:
+    """Preserve valid caller correlation identifiers through the response."""
     request_id = str(uuid.uuid4())
     correlation_id = str(uuid.uuid4())
     app = create_app(build_test_settings())
@@ -37,6 +50,7 @@ def test_valid_request_and_correlation_ids_are_echoed() -> None:
 
 
 def test_invalid_request_id_is_rejected_before_route_execution() -> None:
+    """Reject malformed request identifiers at the middleware boundary."""
     app = create_app(build_test_settings())
     response = TestClient(app).get(
         "/health/live",
@@ -49,6 +63,7 @@ def test_invalid_request_id_is_rejected_before_route_execution() -> None:
 
 
 def test_forwarded_for_is_used_only_for_trusted_proxy() -> None:
+    """Prevent untrusted peers from spoofing the client address header."""
     scope = {
         "type": "http",
         "method": "GET",

@@ -1,5 +1,14 @@
 """File: app/db/base.py
-Shared declarative base and audited entity mixins.
+
+Purpose:
+Defines the SQLAlchemy declarative base and reusable audit/soft-delete column
+mixins for externally migrated tables.
+
+Dependency flow:
+ORM model declaration
+-> declarative base and mixin columns
+-> SQLAlchemy mapping metadata
+-> repository persistence
 
 The migration service owns DDL. This module intentionally does not register
 schema-creation hooks and the API never calls ``metadata.create_all``.

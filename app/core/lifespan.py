@@ -1,5 +1,16 @@
 """File: app/core/lifespan.py
-FastAPI startup and shutdown orchestration.
+
+Purpose:
+Creates, publishes, health-checks, and closes process-wide infrastructure for
+the FastAPI application lifecycle.
+
+Dependency flow:
+Validated AppSettings
+-> PostgreSQL and optional Redis/Mongo clients
+-> rate limiter and AuthRuntime
+-> references stored on app.state
+-> request dependencies
+-> reverse-order shutdown
 
 This module owns the process-wide lifecycle of infrastructure dependencies:
 

@@ -1,5 +1,16 @@
 """File: app/modules/password_management/routes.py
-Password recovery, change, and initial-password endpoints."""
+
+Purpose:
+Defines ``/auth/password`` public recovery and authenticated change/initial-set
+endpoints.
+
+Dependency flow:
+HTTP request
+-> public workflow context/rate limit or PasswordSensitiveAccess
+-> PasswordManagementServiceDep
+-> OTP/password/session service transaction
+-> APIResponse
+"""
 
 from typing import cast
 
@@ -47,7 +58,11 @@ async def forgot_password(
     rate_limits: AuthRateLimitsDep,
     service: PasswordManagementServiceDep,
 ) -> JSONResponse:
-    """Issue a generic-response password-reset challenge."""
+    """Issue a generic-response password-reset challenge.
+
+    This public route applies an identity-aware reset limit and intentionally
+    returns a generic contract so account existence is not disclosed.
+    """
     await rate_limits.password_reset(
         context=context,
         # Pydantic validates these channel-aware fields before this boundary.
@@ -68,7 +83,11 @@ async def verify_password_reset_otp(
     rate_limits: AuthRateLimitsDep,
     service: PasswordManagementServiceDep,
 ) -> JSONResponse:
-    """Consume the OTP and return a short-lived one-time reset proof."""
+    """Consume the OTP and return a short-lived one-time reset proof.
+
+    The public route applies the purpose-specific OTP verification limit before
+    the service row-locks and consumes the challenge.
+    """
     purpose = (
         OTPPurpose.PASSWORD_RESET_EMAIL.value
         if payload.channel == "email"
@@ -94,7 +113,11 @@ async def reset_password(
     context: SessionCreationRequestContextDep,
     service: PasswordManagementServiceDep,
 ) -> JSONResponse:
-    """Set the new password, revoke existing sessions, and issue a new session."""
+    """Set a new password using a short-lived reset proof.
+
+    TokenManager validation protects this public recovery step; the service
+    updates history, revokes existing sessions, and issues one replacement.
+    """
     result = await service.reset_with_token(payload, context)
     debug(
         "Password reset completed",
@@ -115,7 +138,11 @@ async def change_password(
     principal: PasswordSensitiveAccess,
     service: PasswordManagementServiceDep,
 ) -> JSONResponse:
-    """Verify the current password and rotate every active session."""
+    """Verify the current password and rotate every active session.
+
+    ``PasswordSensitiveAccess`` authenticates and rate-limits the caller; the
+    service validates the current secret before changing persisted state.
+    """
     return APIResponse.success(
         data=await service.change(
             user_id=principal.user_id,
@@ -136,7 +163,11 @@ async def set_password(
     principal: PasswordSensitiveAccess,
     service: PasswordManagementServiceDep,
 ) -> JSONResponse:
-    """Add an initial password to an account that has no password hash."""
+    """Add an initial password to an account that has no password hash.
+
+    The sensitive authenticated dependency protects this endpoint and the
+    service rejects accounts that already have password credentials.
+    """
     return APIResponse.success(
         data=await service.set(
             user_id=principal.user_id,

@@ -1,5 +1,15 @@
 """File: app/db/mongo.py
-    Asynchronous MongoDB client lifecycle adapter using PyMongo Async.
+
+Purpose:
+Owns the optional process-wide asynchronous MongoDB client and bounded health
+check used by application lifespan management.
+
+Dependency flow:
+Validated Mongo settings
+-> lifespan creates MongoDatabase
+-> connect()/health_check()
+-> shared optional database handle
+-> close() during shutdown
 """
 
 from __future__ import annotations

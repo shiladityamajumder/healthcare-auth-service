@@ -1,5 +1,19 @@
 """File: app/modules/login/repositories.py
-SQLAlchemy persistence for password and phone-OTP login workflows."""
+
+Purpose:
+Implements identity lookup, credential-state mutation, login auditing,
+authorization/session persistence, and the login OTP repository port.
+
+Dependency flow:
+Login service inside SQLAlchemyUnitOfWork
+-> LoginRepository with the shared AsyncSession
+-> identity/session/OTP statements and row locks
+-> PostgreSQL identity tables
+-> ORM state returned or staged
+
+``add()`` and mutation helpers stage state only. OTP issue/verification locks
+coordinate concurrency while the unit of work owns commit and rollback.
+"""
 
 from __future__ import annotations
 
@@ -25,7 +39,7 @@ class LoginRepository:
         *,
         for_update: bool = False,
     ) -> Users | None:
-        """Load by email from persistence."""
+        """Load by normalized email, optionally locking credential/lockout state."""
         statement = select(Users).where(Users.email_normalized == email)
         if for_update:
             statement = statement.with_for_update()
@@ -38,7 +52,7 @@ class LoginRepository:
         *,
         for_update: bool = False,
     ) -> Users | None:
-        """Load by phone from persistence."""
+        """Load by normalized phone, optionally locking login state."""
         statement = select(Users).where(
             Users.phone_country_code == country_code,
             Users.phone_number == phone_number,

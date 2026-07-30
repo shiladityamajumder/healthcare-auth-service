@@ -1,5 +1,17 @@
 """File: app/modules/current_user/service.py
-Current-user application service."""
+
+Purpose:
+Owns current-user profile reads, preference updates, and effective
+role/permission projections.
+
+Dependency flow:
+CurrentUserServiceDep and authenticated user identifier
+-> request-scoped SQLAlchemyUnitOfWork
+-> CurrentUserRepository on the shared session
+-> profile mutation or claim loading
+-> unit-of-work commit/rollback
+-> response contract
+"""
 
 from __future__ import annotations
 

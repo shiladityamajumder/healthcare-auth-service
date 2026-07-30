@@ -1,5 +1,15 @@
 """File: app/auth/workflows/session_tokens.py
-Shared access-token, refresh-token, and session creation workflow.
+
+Purpose:
+Creates a persisted session record and matching access/refresh token pair for
+registration, login, verification, and password workflows.
+
+Dependency flow:
+Owning service transaction and authorization claims
+-> SessionTokenIssuer
+-> refresh-token hashing and session writer
+-> TokenManager access/refresh signing
+-> token pair returned to owning service
 
 This module coordinates token issuance and stages the corresponding persisted
 session record through an injected writer.

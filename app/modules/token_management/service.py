@@ -1,5 +1,17 @@
 """File: app/modules/token_management/service.py
-Refresh-token rotation and logout application service."""
+
+Purpose:
+Owns refresh-token rotation/replay handling and refresh- or access-principal
+session revocation use cases.
+
+Dependency flow:
+TokenManagementServiceDep
+-> TokenManager verification and SecureHashing
+-> request-scoped SQLAlchemyUnitOfWork
+-> TokenRepository on the shared session
+-> token-family/session validation and mutation
+-> commit/rollback and response contract
+"""
 
 from __future__ import annotations
 
@@ -63,6 +75,8 @@ class TokenManagementService:
         result: TokenPairResponse | None = None
         async with self._uow:
             repository = TokenRepository(self._uow.session)
+            # The session row lock serializes refresh rotation and reuse
+            # detection for one token family.
             session = await repository.get_session(session_id, for_update=True)
             now = utc_now()
             if session is None or session.user_id != user_id:
@@ -132,6 +146,7 @@ class TokenManagementService:
                             refresh_expires_at=refresh.expires_at,
                             user=user_dto,
                         )
+        # Defer the error until family/session revocation mutations commit.
         if pending_error is not None:
             raise pending_error
         assert result is not None

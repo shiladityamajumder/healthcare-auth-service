@@ -1,5 +1,17 @@
 """File: app/modules/admin_permissions/service.py
-Permission and role-policy application service."""
+
+Purpose:
+Owns permission CRUD and complete role-permission replacement use cases,
+including uniqueness and active-record invariants.
+
+Dependency flow:
+AdminPermissionsServiceDep
+-> request-scoped SQLAlchemyUnitOfWork
+-> PermissionRepository on the shared session
+-> validation and staged ORM/mapping changes
+-> unit-of-work commit/rollback
+-> response contract
+"""
 
 from __future__ import annotations
 
@@ -74,6 +86,8 @@ class AdminPermissionsService:
                     updated_by=actor_user_id,
                 )
                 repository.add(permission)
+                # Flush materializes generated values without committing the
+                # request-scoped transaction.
                 await self._uow.flush()
                 response = permission_response(permission)
         except IntegrityError as exc:

@@ -1,5 +1,15 @@
 """File: app/common/exceptions.py
-Framework-independent application exception hierarchy.
+
+Purpose:
+Defines framework-independent application exceptions with client-safe codes,
+messages, and optional details.
+
+Dependency flow:
+Domain/service/infrastructure failure
+-> AppError subtype
+-> propagation without HTTP coupling
+-> centralized API exception handler
+-> canonical error response
 
 Exceptions in this module carry safe, machine-readable information only. They
 must not contain SQL text, connection strings, access tokens, stack traces,

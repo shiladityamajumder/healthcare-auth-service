@@ -1,5 +1,15 @@
 """File: app/modules/admin_permissions/schemas.py
-Permission and role-policy contracts."""
+
+Purpose:
+Defines strict permission CRUD and complete role-permission replacement
+contracts, including duplicate-ID rejection.
+
+Dependency flow:
+HTTP body or service result
+-> Pydantic field/model validation
+-> permission route/service
+-> response-model serialization
+"""
 
 from __future__ import annotations
 

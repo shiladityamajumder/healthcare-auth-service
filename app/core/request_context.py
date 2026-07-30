@@ -1,5 +1,14 @@
 """File: app/core/request_context.py
-    Request-scoped observability context based on ``contextvars``.
+
+Purpose:
+Stores request, correlation, trace, and API-version metadata in context-local
+variables for response and logging consumers.
+
+Dependency flow:
+Request-context middleware
+-> context variable setters
+-> route/logging/APIResponse readers
+-> token-based reset at request completion
 """
 
 from __future__ import annotations

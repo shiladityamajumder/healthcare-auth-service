@@ -1,4 +1,13 @@
-"""File: tests/unit/test_identity_model_contract.py"""
+"""File: tests/unit/test_identity_model_contract.py
+
+Purpose:
+Protects identity ORM schema placement and phone-identity database constraints.
+
+Dependency flow:
+SQLAlchemy identity mapping metadata
+-> table/constraint inspection
+-> external schema contract assertions
+"""
 
 from __future__ import annotations
 

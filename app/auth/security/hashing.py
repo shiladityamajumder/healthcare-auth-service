@@ -1,5 +1,14 @@
 """File: app/auth/security/hashing.py
-Security primitives for deterministic authentication hashing.
+
+Purpose:
+Provides domain-separated deterministic HMAC hashing for non-password
+authentication values that require private, stable lookup keys.
+
+Dependency flow:
+Workflow-owned normalized value and namespace
+-> SecureHashing
+-> peppered HMAC digest
+-> repository lookup or rate-limit backend key
 
 This module provides domain-separated HMAC-SHA256 hashing for opaque
 authentication tokens, OTP challenges, normalized destinations, audit

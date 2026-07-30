@@ -1,5 +1,15 @@
 """File: app/modules/email_verification/schemas.py
-Email-verification contracts owned by this module."""
+
+Purpose:
+Defines email-verification request/confirmation inputs and token-bearing result
+contracts.
+
+Dependency flow:
+HTTP body or service result
+-> strict Pydantic validation
+-> email-verification route/service
+-> response-model serialization
+"""
 
 from __future__ import annotations
 

@@ -1,5 +1,14 @@
 """File: app/auth/infrastructure/openapi.py
-Reusable OpenAPI response definitions for authentication routes.
+
+Purpose:
+Defines reusable authentication error-response metadata for accurate route
+OpenAPI declarations.
+
+Dependency flow:
+Authentication module openapi.py
+-> selected shared response definitions
+-> APIRouter/route responses metadata
+-> generated OpenAPI schema
 
 This module contains transport documentation only. It does not handle
 exceptions, create HTTP responses, or contain authentication business rules.
