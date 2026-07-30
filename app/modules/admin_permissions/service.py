@@ -5,17 +5,23 @@ from __future__ import annotations
 
 import uuid
 
-from app.common.exceptions import NotFoundError, ValidationError
+from sqlalchemy.exc import IntegrityError
+
+from app.common.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.logging import get_logger
 from app.db.uow import SQLAlchemyUnitOfWork
 from app.models.identity import Permissions
 from app.modules.admin_permissions.repositories import PermissionRepository
 from app.modules.admin_permissions.schemas import (
+    CreatePermissionRequest,
+    MessageResponse,
     PermissionListResponse,
     PermissionResponse,
     ReplaceRolePermissionsRequest,
     RolePermissionsResponse,
+    UpdatePermissionRequest,
 )
+from app.utils.datetime_utils import utc_now
 
 logger = get_logger(__name__)
 
@@ -34,7 +40,7 @@ def permission_response(permission: Permissions) -> PermissionResponse:
 
 
 class AdminPermissionsService:
-    """Read permissions and atomically replace role permission sets."""
+    """Manage permission masters and atomically replace role policy sets."""
 
     def __init__(self, *, uow: SQLAlchemyUnitOfWork) -> None:
         self._uow = uow
@@ -46,6 +52,125 @@ class AdminPermissionsService:
             return PermissionListResponse(
                 permissions=[permission_response(item) for item in records]
             )
+
+    async def create(
+        self,
+        *,
+        payload: CreatePermissionRequest,
+        actor_user_id: uuid.UUID,
+    ) -> PermissionResponse:
+        """Create one active permission with complete audit ownership."""
+        try:
+            async with self._uow:
+                repository = PermissionRepository(self._uow.session)
+                if await repository.code_exists(payload.code):
+                    raise _permission_code_conflict(payload.code)
+                permission = Permissions(
+                    code=payload.code,
+                    resource=payload.resource,
+                    action=payload.action,
+                    description=payload.description,
+                    created_by=actor_user_id,
+                    updated_by=actor_user_id,
+                )
+                repository.add(permission)
+                await self._uow.flush()
+                response = permission_response(permission)
+        except IntegrityError as exc:
+            # The partial unique index remains authoritative when two create
+            # requests race after both pass the friendly existence check.
+            raise _permission_code_conflict(payload.code) from exc
+        logger.info(
+            "Security audit event",
+            extra={
+                "event": "permission_created",
+                "actor_user_id": str(actor_user_id),
+                "permission_id": str(response.id),
+                "permission_code": response.code,
+            },
+        )
+        return response
+
+    async def get(self, *, permission_id: uuid.UUID) -> PermissionResponse:
+        """Return one active permission master record."""
+        async with self._uow:
+            permission = await PermissionRepository(self._uow.session).get_active(permission_id)
+            if permission is None:
+                raise NotFoundError("The permission was not found.")
+            return permission_response(permission)
+
+    async def update(
+        self,
+        *,
+        permission_id: uuid.UUID,
+        payload: UpdatePermissionRequest,
+        actor_user_id: uuid.UUID,
+    ) -> PermissionResponse:
+        """Apply supplied fields while preserving active-code uniqueness."""
+        try:
+            async with self._uow:
+                repository = PermissionRepository(self._uow.session)
+                permission = await repository.get_active(
+                    permission_id,
+                    for_update=True,
+                )
+                if permission is None:
+                    raise NotFoundError("The permission was not found.")
+                updates = payload.model_dump(exclude_unset=True)
+                new_code = updates.get("code")
+                if new_code and await repository.code_exists(
+                    str(new_code),
+                    exclude_permission_id=permission.id,
+                ):
+                    raise _permission_code_conflict(str(new_code))
+                for field, value in updates.items():
+                    setattr(permission, field, value)
+                permission.updated_by = actor_user_id
+                await self._uow.flush()
+                response = permission_response(permission)
+        except IntegrityError as exc:
+            code = payload.code or "requested"
+            raise _permission_code_conflict(code) from exc
+        logger.info(
+            "Security audit event",
+            extra={
+                "event": "permission_updated",
+                "actor_user_id": str(actor_user_id),
+                "permission_id": str(permission_id),
+                "permission_code": response.code,
+            },
+        )
+        return response
+
+    async def delete(
+        self,
+        *,
+        permission_id: uuid.UUID,
+        actor_user_id: uuid.UUID,
+    ) -> MessageResponse:
+        """Soft-delete a permission while retaining its audit history."""
+        async with self._uow:
+            permission = await PermissionRepository(self._uow.session).get_active(
+                permission_id,
+                for_update=True,
+            )
+            if permission is None:
+                raise NotFoundError("The permission was not found.")
+            now = utc_now()
+            permission.is_deleted = True
+            permission.deleted_at = now
+            permission.deleted_by = actor_user_id
+            permission.updated_by = actor_user_id
+        logger.info(
+            "Security audit event",
+            extra={
+                "event": "permission_deleted",
+                "actor_user_id": str(actor_user_id),
+                "permission_id": str(permission_id),
+                "permission_code": permission.code,
+            },
+        )
+        return MessageResponse(message="The permission has been deleted.")
 
     async def role_permissions(
         self,
@@ -77,9 +202,7 @@ class AdminPermissionsService:
                 raise NotFoundError("The role was not found.")
             permissions = await repository.get_active_by_ids(payload.permission_ids)
             found_ids = {item.id for item in permissions}
-            missing_ids = [
-                str(item) for item in payload.permission_ids if item not in found_ids
-            ]
+            missing_ids = [str(item) for item in payload.permission_ids if item not in found_ids]
             if missing_ids:
                 raise ValidationError(
                     "One or more permissions do not exist or are deleted.",
@@ -105,6 +228,15 @@ class AdminPermissionsService:
             },
         )
         return response
+
+
+def _permission_code_conflict(code: str) -> ConflictError:
+    """Build one consistent, client-safe duplicate-code error."""
+    return ConflictError(
+        "An active permission with this code already exists.",
+        details={"code": code},
+        code="PERMISSION_CODE_ALREADY_EXISTS",
+    )
 
 
 __all__ = ["AdminPermissionsService", "permission_response"]

@@ -4,13 +4,13 @@ SQLAlchemy persistence for registration workflows."""
 from __future__ import annotations
 
 import uuid
+from collections.abc import Sequence
 from datetime import datetime
 
 from sqlalchemy import func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.authorization.claims import AuthorizationClaims, load_authorization_claims
-from app.common.exceptions import InfrastructureUnavailableError
 from app.models.identity import OtpChallenges, PasswordHistory, Roles, Sessions, UserRoles, Users
 
 
@@ -43,33 +43,35 @@ class RegistrationRepository:
         """Stage password history in the current unit of work."""
         self._session.add(PasswordHistory(user_id=user_id, password_hash=password_hash))
 
-    async def assign_default_role(
+    async def active_roles_by_code(
         self,
-        *,
-        user_id: uuid.UUID,
-        role_code: str,
-        required: bool,
-    ) -> bool:
-        """Assign default role in persistence."""
-        role = await self._session.scalar(
-            select(Roles).where(Roles.code == role_code, Roles.is_deleted.is_(False))
-        )
-        if role is None:
-            if required:
-                raise InfrastructureUnavailableError(
-                    f"Required default role '{role_code}' is missing."
-                )
-            return False
-        self._session.add(
-            UserRoles(
-                user_id=user_id,
-                role_id=role.id,
-                scope_type=None,
-                scope_id=None,
-                is_active=True,
+        role_codes: Sequence[str],
+    ) -> dict[str, Roles]:
+        """Load all requested active roles with one database round trip."""
+        if not role_codes:
+            return {}
+        roles = await self._session.scalars(
+            select(Roles).where(
+                Roles.code.in_(role_codes),
+                Roles.is_deleted.is_(False),
             )
         )
-        return True
+        return {role.code: role for role in roles}
+
+    def assign_roles(self, *, user_id: uuid.UUID, roles: Sequence[Roles]) -> None:
+        """Stage global active role assignments in the current transaction."""
+        self._session.add_all(
+            [
+                UserRoles(
+                    user_id=user_id,
+                    role_id=role.id,
+                    scope_type=None,
+                    scope_id=None,
+                    is_active=True,
+                )
+                for role in roles
+            ]
+        )
 
     async def authorization_claims(
         self,
@@ -121,7 +123,7 @@ class RegistrationRepository:
         purpose: str,
     ) -> OtpChallenges | None:
         """Load the latest for destination from persistence."""
-        return await self._session.scalar(
+        statement = (
             select(OtpChallenges)
             .where(
                 OtpChallenges.destination_hash == destination_hash,
@@ -130,6 +132,7 @@ class RegistrationRepository:
             .order_by(OtpChallenges.created_at.desc())
             .limit(1)
         )
+        return (await self._session.scalars(statement)).first()
 
     async def invalidate_active(
         self,
@@ -149,15 +152,16 @@ class RegistrationRepository:
             )
             .values(consumed_at=consumed_at)
         )
-        return int(result.rowcount or 0)
+        return int(getattr(result, "rowcount", 0) or 0)
 
     async def get_for_update(self, challenge_id: uuid.UUID) -> OtpChallenges | None:
         """Load and lock an OTP challenge for verification."""
-        return await self._session.scalar(
+        statement = (
             select(OtpChallenges)
             .where(OtpChallenges.id == challenge_id)
             .with_for_update()
         )
+        return (await self._session.scalars(statement)).first()
 
 
 __all__ = ["RegistrationRepository"]

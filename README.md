@@ -196,9 +196,13 @@ DELETE /api/v1/admin/roles/{role_id}
 ### Permissions and role permissions
 
 ```text
-GET /api/v1/admin/permissions
-GET /api/v1/admin/roles/{role_id}/permissions
-PUT /api/v1/admin/roles/{role_id}/permissions
+GET    /api/v1/admin/permissions
+POST   /api/v1/admin/permissions
+GET    /api/v1/admin/permissions/{permission_id}
+PATCH  /api/v1/admin/permissions/{permission_id}
+DELETE /api/v1/admin/permissions/{permission_id}
+GET    /api/v1/admin/roles/{role_id}/permissions
+PUT    /api/v1/admin/roles/{role_id}/permissions
 ```
 
 ### User-role assignments

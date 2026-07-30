@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from app.main import create_app
 
-
 EXPECTED_IDENTITY_PATHS = {
     "/api/v1/auth/register/email",
     "/api/v1/auth/register/phone/request-otp",
@@ -34,6 +33,7 @@ EXPECTED_IDENTITY_PATHS = {
     "/api/v1/admin/roles",
     "/api/v1/admin/roles/{role_id}",
     "/api/v1/admin/permissions",
+    "/api/v1/admin/permissions/{permission_id}",
     "/api/v1/admin/roles/{role_id}/permissions",
     "/api/v1/admin/users/{user_id}/roles",
     "/api/v1/admin/users/{user_id}/roles/{user_role_id}",
@@ -57,15 +57,9 @@ def test_auth_metadata_headers_are_explicit_and_non_authoritative() -> None:
     login = schema["paths"]["/api/v1/auth/login/password"]["post"]
     protected = schema["paths"]["/api/v1/auth/sessions"]["get"]
 
-    login_headers = {
-        item["name"]: item
-        for item in login["parameters"]
-        if item["in"] == "header"
-    }
+    login_headers = {item["name"]: item for item in login["parameters"] if item["in"] == "header"}
     protected_headers = {
-        item["name"]: item
-        for item in protected["parameters"]
-        if item["in"] == "header"
+        item["name"]: item for item in protected["parameters"] if item["in"] == "header"
     }
 
     for header_name in (
@@ -82,12 +76,8 @@ def test_auth_metadata_headers_are_explicit_and_non_authoritative() -> None:
         assert header_name in login_headers
         assert login_headers[header_name]["required"] is False
 
-    assert "consistency assertion" in protected_headers["X-User-ID"][
-        "description"
-    ].lower()
-    assert "consistency assertion" in protected_headers["X-Session-ID"][
-        "description"
-    ].lower()
+    assert "consistency assertion" in protected_headers["X-User-ID"]["description"].lower()
+    assert "consistency assertion" in protected_headers["X-Session-ID"]["description"].lower()
 
 
 def test_auth_operations_publish_unified_error_responses() -> None:
@@ -114,9 +104,7 @@ def test_password_and_role_paths_publish_expected_methods() -> None:
 
     assert {"put", "post"}.issubset(paths["/api/v1/auth/password"])
     assert {"get", "post"}.issubset(paths["/api/v1/admin/roles"])
-    assert {"get", "patch", "delete"}.issubset(
-        paths["/api/v1/admin/roles/{role_id}"]
-    )
-    assert {"get", "put"}.issubset(
-        paths["/api/v1/admin/roles/{role_id}/permissions"]
-    )
+    assert {"get", "patch", "delete"}.issubset(paths["/api/v1/admin/roles/{role_id}"])
+    assert {"get", "put"}.issubset(paths["/api/v1/admin/roles/{role_id}/permissions"])
+    assert {"get", "post"}.issubset(paths["/api/v1/admin/permissions"])
+    assert {"get", "patch", "delete"}.issubset(paths["/api/v1/admin/permissions/{permission_id}"])

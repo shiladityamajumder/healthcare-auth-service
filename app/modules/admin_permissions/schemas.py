@@ -6,9 +6,52 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
+from app.common.auth_contracts import MessageResponse
 from app.common.schemas import StrictModel
+
+
+class CreatePermissionRequest(StrictModel):
+    """Create one fine-grained permission master record."""
+
+    code: str = Field(pattern=r"^[a-z][a-z0-9_.:-]{1,127}$")
+    resource: str = Field(pattern=r"^[a-z][a-z0-9_.-]{1,63}$")
+    action: str = Field(pattern=r"^[a-z][a-z0-9_-]{1,63}$")
+    description: str | None = Field(default=None, max_length=2000)
+
+
+class UpdatePermissionRequest(StrictModel):
+    """Partially update a permission master record."""
+
+    code: str | None = Field(
+        default=None,
+        pattern=r"^[a-z][a-z0-9_.:-]{1,127}$",
+    )
+    resource: str | None = Field(
+        default=None,
+        pattern=r"^[a-z][a-z0-9_.-]{1,63}$",
+    )
+    action: str | None = Field(
+        default=None,
+        pattern=r"^[a-z][a-z0-9_-]{1,63}$",
+    )
+    description: str | None = Field(default=None, max_length=2000)
+
+    @model_validator(mode="after")
+    def require_update(self) -> UpdatePermissionRequest:
+        """Reject empty updates and explicit nulls for database-required fields."""
+        if not self.model_fields_set:
+            raise ValueError("at least one permission field must be supplied")
+        required_fields = {"code", "resource", "action"}
+        explicit_nulls = [
+            field
+            for field in required_fields & self.model_fields_set
+            if getattr(self, field) is None
+        ]
+        if explicit_nulls:
+            raise ValueError(f"{', '.join(sorted(explicit_nulls))} cannot be null")
+        return self
 
 
 class PermissionResponse(StrictModel):
@@ -51,8 +94,11 @@ class RolePermissionsResponse(StrictModel):
 
 
 __all__ = [
+    "CreatePermissionRequest",
+    "MessageResponse",
     "PermissionListResponse",
     "PermissionResponse",
     "ReplaceRolePermissionsRequest",
     "RolePermissionsResponse",
+    "UpdatePermissionRequest",
 ]

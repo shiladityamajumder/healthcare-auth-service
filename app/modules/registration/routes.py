@@ -3,19 +3,17 @@ Registration HTTP endpoints."""
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Header, Request, status
 from fastapi.responses import JSONResponse
 
-from app.auth.request_context.dependencies import AuthRateLimitsDep, AuthRequestContextDep, AuthRuntimeDep
 from app.auth.identity.canonical import email_identity, phone_identity
+from app.auth.request_context.context import AuthRequestContext
+from app.auth.request_context.dependencies import AuthRateLimitsDep, AuthRuntimeDep
+from app.auth.request_context.headers import get_auth_headers
 from app.common.response import APIResponse, APIResponseModel
 from app.core.di import PostgresUOWDep
 from app.models.enums import OTPPurpose
 from app.modules.registration.openapi import RESPONSES, TAG
-from app.modules.registration.service import (
-    EmailPasswordRegistrationService,
-    PhoneOtpRegistrationService,
-)
 from app.modules.registration.schemas import (
     EmailPasswordRegistrationRequest,
     OtpChallengeResponse,
@@ -23,6 +21,10 @@ from app.modules.registration.schemas import (
     PhoneOtpRegistrationVerifyRequest,
     RegistrationResponse,
     TokenPairResponse,
+)
+from app.modules.registration.service import (
+    EmailPasswordRegistrationService,
+    PhoneOtpRegistrationService,
 )
 from app.utils.debug import debug
 
@@ -33,11 +35,92 @@ router = APIRouter(
 )
 
 
+def get_registration_request_context(
+    request: Request,
+    runtime: AuthRuntimeDep,
+    x_client_id: Annotated[
+        str | None,
+        Header(
+            alias="X-Client-ID",
+            min_length=1,
+            max_length=128,
+            description="Optional client identifier used for registration rate limits.",
+        ),
+    ] = None,
+    x_platform: Annotated[
+        str | None,
+        Header(
+            alias="X-Platform",
+            min_length=1,
+            max_length=16,
+            description=(
+                "Client platform: web, android, ios, or service; used as the "
+                "session device-type fallback."
+            ),
+        ),
+    ] = None,
+    x_device_id: Annotated[
+        str | None,
+        Header(
+            alias="X-Device-ID",
+            min_length=1,
+            max_length=255,
+            description=(
+                "Optional stable identifier used for rate limits and as the "
+                "first-session fallback when device_id is absent from the body."
+            ),
+        ),
+    ] = None,
+    x_device_type: Annotated[
+        str | None,
+        Header(
+            alias="X-Device-Type",
+            min_length=1,
+            max_length=32,
+            description=(
+                "Optional first-session device type used when device_type is "
+                "absent from the body."
+            ),
+        ),
+    ] = None,
+) -> AuthRequestContext:
+    """Build the anonymous registration context from headers that are used.
+
+    ``X-User-ID`` and ``X-Session-ID`` are excluded because registration has no
+    authenticated principal. Client version, device name, and idempotency are
+    also excluded until registration has persistence that consumes them. For
+    backward compatibility, body device metadata takes precedence over header
+    fallback values when both are supplied.
+    """
+    headers = get_auth_headers(
+        x_client_id=x_client_id,
+        x_platform=x_platform,
+        x_device_id=x_device_id,
+        x_device_type=x_device_type,
+    )
+    return AuthRequestContext.from_request(
+        request,
+        settings=runtime.settings,
+        headers=headers,
+    )
+
+
+RegistrationRequestContextDep = Annotated[
+    AuthRequestContext,
+    Depends(get_registration_request_context),
+]
+
+
 def get_email_registration_service(
     uow: PostgresUOWDep,
     runtime: AuthRuntimeDep,
 ) -> EmailPasswordRegistrationService:
-    """Build the request-scoped email registration service."""
+    """Build a request-scoped email registration service through DI.
+
+    FastAPI injects one unit of work plus the shared immutable auth runtime.
+    Constructor injection keeps transaction and security dependencies explicit,
+    makes the service easy to test, and prevents hidden global state.
+    """
     return EmailPasswordRegistrationService(
         uow=uow,
         settings=runtime.settings,
@@ -53,7 +136,7 @@ def get_phone_registration_service(
     uow: PostgresUOWDep,
     runtime: AuthRuntimeDep,
 ) -> PhoneOtpRegistrationService:
-    """Build the request-scoped phone registration service."""
+    """Build the phone service from the same DI-managed infrastructure."""
     return PhoneOtpRegistrationService(
         uow=uow,
         settings=runtime.settings,
@@ -83,11 +166,11 @@ PhoneOtpRegistrationDep = Annotated[
 )
 async def register_email(
     payload: EmailPasswordRegistrationRequest,
-    context: AuthRequestContextDep,
+    context: RegistrationRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: EmailPasswordRegistrationDep,
 ) -> JSONResponse:
-    """Create a customer identity using email and password."""
+    """Create an email identity with one or more validated initial roles."""
     await rate_limits.registration(
         context=context,
         identity=email_identity(payload.email),
@@ -104,7 +187,7 @@ async def register_email(
 )
 async def request_phone_registration_otp(
     payload: PhoneOtpRegistrationRequest,
-    context: AuthRequestContextDep,
+    context: RegistrationRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: PhoneOtpRegistrationDep,
 ) -> JSONResponse:
@@ -127,7 +210,7 @@ async def request_phone_registration_otp(
 )
 async def verify_phone_registration_otp(
     payload: PhoneOtpRegistrationVerifyRequest,
-    context: AuthRequestContextDep,
+    context: RegistrationRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: PhoneOtpRegistrationDep,
 ) -> JSONResponse:

@@ -12,7 +12,7 @@ from app.models.identity import Permissions, RolePermissions, Roles
 
 
 class PermissionRepository:
-    """Read active permissions and replace role-permission mappings."""
+    """Persist permission masters and their role-policy mappings."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -30,6 +30,40 @@ class PermissionRepository:
         )
         return list((await self._session.scalars(statement)).all())
 
+    async def get_active(
+        self,
+        permission_id: uuid.UUID,
+        *,
+        for_update: bool = False,
+    ) -> Permissions | None:
+        """Return an active permission, optionally locking it for mutation."""
+        statement = select(Permissions).where(
+            Permissions.id == permission_id,
+            Permissions.is_deleted.is_(False),
+        )
+        if for_update:
+            statement = statement.with_for_update()
+        return (await self._session.scalars(statement)).first()
+
+    async def code_exists(
+        self,
+        code: str,
+        *,
+        exclude_permission_id: uuid.UUID | None = None,
+    ) -> bool:
+        """Return whether another active permission uses the supplied code."""
+        statement = select(Permissions.id).where(
+            Permissions.code == code,
+            Permissions.is_deleted.is_(False),
+        )
+        if exclude_permission_id is not None:
+            statement = statement.where(Permissions.id != exclude_permission_id)
+        return (await self._session.scalars(statement)).first() is not None
+
+    def add(self, permission: Permissions) -> None:
+        """Stage a permission master inside the current unit of work."""
+        self._session.add(permission)
+
     async def get_role(
         self,
         role_id: uuid.UUID,
@@ -43,7 +77,7 @@ class PermissionRepository:
         )
         if for_update:
             statement = statement.with_for_update()
-        return await self._session.scalar(statement)
+        return (await self._session.scalars(statement)).first()
 
     async def list_for_role(self, role_id: uuid.UUID) -> list[Permissions]:
         """Return active permissions currently assigned to a role."""
