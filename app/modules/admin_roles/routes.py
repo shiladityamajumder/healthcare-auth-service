@@ -4,15 +4,16 @@ Permission-protected RBAC role endpoints."""
 from __future__ import annotations
 
 import uuid
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
-from app.auth.authorization.dependencies import require_permissions
-from app.auth.request_context.principals import UserPrincipal
 from app.common.response import APIResponse, APIResponseModel
-from app.core.di import PostgresUOWDep
+from app.modules.admin_roles.dependencies import (
+    AdminRolesServiceDep,
+    RoleManagePrincipal,
+    RoleReadPrincipal,
+)
 from app.modules.admin_roles.openapi import RESPONSES, TAG
 from app.modules.admin_roles.schemas import (
     CreateRoleRequest,
@@ -21,36 +22,12 @@ from app.modules.admin_roles.schemas import (
     RoleResponse,
     UpdateRoleRequest,
 )
-from app.modules.admin_roles.service import AdminRolesService
 
 router = APIRouter(
     prefix="/admin/roles",
     tags=[TAG],
     responses=RESPONSES,
 )
-RoleReadPrincipal = Annotated[
-    UserPrincipal,
-    Depends(require_permissions("identity.roles.read")),
-]
-RoleManagePrincipal = Annotated[
-    UserPrincipal,
-    Depends(require_permissions("identity.roles.manage")),
-]
-
-
-def get_admin_roles_service(uow: PostgresUOWDep) -> AdminRolesService:
-    """Build the role service with the request-scoped unit of work.
-
-    Constructor injection keeps persistence explicit and lets tests provide a
-    controlled transaction without changing service code.
-    """
-    return AdminRolesService(uow=uow)
-
-
-AdminRolesServiceDep = Annotated[
-    AdminRolesService,
-    Depends(get_admin_roles_service),
-]
 
 
 @router.get(

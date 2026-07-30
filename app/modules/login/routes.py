@@ -1,21 +1,19 @@
 """File: app/modules/login/routes.py
 Password and phone-OTP login endpoints."""
 
-from typing import Annotated
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from app.auth.identity.canonical import email_identity, phone_identity
-from app.auth.request_context.dependencies import (
+from app.common.response import APIResponse, APIResponseModel
+from app.models.enums import OTPPurpose
+from app.modules.login.dependencies import (
     AuthRateLimitsDep,
-    AuthRuntimeDep,
+    PasswordLoginDep,
+    PhoneOtpLoginDep,
     RateLimitRequestContextDep,
     SessionCreationRequestContextDep,
 )
-from app.common.response import APIResponse, APIResponseModel
-from app.core.di import PostgresUOWDep
-from app.models.enums import OTPPurpose
 from app.modules.login.openapi import RESPONSES, TAG
 from app.modules.login.schemas import (
     OtpChallengeResponse,
@@ -24,53 +22,9 @@ from app.modules.login.schemas import (
     PhoneOtpLoginVerifyRequest,
     TokenPairResponse,
 )
-from app.modules.login.service import PasswordLoginService, PhoneOtpLoginService
 from app.utils.debug import debug
 
 router = APIRouter(prefix="/auth/login", tags=[TAG], responses=RESPONSES)
-
-
-def get_password_login_service(
-    uow: PostgresUOWDep,
-    runtime: AuthRuntimeDep,
-) -> PasswordLoginService:
-    """Build password login from FastAPI-managed dependencies.
-
-    Constructor injection shares one request transaction and makes each
-    security dependency replaceable in isolated service tests.
-    """
-    return PasswordLoginService(
-        uow=uow,
-        settings=runtime.settings,
-        passwords=runtime.passwords,
-        hashing=runtime.hashing,
-        tokens=runtime.tokens,
-    )
-
-
-def get_phone_otp_login_service(
-    uow: PostgresUOWDep,
-    runtime: AuthRuntimeDep,
-) -> PhoneOtpLoginService:
-    """Build phone-OTP login from the same explicit dependency graph."""
-    return PhoneOtpLoginService(
-        uow=uow,
-        settings=runtime.settings,
-        hashing=runtime.hashing,
-        tokens=runtime.tokens,
-        otp=runtime.otp,
-        notifications=runtime.notifications,
-    )
-
-
-PasswordLoginDep = Annotated[
-    PasswordLoginService,
-    Depends(get_password_login_service),
-]
-PhoneOtpLoginDep = Annotated[
-    PhoneOtpLoginService,
-    Depends(get_phone_otp_login_service),
-]
 
 
 @router.post(

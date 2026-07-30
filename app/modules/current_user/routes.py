@@ -1,14 +1,11 @@
 """File: app/modules/current_user/routes.py
 Authenticated current-user endpoints."""
 
-from typing import Annotated
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from app.auth.request_context.dependencies import CurrentUserDep
 from app.common.response import APIResponse, APIResponseModel
-from app.core.di import PostgresUOWDep
+from app.modules.current_user.dependencies import CurrentUserDep, CurrentUserServiceDep
 from app.modules.current_user.openapi import RESPONSES, TAG
 from app.modules.current_user.schemas import (
     UpdateCurrentUserRequest,
@@ -16,28 +13,12 @@ from app.modules.current_user.schemas import (
     UserResponse,
     UserRolesResponse,
 )
-from app.modules.current_user.service import CurrentUserService
 
 router = APIRouter(
     prefix="/users/me",
     tags=[TAG],
     responses=RESPONSES,
 )
-
-
-def get_current_user_service(uow: PostgresUOWDep) -> CurrentUserService:
-    """Build the service with FastAPI's request-scoped unit of work.
-
-    Constructor injection makes transaction ownership explicit and keeps the
-    service independently testable without global database state.
-    """
-    return CurrentUserService(uow=uow)
-
-
-CurrentUserServiceDep = Annotated[
-    CurrentUserService,
-    Depends(get_current_user_service),
-]
 
 
 @router.get(

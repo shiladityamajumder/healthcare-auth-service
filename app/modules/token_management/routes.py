@@ -1,21 +1,18 @@
 """File: app/modules/token_management/routes.py
 Refresh-token rotation, logout, and JWKS endpoints."""
 
-from typing import Annotated
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from app.auth.request_context.dependencies import (
-    AuthRateLimitsDep,
-    AuthRuntimeDep,
-    CurrentUserDep,
-    SessionCreationRequestContextDep,
-    TokenManagerDep,
-)
 from app.common.exceptions import NotFoundError
 from app.common.response import APIResponse, APIResponseModel
-from app.core.di import PostgresUOWDep
+from app.modules.token_management.dependencies import (
+    AuthRateLimitsDep,
+    CurrentUserDep,
+    SessionCreationRequestContextDep,
+    TokenManagementServiceDep,
+    TokenManagerDep,
+)
 from app.modules.token_management.openapi import RESPONSES, TAG
 from app.modules.token_management.schemas import (
     JWKSResponse,
@@ -24,32 +21,9 @@ from app.modules.token_management.schemas import (
     RefreshTokenRequest,
     TokenPairResponse,
 )
-from app.modules.token_management.service import TokenManagementService
 from app.utils.debug import debug
 
 router = APIRouter(prefix="/auth", tags=[TAG], responses=RESPONSES)
-
-
-def get_token_management_service(
-    uow: PostgresUOWDep,
-    runtime: AuthRuntimeDep,
-) -> TokenManagementService:
-    """Build the service from FastAPI-managed request dependencies.
-
-    Constructor injection keeps security adapters explicit and reuses the
-    request-scoped unit of work instead of opening hidden transactions.
-    """
-    return TokenManagementService(
-        uow=uow,
-        hashing=runtime.hashing,
-        tokens=runtime.tokens,
-    )
-
-
-TokenManagementServiceDep = Annotated[
-    TokenManagementService,
-    Depends(get_token_management_service),
-]
 
 
 @router.get(

@@ -6,15 +6,17 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 
-from app.auth.authorization.dependencies import require_permissions
-from app.auth.request_context.principals import UserPrincipal
 from app.common.response import APIResponse, APIResponseModel
-from app.core.di import PostgresUOWDep
 from app.core.pagination import PaginationParams
 from app.models.enums import UserStatus
+from app.modules.admin_users.dependencies import (
+    AdminManagePrincipal,
+    AdminReadPrincipal,
+    AdminUsersServiceDep,
+)
 from app.modules.admin_users.openapi import RESPONSES, TAG
 from app.modules.admin_users.schemas import (
     AdminLogoutAllRequest,
@@ -23,36 +25,12 @@ from app.modules.admin_users.schemas import (
     UpdateUserStatusRequest,
     UserResponse,
 )
-from app.modules.admin_users.service import AdminUsersService
 
 router = APIRouter(
     prefix="/admin/users",
     tags=[TAG],
     responses=RESPONSES,
 )
-AdminReadPrincipal = Annotated[
-    UserPrincipal,
-    Depends(require_permissions("identity.users.read")),
-]
-AdminManagePrincipal = Annotated[
-    UserPrincipal,
-    Depends(require_permissions("identity.users.manage")),
-]
-
-
-def get_admin_users_service(uow: PostgresUOWDep) -> AdminUsersService:
-    """Build the admin-user service with the request-scoped unit of work.
-
-    Explicit injection keeps authorization workflows free of hidden database
-    globals and gives tests control over commit and rollback behavior.
-    """
-    return AdminUsersService(uow=uow)
-
-
-AdminUsersServiceDep = Annotated[
-    AdminUsersService,
-    Depends(get_admin_users_service),
-]
 
 
 @router.get(

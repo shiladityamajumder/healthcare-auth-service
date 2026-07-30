@@ -4,15 +4,16 @@ Permission-protected permission and role-policy endpoints."""
 from __future__ import annotations
 
 import uuid
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
-from app.auth.authorization.dependencies import require_permissions
-from app.auth.request_context.principals import UserPrincipal
 from app.common.response import APIResponse, APIResponseModel
-from app.core.di import PostgresUOWDep
+from app.modules.admin_permissions.dependencies import (
+    AdminPermissionsServiceDep,
+    PermissionManagePrincipal,
+    PermissionReadPrincipal,
+)
 from app.modules.admin_permissions.openapi import RESPONSES, TAG
 from app.modules.admin_permissions.schemas import (
     CreatePermissionRequest,
@@ -23,7 +24,6 @@ from app.modules.admin_permissions.schemas import (
     RolePermissionsResponse,
     UpdatePermissionRequest,
 )
-from app.modules.admin_permissions.service import AdminPermissionsService
 
 permissions_router = APIRouter(
     prefix="/admin/permissions",
@@ -35,29 +35,6 @@ role_permissions_router = APIRouter(
     tags=[TAG],
     responses=RESPONSES,
 )
-PermissionReadPrincipal = Annotated[
-    UserPrincipal,
-    Depends(require_permissions("identity.permissions.read")),
-]
-PermissionManagePrincipal = Annotated[
-    UserPrincipal,
-    Depends(require_permissions("identity.permissions.manage")),
-]
-
-
-def get_admin_permissions_service(uow: PostgresUOWDep) -> AdminPermissionsService:
-    """Build the request-scoped permission service through dependency injection.
-
-    FastAPI supplies one unit of work per request. Injecting it keeps database
-    transaction ownership explicit and lets services be tested without globals.
-    """
-    return AdminPermissionsService(uow=uow)
-
-
-AdminPermissionsServiceDep = Annotated[
-    AdminPermissionsService,
-    Depends(get_admin_permissions_service),
-]
 
 
 @permissions_router.get(

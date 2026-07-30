@@ -36,6 +36,8 @@ Outbound OTP delivery is intentionally disabled at the notification gateway. OTP
 ## Final ownership rules
 
 - `app/modules/<feature>/routes.py` owns HTTP transport behavior.
+- `app/modules/<feature>/dependencies.py` composes FastAPI service, security,
+  request-context, and transaction dependencies for that feature.
 - `app/modules/<feature>/schemas.py` owns request contracts and feature-specific responses.
 - `app/modules/<feature>/service.py` owns use-case orchestration and transaction boundaries.
 - `app/modules/<feature>/repositories.py` owns SQLAlchemy persistence operations.

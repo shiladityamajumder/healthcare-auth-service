@@ -2,36 +2,19 @@
 User session inventory and revocation endpoints."""
 
 import uuid
-from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from app.auth.request_context.dependencies import CurrentUserDep
 from app.common.response import APIResponse, APIResponseModel
-from app.core.di import PostgresUOWDep
+from app.modules.session_management.dependencies import (
+    CurrentUserDep,
+    SessionManagementServiceDep,
+)
 from app.modules.session_management.openapi import RESPONSES, TAG
 from app.modules.session_management.schemas import MessageResponse, SessionListResponse
-from app.modules.session_management.service import SessionManagementService
 
 router = APIRouter(prefix="/auth/sessions", tags=[TAG], responses=RESPONSES)
-
-
-def get_session_management_service(
-    uow: PostgresUOWDep,
-) -> SessionManagementService:
-    """Build the service with FastAPI's request-scoped unit of work.
-
-    Injecting the transaction boundary avoids hidden sessions and makes
-    rollback behavior consistent across every session endpoint.
-    """
-    return SessionManagementService(uow=uow)
-
-
-SessionManagementServiceDep = Annotated[
-    SessionManagementService,
-    Depends(get_session_management_service),
-]
 
 
 @router.get(

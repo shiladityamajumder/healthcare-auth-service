@@ -4,15 +4,16 @@ Permission-protected user-role assignment endpoints."""
 from __future__ import annotations
 
 import uuid
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
-from app.auth.authorization.dependencies import require_permissions
-from app.auth.request_context.principals import UserPrincipal
 from app.common.response import APIResponse, APIResponseModel
-from app.core.di import PostgresUOWDep
+from app.modules.admin_user_roles.dependencies import (
+    AdminUserRolesServiceDep,
+    UserRoleManagePrincipal,
+    UserRoleReadPrincipal,
+)
 from app.modules.admin_user_roles.openapi import RESPONSES, TAG
 from app.modules.admin_user_roles.schemas import (
     AssignUserRoleRequest,
@@ -21,36 +22,12 @@ from app.modules.admin_user_roles.schemas import (
     UserRoleListResponse,
     UserRoleResponse,
 )
-from app.modules.admin_user_roles.service import AdminUserRolesService
 
 router = APIRouter(
     prefix="/admin/users",
     tags=[TAG],
     responses=RESPONSES,
 )
-UserRoleReadPrincipal = Annotated[
-    UserPrincipal,
-    Depends(require_permissions("identity.user_roles.read")),
-]
-UserRoleManagePrincipal = Annotated[
-    UserPrincipal,
-    Depends(require_permissions("identity.user_roles.manage")),
-]
-
-
-def get_admin_user_roles_service(uow: PostgresUOWDep) -> AdminUserRolesService:
-    """Build the user-role service with the request-scoped unit of work.
-
-    Explicit injection makes assignment transactions easy to test and keeps
-    route code responsible only for HTTP concerns.
-    """
-    return AdminUserRolesService(uow=uow)
-
-
-AdminUserRolesServiceDep = Annotated[
-    AdminUserRolesService,
-    Depends(get_admin_user_roles_service),
-]
 
 
 @router.get(

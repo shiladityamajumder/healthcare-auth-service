@@ -1,0 +1,30 @@
+"""Dependency composition for authenticated current-user endpoints."""
+
+from typing import Annotated
+
+from fastapi import Depends
+
+from app.auth.request_context.dependencies import CurrentUserDep
+from app.core.di import PostgresUOWDep
+from app.modules.current_user.service import CurrentUserService
+
+
+def get_current_user_service(uow: PostgresUOWDep) -> CurrentUserService:
+    """Construct the service with FastAPI's request-scoped unit of work.
+
+    FastAPI caches dependencies within one request, so every consumer shares
+    the same transaction boundary and unfinished work is rolled back centrally.
+    """
+    return CurrentUserService(uow=uow)
+
+
+CurrentUserServiceDep = Annotated[
+    CurrentUserService,
+    Depends(get_current_user_service),
+]
+
+__all__ = [
+    "CurrentUserDep",
+    "CurrentUserServiceDep",
+    "get_current_user_service",
+]

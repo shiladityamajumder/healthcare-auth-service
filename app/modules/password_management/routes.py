@@ -1,22 +1,21 @@
 """File: app/modules/password_management/routes.py
 Password recovery, change, and initial-password endpoints."""
 
-from typing import Annotated, cast
+from typing import cast
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from app.auth.identity.canonical import ChannelIdentityPayload, generic_identity
-from app.auth.request_context.dependencies import (
+from app.common.response import APIResponse, APIResponseModel
+from app.models.enums import OTPPurpose
+from app.modules.password_management.dependencies import (
     AuthRateLimitsDep,
-    AuthRuntimeDep,
     CurrentUserDep,
+    PasswordManagementServiceDep,
     RateLimitRequestContextDep,
     SessionCreationRequestContextDep,
 )
-from app.common.response import APIResponse, APIResponseModel
-from app.core.di import PostgresUOWDep
-from app.models.enums import OTPPurpose
 from app.modules.password_management.openapi import RESPONSES, TAG
 from app.modules.password_management.schemas import (
     ChangePasswordRequest,
@@ -28,7 +27,6 @@ from app.modules.password_management.schemas import (
     TokenPairResponse,
     VerifyResetOtpRequest,
 )
-from app.modules.password_management.service import PasswordManagementService
 from app.utils.debug import debug
 
 router = APIRouter(
@@ -36,32 +34,6 @@ router = APIRouter(
     tags=[TAG],
     responses=RESPONSES,
 )
-
-
-def get_password_management_service(
-    uow: PostgresUOWDep,
-    runtime: AuthRuntimeDep,
-) -> PasswordManagementService:
-    """Build password management from FastAPI-managed dependencies.
-
-    Constructor injection shares one request transaction and keeps password,
-    token, OTP, and notification adapters explicit for isolated testing.
-    """
-    return PasswordManagementService(
-        uow=uow,
-        settings=runtime.settings,
-        passwords=runtime.passwords,
-        hashing=runtime.hashing,
-        tokens=runtime.tokens,
-        otp=runtime.otp,
-        notifications=runtime.notifications,
-    )
-
-
-PasswordManagementServiceDep = Annotated[
-    PasswordManagementService,
-    Depends(get_password_management_service),
-]
 
 
 @router.post(

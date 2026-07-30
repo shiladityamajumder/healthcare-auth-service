@@ -25,7 +25,10 @@ routes -> service -> repository -> SQLAlchemy session
 
 Allowed dependencies:
 
-- Routes import only their local schemas, local service, local OpenAPI metadata, and shared FastAPI dependencies.
+- Routes import their local schemas, local dependency aliases, local OpenAPI
+  metadata, and transport-level framework utilities.
+- Each feature's `dependencies.py` constructs services and composes shared
+  request/security dependencies; routes import the resulting typed aliases.
 - Services import their local repository and schemas plus shared infrastructure.
 - Repositories import SQLAlchemy and ORM models.
 - `app/auth` imports no business module.

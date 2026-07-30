@@ -1,21 +1,19 @@
 """File: app/modules/registration/routes.py
 Registration HTTP endpoints."""
 
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
 from app.auth.identity.canonical import email_identity, phone_identity
-from app.auth.request_context.dependencies import (
+from app.common.response import APIResponse, APIResponseModel
+from app.models.enums import OTPPurpose
+from app.modules.registration.dependencies import (
     AuthRateLimitsDep,
-    AuthRuntimeDep,
+    EmailPasswordRegistrationDep,
+    PhoneOtpRegistrationDep,
     RateLimitRequestContextDep,
     SessionCreationRequestContextDep,
 )
-from app.common.response import APIResponse, APIResponseModel
-from app.core.di import PostgresUOWDep
-from app.models.enums import OTPPurpose
 from app.modules.registration.openapi import RESPONSES, TAG
 from app.modules.registration.schemas import (
     EmailPasswordRegistrationRequest,
@@ -25,10 +23,6 @@ from app.modules.registration.schemas import (
     RegistrationResponse,
     TokenPairResponse,
 )
-from app.modules.registration.service import (
-    EmailPasswordRegistrationService,
-    PhoneOtpRegistrationService,
-)
 from app.utils.debug import debug
 
 router = APIRouter(
@@ -36,53 +30,6 @@ router = APIRouter(
     tags=[TAG],
     responses=RESPONSES,
 )
-
-
-def get_email_registration_service(
-    uow: PostgresUOWDep,
-    runtime: AuthRuntimeDep,
-) -> EmailPasswordRegistrationService:
-    """Build a request-scoped email registration service through DI.
-
-    FastAPI injects one unit of work plus the shared immutable auth runtime.
-    Constructor injection keeps transaction and security dependencies explicit,
-    makes the service easy to test, and prevents hidden global state.
-    """
-    return EmailPasswordRegistrationService(
-        uow=uow,
-        settings=runtime.settings,
-        passwords=runtime.passwords,
-        hashing=runtime.hashing,
-        tokens=runtime.tokens,
-        otp=runtime.otp,
-        notifications=runtime.notifications,
-    )
-
-
-def get_phone_registration_service(
-    uow: PostgresUOWDep,
-    runtime: AuthRuntimeDep,
-) -> PhoneOtpRegistrationService:
-    """Build the phone service from the same DI-managed infrastructure."""
-    return PhoneOtpRegistrationService(
-        uow=uow,
-        settings=runtime.settings,
-        passwords=runtime.passwords,
-        hashing=runtime.hashing,
-        tokens=runtime.tokens,
-        otp=runtime.otp,
-        notifications=runtime.notifications,
-    )
-
-
-EmailPasswordRegistrationDep = Annotated[
-    EmailPasswordRegistrationService,
-    Depends(get_email_registration_service),
-]
-PhoneOtpRegistrationDep = Annotated[
-    PhoneOtpRegistrationService,
-    Depends(get_phone_registration_service),
-]
 
 
 @router.post(

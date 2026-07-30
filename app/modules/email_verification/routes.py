@@ -1,21 +1,18 @@
 """File: app/modules/email_verification/routes.py
 Email verification HTTP endpoints."""
 
-from typing import Annotated
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from app.auth.identity.canonical import email_identity
-from app.auth.request_context.dependencies import (
+from app.common.response import APIResponse, APIResponseModel
+from app.models.enums import OTPPurpose
+from app.modules.email_verification.dependencies import (
     AuthRateLimitsDep,
-    AuthRuntimeDep,
+    EmailVerificationDep,
     RateLimitRequestContextDep,
     SessionCreationRequestContextDep,
 )
-from app.common.response import APIResponse, APIResponseModel
-from app.core.di import PostgresUOWDep
-from app.models.enums import OTPPurpose
 from app.modules.email_verification.openapi import RESPONSES, TAG
 from app.modules.email_verification.schemas import (
     EmailVerificationConfirmRequest,
@@ -23,7 +20,6 @@ from app.modules.email_verification.schemas import (
     OtpChallengeResponse,
     TokenPairResponse,
 )
-from app.modules.email_verification.service import EmailVerificationService
 from app.utils.debug import debug
 
 router = APIRouter(
@@ -31,31 +27,6 @@ router = APIRouter(
     tags=[TAG],
     responses=RESPONSES,
 )
-
-
-def get_email_verification_service(
-    uow: PostgresUOWDep,
-    runtime: AuthRuntimeDep,
-) -> EmailVerificationService:
-    """Build email verification from FastAPI-managed dependencies.
-
-    Constructor injection shares one transaction and keeps token, OTP, and
-    notification adapters explicit and independently testable.
-    """
-    return EmailVerificationService(
-        uow=uow,
-        settings=runtime.settings,
-        hashing=runtime.hashing,
-        tokens=runtime.tokens,
-        otp=runtime.otp,
-        notifications=runtime.notifications,
-    )
-
-
-EmailVerificationDep = Annotated[
-    EmailVerificationService,
-    Depends(get_email_verification_service),
-]
 
 
 @router.post(
