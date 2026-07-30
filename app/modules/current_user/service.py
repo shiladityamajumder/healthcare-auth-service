@@ -65,7 +65,9 @@ class CurrentUserService:
             if await users.get_by_id(user_id) is None:
                 raise NotFoundError("The user was not found.")
             claims = await users.authorization_claims(user_id=user_id, now=utc_now())
-            return UserRolesResponse(roles=claims.roles)
+            # Authorization claims are immutable tuples internally. Convert at
+            # the API boundary because the response contract exposes JSON arrays.
+            return UserRolesResponse(roles=list(claims.roles))
 
     async def permissions(self, *, user_id: uuid.UUID) -> UserPermissionsResponse:
         """Return effective global permission codes."""
@@ -74,7 +76,7 @@ class CurrentUserService:
             if await users.get_by_id(user_id) is None:
                 raise NotFoundError("The user was not found.")
             claims = await users.authorization_claims(user_id=user_id, now=utc_now())
-            return UserPermissionsResponse(permissions=claims.permissions)
+            return UserPermissionsResponse(permissions=list(claims.permissions))
 
 
 __all__ = ["CurrentUserService"]

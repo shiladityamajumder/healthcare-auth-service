@@ -3,6 +3,7 @@ Email-verification application service."""
 
 from __future__ import annotations
 
+from app.auth.authorization.model_adapters import account_access_state
 from app.auth.authorization.policies import AccountAccessPolicy
 from app.auth.identity.normalization import normalize_email
 from app.auth.identity.presentation import public_user_data
@@ -113,7 +114,10 @@ class EmailVerificationService:
                 pending_error = AuthenticationError("The verification code is invalid or expired.")
             else:
                 try:
-                    AccountAccessPolicy.ensure_login_allowed(user, allow_pending=True)
+                    AccountAccessPolicy.ensure_login_allowed(
+                        account_access_state(user),
+                        allow_pending=True,
+                    )
                 except AuthenticationError as exc:
                     pending_error = exc
                 else:

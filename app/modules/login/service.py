@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from app.auth.authorization.model_adapters import account_access_state
 from app.auth.authorization.policies import AccountAccessPolicy
 from app.auth.identity.normalization import normalize_email, normalize_phone, phone_destination
 from app.auth.identity.presentation import public_user_data
@@ -227,7 +228,7 @@ class PasswordLoginService(_LoginBase):
 
         try:
             AccountAccessPolicy.ensure_login_allowed(
-                user,
+                account_access_state(user),
                 verified_channel=verified_channel,
             )
         except AuthenticationError:
@@ -372,7 +373,7 @@ class PhoneOtpLoginService(_LoginBase):
             else:
                 try:
                     AccountAccessPolicy.ensure_login_allowed(
-                        user,
+                        account_access_state(user),
                         verified_channel=OTPChannel.SMS.value,
                     )
                 except AuthenticationError:

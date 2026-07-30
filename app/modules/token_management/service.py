@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import uuid
 
+from app.auth.authorization.model_adapters import account_access_state
 from app.auth.authorization.policies import AccountAccessPolicy
 from app.auth.identity.presentation import public_user_data
 from app.auth.request_context.context import AuthRequestContext
@@ -88,7 +89,7 @@ class TokenManagementService:
                     pending_error = AuthenticationError("The refresh token is invalid.")
                 else:
                     try:
-                        AccountAccessPolicy.ensure_login_allowed(user)
+                        AccountAccessPolicy.ensure_login_allowed(account_access_state(user))
                     except AuthenticationError as exc:
                         session.revoked_at = now
                         session.revoke_reason = "account_not_available"

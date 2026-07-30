@@ -6,6 +6,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass
 
+from app.auth.authorization.model_adapters import account_access_state, password_history_state
 from app.auth.authorization.policies import AccountAccessPolicy, PasswordHistoryPolicy
 from app.auth.identity.normalization import normalize_email, normalize_phone, phone_destination
 from app.auth.identity.presentation import public_user_data
@@ -216,7 +217,7 @@ class PasswordManagementService:
             else:
                 try:
                     AccountAccessPolicy.ensure_login_allowed(
-                        user,
+                        account_access_state(user),
                         verified_channel=identity.channel,
                     )
                 except AuthenticationError as exc:
@@ -278,7 +279,7 @@ class PasswordManagementService:
             user = await repository.get_by_id(user_id, for_update=True)
             if user is None:
                 raise AuthenticationError("The password-reset proof is invalid.")
-            AccountAccessPolicy.ensure_login_allowed(user)
+            AccountAccessPolicy.ensure_login_allowed(account_access_state(user))
             self._passwords.validate_strength(
                 payload.new_password,
                 email=user.email,
@@ -286,7 +287,7 @@ class PasswordManagementService:
             )
             await self._history.ensure_not_reused(
                 users=repository,
-                user=user,
+                user=password_history_state(user),
                 new_password=payload.new_password,
             )
             new_hash = await self._passwords.hash(payload.new_password)
@@ -332,7 +333,7 @@ class PasswordManagementService:
             )
             await self._history.ensure_not_reused(
                 users=repository,
-                user=user,
+                user=password_history_state(user),
                 new_password=payload.new_password,
             )
             new_hash = await self._passwords.hash(payload.new_password)

@@ -15,6 +15,7 @@ Role and permission authorization policies belong in
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
@@ -43,19 +44,58 @@ from app.utils.datetime_utils import utc_now
 class AccountAccessSubject(Protocol):
     """Account attributes required by access policies."""
 
+    @property
+    def status(self) -> UserStatus: ...
+
+    @property
+    def account_closed_at(self) -> datetime | None: ...
+
+    @property
+    def locked_until(self) -> datetime | None: ...
+
+    @property
+    def email(self) -> str | None: ...
+
+    @property
+    def email_verified_at(self) -> datetime | None: ...
+
+    @property
+    def phone_number(self) -> str | None: ...
+
+    @property
+    def phone_verified_at(self) -> datetime | None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class AccountAccessState:
+    """Immutable account values evaluated by access policies.
+
+    Persistence adapters copy ORM values into this object so the policy layer
+    never depends on SQLAlchemy ``Mapped`` descriptors.
+    """
+
     status: UserStatus
     account_closed_at: datetime | None
     locked_until: datetime | None
-
     email: str | None
     email_verified_at: datetime | None
-
     phone_number: str | None
     phone_verified_at: datetime | None
 
 
 class PasswordHistorySubject(Protocol):
     """User attributes required by password-history policies."""
+
+    @property
+    def id(self) -> uuid.UUID: ...
+
+    @property
+    def password_hash(self) -> str | None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class PasswordHistoryState:
+    """Immutable user values evaluated by password-history policies."""
 
     id: uuid.UUID
     password_hash: str | None
@@ -380,9 +420,11 @@ class OtpVerificationPolicy:
 
 __all__ = [
     "AccountAccessPolicy",
+    "AccountAccessState",
     "AccountAccessSubject",
     "OtpVerificationPolicy",
     "PasswordHistoryPolicy",
     "PasswordHistoryRepositoryPort",
+    "PasswordHistoryState",
     "PasswordHistorySubject",
 ]
