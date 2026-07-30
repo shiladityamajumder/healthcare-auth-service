@@ -1,4 +1,5 @@
-"""OpenAPI metadata for session management endpoints."""
+"""File: app/modules/session_management/openapi.py
+OpenAPI metadata for session management endpoints."""
 
 from app.auth.infrastructure.openapi import AUTH_ERROR_RESPONSES
 

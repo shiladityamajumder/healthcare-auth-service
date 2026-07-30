@@ -1,4 +1,5 @@
-"""SQLAlchemy persistence for current-user profile and authorization workflows."""
+"""File: app/modules/current_user/repositories.py
+SQLAlchemy persistence for current-user profile and authorization workflows."""
 
 from __future__ import annotations
 

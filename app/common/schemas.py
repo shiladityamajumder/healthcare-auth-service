@@ -1,4 +1,5 @@
-"""Shared Pydantic primitives used by API modules.
+"""File: app/common/schemas.py
+Shared Pydantic primitives used by API modules.
 
 Only transport-level base classes belong here. Endpoint request and response
 contracts remain inside their owning vertical module.

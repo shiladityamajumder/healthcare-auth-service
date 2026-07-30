@@ -1,4 +1,5 @@
-"""Password recovery, change, and initial-password application service."""
+"""File: app/modules/password_management/service.py
+Password recovery, change, and initial-password application service."""
 
 from __future__ import annotations
 

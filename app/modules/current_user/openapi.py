@@ -1,4 +1,5 @@
-"""OpenAPI metadata for current-user endpoints."""
+"""File: app/modules/current_user/openapi.py
+OpenAPI metadata for current-user endpoints."""
 
 from app.auth.infrastructure.openapi import AUTH_ERROR_RESPONSES
 

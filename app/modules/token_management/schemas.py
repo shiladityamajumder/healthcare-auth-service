@@ -1,4 +1,5 @@
-"""Refresh-token rotation and logout contracts owned by this module."""
+"""File: app/modules/token_management/schemas.py
+Refresh-token rotation and logout contracts owned by this module."""
 
 from __future__ import annotations
 

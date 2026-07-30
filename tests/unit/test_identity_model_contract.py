@@ -1,3 +1,5 @@
+"""File: tests/unit/test_identity_model_contract.py"""
+
 from __future__ import annotations
 
 from app.models.identity import ApiClients, Sessions, Users

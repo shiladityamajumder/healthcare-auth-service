@@ -1,4 +1,5 @@
-"""Replaceable rate-limiting backends and enforcement helpers.
+"""File: app/core/rate_limiting.py
+Replaceable rate-limiting backends and enforcement helpers.
 
 This module provides a shared asynchronous rate-limiting abstraction with
 three implementations:

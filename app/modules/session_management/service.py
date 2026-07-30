@@ -1,4 +1,5 @@
-"""User session inventory and revocation application service."""
+"""File: app/modules/session_management/service.py
+User session inventory and revocation application service."""
 
 from __future__ import annotations
 

@@ -1,4 +1,5 @@
-"""Current-user application service."""
+"""File: app/modules/current_user/service.py
+Current-user application service."""
 
 from __future__ import annotations
 

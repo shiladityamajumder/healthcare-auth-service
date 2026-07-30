@@ -1,4 +1,5 @@
-"""Permission-protected administrative user endpoints."""
+"""File: app/modules/admin_users/routes.py
+Permission-protected administrative user endpoints."""
 
 from __future__ import annotations
 

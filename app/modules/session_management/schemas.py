@@ -1,4 +1,5 @@
-"""User-session response contracts owned by this module."""
+"""File: app/modules/session_management/schemas.py
+User-session response contracts owned by this module."""
 
 from __future__ import annotations
 

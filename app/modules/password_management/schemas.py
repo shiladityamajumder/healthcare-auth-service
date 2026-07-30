@@ -1,4 +1,5 @@
-"""Password lifecycle contracts owned by this module."""
+"""File: app/modules/password_management/schemas.py
+Password lifecycle contracts owned by this module."""
 
 from __future__ import annotations
 

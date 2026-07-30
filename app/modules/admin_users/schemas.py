@@ -1,4 +1,5 @@
-"""Administrative user request and response contracts."""
+"""File: app/modules/admin_users/schemas.py
+Administrative user request and response contracts."""
 
 from __future__ import annotations
 

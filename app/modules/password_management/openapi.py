@@ -1,4 +1,5 @@
-"""OpenAPI metadata for password lifecycle endpoints."""
+"""File: app/modules/password_management/openapi.py
+OpenAPI metadata for password lifecycle endpoints."""
 
 from app.auth.infrastructure.openapi import AUTH_ERROR_RESPONSES
 

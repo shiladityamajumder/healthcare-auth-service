@@ -1,4 +1,5 @@
-"""OpenAPI metadata for administrative user-role assignment endpoints."""
+"""File: app/modules/admin_user_roles/openapi.py
+OpenAPI metadata for administrative user-role assignment endpoints."""
 
 from app.auth.infrastructure.openapi import AUTH_ERROR_RESPONSES
 

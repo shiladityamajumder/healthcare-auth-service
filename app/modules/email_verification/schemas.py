@@ -1,4 +1,5 @@
-"""Email-verification contracts owned by this module."""
+"""File: app/modules/email_verification/schemas.py
+Email-verification contracts owned by this module."""
 
 from __future__ import annotations
 

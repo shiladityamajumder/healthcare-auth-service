@@ -1,4 +1,5 @@
-"""Version-independent registry of vertical identity modules."""
+"""File: app/modules/router.py
+Version-independent registry of vertical identity modules."""
 
 from __future__ import annotations
 

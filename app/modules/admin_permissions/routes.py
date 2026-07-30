@@ -1,4 +1,5 @@
-"""Permission-protected permission and role-policy endpoints."""
+"""File: app/modules/admin_permissions/routes.py
+Permission-protected permission and role-policy endpoints."""
 
 from __future__ import annotations
 

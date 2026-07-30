@@ -1,4 +1,5 @@
-"""Password and phone-OTP login contracts owned by this module."""
+"""File: app/modules/login/schemas.py
+Password and phone-OTP login contracts owned by this module."""
 
 from __future__ import annotations
 

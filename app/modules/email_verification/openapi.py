@@ -1,4 +1,5 @@
-"""OpenAPI metadata for email verification endpoints."""
+"""File: app/modules/email_verification/openapi.py
+OpenAPI metadata for email verification endpoints."""
 
 from app.auth.infrastructure.openapi import AUTH_ERROR_RESPONSES
 

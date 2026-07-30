@@ -1,4 +1,5 @@
-"""Shared SQLAlchemy model helpers for PostgreSQL enum columns."""
+"""File: app/models/common.py
+Shared SQLAlchemy model helpers for PostgreSQL enum columns."""
 
 from __future__ import annotations
 

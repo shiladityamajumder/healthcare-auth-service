@@ -1,4 +1,5 @@
-"""User session inventory and revocation endpoints."""
+"""File: app/modules/session_management/routes.py
+User session inventory and revocation endpoints."""
 
 import uuid
 from typing import Annotated

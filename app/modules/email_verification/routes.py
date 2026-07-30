@@ -1,4 +1,5 @@
-"""Email verification HTTP endpoints."""
+"""File: app/modules/email_verification/routes.py
+Email verification HTTP endpoints."""
 
 from typing import Annotated
 

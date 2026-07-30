@@ -1,4 +1,5 @@
-"""Immutable authentication request metadata.
+"""File: app/auth/request_context/context.py
+Immutable authentication request metadata.
 
 This module converts trusted connection information and validated authentication
 headers into a request-scoped context consumed by authentication workflows.

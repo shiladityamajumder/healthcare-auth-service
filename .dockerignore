@@ -1,3 +1,5 @@
+# File: .dockerignore
+
 .git
 .gitignore
 .env

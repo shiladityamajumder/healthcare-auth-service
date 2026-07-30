@@ -1,3 +1,5 @@
+"""File: tests/contract/test_auth_openapi.py"""
+
 from __future__ import annotations
 
 from app.main import create_app

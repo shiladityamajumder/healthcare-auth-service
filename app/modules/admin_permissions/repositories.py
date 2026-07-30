@@ -1,4 +1,5 @@
-"""SQLAlchemy repository for permission and role-policy administration."""
+"""File: app/modules/admin_permissions/repositories.py
+SQLAlchemy repository for permission and role-policy administration."""
 
 from __future__ import annotations
 

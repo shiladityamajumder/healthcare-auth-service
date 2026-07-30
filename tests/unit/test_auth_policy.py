@@ -1,4 +1,5 @@
-"""Unit tests for shared authentication policies and normalization."""
+"""File: tests/unit/test_auth_policy.py
+Unit tests for shared authentication policies and normalization."""
 
 from __future__ import annotations
 

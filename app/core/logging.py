@@ -1,4 +1,5 @@
-"""Structured, queue-backed, sensitive-data-aware logging configuration.
+"""File: app/core/logging.py
+Structured, queue-backed, sensitive-data-aware logging configuration.
 
 This is the existing logging foundation with authentication-specific redaction
 keys and token-pattern protection added. Request bodies and identity secrets

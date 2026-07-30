@@ -1,4 +1,5 @@
-"""Authentication workflow policies without transport or persistence coupling.
+"""File: app/auth/authorization/policies.py
+Authentication workflow policies without transport or persistence coupling.
 
 This module contains reusable business rules used by login, OTP verification,
 password recovery, and password-management workflows.

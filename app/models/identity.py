@@ -1,4 +1,5 @@
-"""SQLAlchemy mappings for the externally managed identity schema.
+"""File: app/models/identity.py
+SQLAlchemy mappings for the externally managed identity schema.
 
 These mappings represent the existing PostgreSQL ``identity`` schema. Schema
 creation and migrations remain owned by the external migration process.

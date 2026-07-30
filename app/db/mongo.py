@@ -1,4 +1,4 @@
-"""File: `app/db/mongo.py`
+"""File: app/db/mongo.py
     Asynchronous MongoDB client lifecycle adapter using PyMongo Async.
 """
 

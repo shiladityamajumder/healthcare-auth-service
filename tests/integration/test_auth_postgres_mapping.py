@@ -1,4 +1,5 @@
-"""Opt-in contract test for the externally migrated PostgreSQL schema."""
+"""File: tests/integration/test_auth_postgres_mapping.py
+Opt-in contract test for the externally migrated PostgreSQL schema."""
 
 from __future__ import annotations
 

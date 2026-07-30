@@ -1,4 +1,5 @@
-"""Safe presentation helpers for authentication identities.
+"""File: app/auth/identity/presentation.py
+Safe presentation helpers for authentication identities.
 
 This module creates masked identity values suitable for API responses,
 notifications, account-recovery responses, support workflows, and security

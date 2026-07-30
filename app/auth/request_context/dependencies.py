@@ -1,4 +1,5 @@
-"""FastAPI dependencies for authentication request resolution.
+"""File: app/auth/request_context/dependencies.py
+FastAPI dependencies for authentication request resolution.
 
 This module resolves process-wide authentication infrastructure, validated
 request metadata, bearer access tokens, persisted sessions, and authenticated

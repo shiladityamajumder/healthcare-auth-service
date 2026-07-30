@@ -1,4 +1,5 @@
-"""OpenAPI metadata for login endpoints."""
+"""File: app/modules/login/openapi.py
+OpenAPI metadata for login endpoints."""
 
 from app.auth.infrastructure.openapi import AUTH_ERROR_RESPONSES
 

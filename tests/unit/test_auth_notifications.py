@@ -1,3 +1,5 @@
+"""File: tests/unit/test_auth_notifications.py"""
+
 from __future__ import annotations
 
 import pytest

@@ -1,4 +1,5 @@
-"""Request-scoped SQLAlchemy transaction boundary."""
+"""File: app/db/uow.py
+Request-scoped SQLAlchemy transaction boundary."""
 
 from __future__ import annotations
 

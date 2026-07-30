@@ -1,4 +1,5 @@
-"""Reusable OpenAPI response definitions for authentication routes.
+"""File: app/auth/infrastructure/openapi.py
+Reusable OpenAPI response definitions for authentication routes.
 
 This module contains transport documentation only. It does not handle
 exceptions, create HTTP responses, or contain authentication business rules.

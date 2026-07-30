@@ -1,4 +1,5 @@
-"""OpenAPI metadata for administrative user endpoints."""
+"""File: app/modules/admin_users/openapi.py
+OpenAPI metadata for administrative user endpoints."""
 
 from app.auth.infrastructure.openapi import AUTH_ERROR_RESPONSES
 

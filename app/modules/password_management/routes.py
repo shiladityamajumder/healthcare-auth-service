@@ -1,4 +1,5 @@
-"""Password recovery, change, and initial-password endpoints."""
+"""File: app/modules/password_management/routes.py
+Password recovery, change, and initial-password endpoints."""
 
 from typing import Annotated
 

@@ -1,4 +1,4 @@
-"""File: `app/db/sqlalchemy_types.py`
+"""File: app/db/sqlalchemy_types.py
 Cross-dialect UTC datetime types and audit-column factories.
 
 Application timestamps originate in the timezone configured through

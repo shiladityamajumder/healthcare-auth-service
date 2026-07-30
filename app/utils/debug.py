@@ -1,4 +1,5 @@
-"""Development-only debug logging compatibility helper.
+"""File: app/utils/debug.py
+Development-only debug logging compatibility helper.
 
 The original arbitrary ``print(*objects)`` utility could bypass redaction and
 leak prescription, patient, credential, or token data. This replacement emits

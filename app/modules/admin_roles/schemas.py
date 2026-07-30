@@ -1,4 +1,5 @@
-"""Role administration request and response contracts."""
+"""File: app/modules/admin_roles/schemas.py
+Role administration request and response contracts."""
 
 from __future__ import annotations
 

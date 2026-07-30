@@ -1,4 +1,5 @@
-"""Reusable, transport-safe response contracts shared by identity modules.
+"""File: app/common/auth_contracts.py
+Reusable, transport-safe response contracts shared by identity modules.
 
 Only stable response envelopes that are genuinely identical across multiple
 vertical slices belong here. Each module continues to own its request models

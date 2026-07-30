@@ -1,4 +1,5 @@
-"""Security primitives for deterministic authentication hashing.
+"""File: app/auth/security/hashing.py
+Security primitives for deterministic authentication hashing.
 
 This module provides domain-separated HMAC-SHA256 hashing for opaque
 authentication tokens, OTP challenges, normalized destinations, audit

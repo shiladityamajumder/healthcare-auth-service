@@ -1,4 +1,5 @@
-"""SQLAlchemy persistence for registration workflows."""
+"""File: app/modules/registration/repositories.py
+SQLAlchemy persistence for registration workflows."""
 
 from __future__ import annotations
 

@@ -1,4 +1,5 @@
-"""Refresh-token rotation, logout, and JWKS endpoints."""
+"""File: app/modules/token_management/routes.py
+Refresh-token rotation, logout, and JWKS endpoints."""
 
 from typing import Annotated
 

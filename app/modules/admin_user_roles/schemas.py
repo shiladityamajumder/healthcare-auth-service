@@ -1,4 +1,5 @@
-"""User-role assignment request and response contracts."""
+"""File: app/modules/admin_user_roles/schemas.py
+User-role assignment request and response contracts."""
 
 from __future__ import annotations
 

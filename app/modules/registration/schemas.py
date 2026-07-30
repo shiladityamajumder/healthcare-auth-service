@@ -1,4 +1,5 @@
-"""Registration request and response contracts owned by this module."""
+"""File: app/modules/registration/schemas.py
+Registration request and response contracts owned by this module."""
 
 from __future__ import annotations
 

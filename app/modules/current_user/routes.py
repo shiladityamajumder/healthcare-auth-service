@@ -1,4 +1,5 @@
-"""Authenticated current-user endpoints."""
+"""File: app/modules/current_user/routes.py
+Authenticated current-user endpoints."""
 
 from typing import Annotated
 

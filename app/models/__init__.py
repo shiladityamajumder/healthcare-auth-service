@@ -1,4 +1,5 @@
-"""Public ORM model exports for the externally managed identity schema."""
+"""File: app/models/__init__.py
+Public ORM model exports for the externally managed identity schema."""
 
 from app.models.identity import (
     ApiClientSecrets,

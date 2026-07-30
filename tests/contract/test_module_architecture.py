@@ -1,4 +1,5 @@
-"""Contract tests that prevent authentication layers from collapsing again."""
+"""File: tests/contract/test_module_architecture.py
+Contract tests that prevent authentication layers from collapsing again."""
 
 from __future__ import annotations
 

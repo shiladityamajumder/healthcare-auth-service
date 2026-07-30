@@ -1,4 +1,5 @@
-"""Generate local authentication secrets and an RS256 signing key pair.
+"""File: scripts/generate_auth_secrets.py
+Generate local authentication secrets and an RS256 signing key pair.
 
 Run locally, then move the values into your secret manager. Do not commit the
 printed values or generated PEM material to source control.

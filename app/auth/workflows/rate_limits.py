@@ -1,4 +1,5 @@
-"""Authentication-specific rate-limit policy and key construction.
+"""File: app/auth/workflows/rate_limits.py
+Authentication-specific rate-limit policy and key construction.
 
 This module converts authentication operations and request metadata into
 bounded, privacy-preserving rate-limit keys.

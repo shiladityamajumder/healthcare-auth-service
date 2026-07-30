@@ -1,4 +1,5 @@
-"""Central HTTP translation for application, framework, and database errors."""
+"""File: app/api/exception_handlers.py
+Central HTTP translation for application, framework, and database errors."""
 
 from __future__ import annotations
 

@@ -1,4 +1,5 @@
-"""Unit tests for password, hashing, and JWT security primitives."""
+"""File: tests/unit/test_auth_security.py
+Unit tests for password, hashing, and JWT security primitives."""
 
 from __future__ import annotations
 

@@ -1,3 +1,5 @@
+<!-- File: Architecture.md -->
+
 # Authentication Architecture
 
 ## Architectural style

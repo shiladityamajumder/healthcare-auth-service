@@ -1,4 +1,5 @@
-"""Permission-protected RBAC role endpoints."""
+"""File: app/modules/admin_roles/routes.py
+Permission-protected RBAC role endpoints."""
 
 from __future__ import annotations
 

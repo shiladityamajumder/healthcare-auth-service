@@ -1,4 +1,5 @@
-"""SQLAlchemy persistence for password recovery and password lifecycle workflows."""
+"""File: app/modules/password_management/repositories.py
+SQLAlchemy persistence for password recovery and password lifecycle workflows."""
 
 from __future__ import annotations
 

@@ -1,4 +1,5 @@
-"""FastAPI startup and shutdown orchestration.
+"""File: app/core/lifespan.py
+FastAPI startup and shutdown orchestration.
 
 This module owns the process-wide lifecycle of infrastructure dependencies:
 

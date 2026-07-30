@@ -1,4 +1,5 @@
-"""Shared declarative base and audited entity mixins.
+"""File: app/db/base.py
+Shared declarative base and audited entity mixins.
 
 The migration service owns DDL. This module intentionally does not register
 schema-creation hooks and the API never calls ``metadata.create_all``.

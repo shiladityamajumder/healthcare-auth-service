@@ -1,4 +1,5 @@
-"""OpenAPI metadata for registration endpoints."""
+"""File: app/modules/registration/openapi.py
+OpenAPI metadata for registration endpoints."""
 
 from app.auth.infrastructure.openapi import AUTH_ERROR_RESPONSES
 

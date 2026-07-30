@@ -1,4 +1,5 @@
-"""Authentication notification integration boundary.
+"""File: app/auth/workflows/notifications.py
+Authentication notification integration boundary.
 
 External delivery remains intentionally disabled until the platform
 notification service is connected.

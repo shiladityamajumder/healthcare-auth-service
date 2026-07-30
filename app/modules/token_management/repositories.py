@@ -1,4 +1,5 @@
-"""SQLAlchemy persistence for refresh-token and logout workflows."""
+"""File: app/modules/token_management/repositories.py
+SQLAlchemy persistence for refresh-token and logout workflows."""
 
 from __future__ import annotations
 

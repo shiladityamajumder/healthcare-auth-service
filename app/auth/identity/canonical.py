@@ -1,4 +1,5 @@
-"""Canonical authentication identity construction.
+"""File: app/auth/identity/canonical.py
+Canonical authentication identity construction.
 
 This module converts email, phone, and channel-aware identity inputs into
 stable canonical strings.

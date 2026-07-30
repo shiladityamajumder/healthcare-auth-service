@@ -1,4 +1,5 @@
-"""Email-verification application service."""
+"""File: app/modules/email_verification/service.py
+Email-verification application service."""
 
 from __future__ import annotations
 

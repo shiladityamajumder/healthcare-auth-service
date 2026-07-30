@@ -1,4 +1,5 @@
-"""Public exports for shared authentication security components."""
+"""File: app/auth/security/__init__.py
+Public exports for shared authentication security components."""
 
 from app.auth.security.hashing import SecureHashing
 from app.auth.security.passwords import PasswordManager

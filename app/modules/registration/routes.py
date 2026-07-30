@@ -1,4 +1,5 @@
-"""Registration HTTP endpoints."""
+"""File: app/modules/registration/routes.py
+Registration HTTP endpoints."""
 
 from typing import Annotated
 

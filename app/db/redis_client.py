@@ -1,4 +1,5 @@
-"""Asynchronous Redis client lifecycle adapter.
+"""File: app/db/redis_client.py
+Asynchronous Redis client lifecycle adapter.
 
 This module owns one process-wide asynchronous Redis client and its connection
 pool. The client is created during FastAPI startup, shared by Redis-dependent

@@ -1,1 +1,2 @@
-"""AI Prescription automated test package."""
+"""File: tests/__init__.py
+AI Prescription automated test package."""

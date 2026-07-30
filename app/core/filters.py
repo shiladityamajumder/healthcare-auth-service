@@ -1,4 +1,4 @@
-"""File: `app/core/filters.py`
+"""File: app/core/filters.py
     Allow-listed SQLAlchemy filtering helpers for MySQL and SQL Server.
 """
 

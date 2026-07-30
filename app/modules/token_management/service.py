@@ -1,4 +1,5 @@
-"""Refresh-token rotation and logout application service."""
+"""File: app/modules/token_management/service.py
+Refresh-token rotation and logout application service."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""File: `app/core/pagination.py`
+"""File: app/core/pagination.py
     Typed offset-pagination primitives for relational repositories.
 """
 

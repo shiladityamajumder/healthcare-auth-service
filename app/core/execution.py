@@ -1,4 +1,4 @@
-"""File: `app/core/execution.py`
+"""File: app/core/execution.py
     Execution primitives for observable, bounded asynchronous operations.
 """
 

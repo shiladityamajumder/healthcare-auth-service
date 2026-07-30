@@ -1,4 +1,5 @@
-"""Load effective role and permission claims from PostgreSQL.
+"""File: app/auth/authorization/claims.py
+Load effective role and permission claims from PostgreSQL.
 
 This module contains the SQL-backed claim loader used by authentication module
 services and request authentication dependencies.

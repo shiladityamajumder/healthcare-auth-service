@@ -1,4 +1,5 @@
-"""FastAPI composition root for the pharmacy identity service."""
+"""File: app/main.py
+FastAPI composition root for the pharmacy identity service."""
 
 from __future__ import annotations
 

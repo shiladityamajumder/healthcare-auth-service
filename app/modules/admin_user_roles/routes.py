@@ -1,4 +1,5 @@
-"""Permission-protected user-role assignment endpoints."""
+"""File: app/modules/admin_user_roles/routes.py
+Permission-protected user-role assignment endpoints."""
 
 from __future__ import annotations
 

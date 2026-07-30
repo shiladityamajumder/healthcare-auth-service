@@ -1,4 +1,5 @@
-"""OpenAPI metadata for token and logout endpoints."""
+"""File: app/modules/token_management/openapi.py
+OpenAPI metadata for token and logout endpoints."""
 
 from app.auth.infrastructure.openapi import AUTH_ERROR_RESPONSES
 

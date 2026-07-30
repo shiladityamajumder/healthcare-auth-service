@@ -1,4 +1,5 @@
-"""Shared access-token, refresh-token, and session creation workflow.
+"""File: app/auth/workflows/session_tokens.py
+Shared access-token, refresh-token, and session creation workflow.
 
 This module coordinates token issuance and stages the corresponding persisted
 session record through an injected writer.

@@ -1,3 +1,5 @@
+"""File: tests/unit/test_configuration.py"""
+
 from __future__ import annotations
 
 import pytest

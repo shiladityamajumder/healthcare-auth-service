@@ -1,4 +1,4 @@
-"""File: `app/common/response.py`
+"""File: app/common/response.py
 Canonical external API response envelope.
 
 This module defines the stable JSON response contract exposed to API clients.

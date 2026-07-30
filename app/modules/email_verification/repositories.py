@@ -1,4 +1,5 @@
-"""SQLAlchemy persistence for email-verification workflows."""
+"""File: app/modules/email_verification/repositories.py
+SQLAlchemy persistence for email-verification workflows."""
 
 from __future__ import annotations
 

@@ -1,4 +1,5 @@
-"""Validation tests for endpoint contracts owned by vertical modules."""
+"""File: tests/unit/test_auth_schemas.py
+Validation tests for endpoint contracts owned by vertical modules."""
 
 from __future__ import annotations
 

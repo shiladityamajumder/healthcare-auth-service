@@ -1,4 +1,5 @@
-"""Permission and role-policy application service."""
+"""File: app/modules/admin_permissions/service.py
+Permission and role-policy application service."""
 
 from __future__ import annotations
 

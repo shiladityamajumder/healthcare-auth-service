@@ -1,4 +1,5 @@
-"""FastAPI authorization dependencies.
+"""File: app/auth/authorization/dependencies.py
+FastAPI authorization dependencies.
 
 These dependencies consume an already authenticated ``UserPrincipal`` and
 enforce role or permission requirements.

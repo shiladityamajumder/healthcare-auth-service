@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# File: cicd/scripts/deploy_remote.sh
 set -Eeuo pipefail
 
 readonly IMAGE_URI="${1:?IMAGE_URI is required}"

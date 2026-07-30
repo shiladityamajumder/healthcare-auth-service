@@ -1,4 +1,4 @@
-"""File: `app/common/exceptions.py`
+"""File: app/common/exceptions.py
 Framework-independent application exception hierarchy.
 
 Exceptions in this module carry safe, machine-readable information only. They

@@ -1,4 +1,5 @@
-"""Authentication identity validation and normalization.
+"""File: app/auth/identity/normalization.py
+Authentication identity validation and normalization.
 
 This module defines the canonical normalization rules used for email addresses,
 phone country codes, and national phone numbers.

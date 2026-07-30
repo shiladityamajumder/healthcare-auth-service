@@ -1,4 +1,5 @@
-"""User-role assignment application service."""
+"""File: app/modules/admin_user_roles/service.py
+User-role assignment application service."""
 
 from __future__ import annotations
 

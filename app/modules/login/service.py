@@ -1,4 +1,5 @@
-"""Password and phone-OTP login application services."""
+"""File: app/modules/login/service.py
+Password and phone-OTP login application services."""
 
 from __future__ import annotations
 

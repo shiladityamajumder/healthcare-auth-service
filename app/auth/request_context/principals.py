@@ -1,4 +1,5 @@
-"""Authenticated request principal types.
+"""File: app/auth/request_context/principals.py
+Authenticated request principal types.
 
 A principal represents identity and authorization information that has already
 been validated from a signed access token and, when configured, the persisted

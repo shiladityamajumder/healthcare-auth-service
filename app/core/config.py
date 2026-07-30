@@ -1,4 +1,5 @@
-"""Central, immutable configuration for the authentication service.
+"""File: app/core/config.py
+Central, immutable configuration for the authentication service.
 
 The service reads configuration from environment variables and one optional
 ``.env`` file. Pydantic validates individual values and cross-field security

@@ -1,4 +1,5 @@
-"""Typed authentication and client metadata headers.
+"""File: app/auth/request_context/headers.py
+Typed authentication and client metadata headers.
 
 These headers contain request metadata, not authentication credentials.
 

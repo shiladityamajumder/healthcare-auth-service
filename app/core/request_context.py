@@ -1,4 +1,4 @@
-"""File: `app/core/request_context.py`
+"""File: app/core/request_context.py
     Request-scoped observability context based on ``contextvars``.
 """
 

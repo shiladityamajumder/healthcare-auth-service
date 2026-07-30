@@ -1,4 +1,5 @@
-"""Shared deterministic configuration for offline tests."""
+"""File: tests/conftest.py
+Shared deterministic configuration for offline tests."""
 
 from __future__ import annotations
 

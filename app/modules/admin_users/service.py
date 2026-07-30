@@ -1,4 +1,5 @@
-"""Administrative user application service."""
+"""File: app/modules/admin_users/service.py
+Administrative user application service."""
 
 from __future__ import annotations
 

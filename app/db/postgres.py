@@ -1,4 +1,5 @@
-"""Process-wide PostgreSQL engine and request-scoped session lifecycle."""
+"""File: app/db/postgres.py
+Process-wide PostgreSQL engine and request-scoped session lifecycle."""
 
 from __future__ import annotations
 

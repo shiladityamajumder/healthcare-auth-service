@@ -1,4 +1,5 @@
-"""Process-wide authentication infrastructure container.
+"""File: app/auth/infrastructure/runtime.py
+Process-wide authentication infrastructure container.
 
 The runtime stores reusable authentication infrastructure that is safe to
 share across requests. Request-scoped business services, repositories,

@@ -1,4 +1,5 @@
-"""Current-user profile and authorization contracts owned by this module."""
+"""File: app/modules/current_user/schemas.py
+Current-user profile and authorization contracts owned by this module."""
 
 from __future__ import annotations
 

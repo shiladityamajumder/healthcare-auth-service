@@ -1,4 +1,5 @@
-"""API version-one router registry."""
+"""File: app/api/v1/router.py
+API version-one router registry."""
 
 from __future__ import annotations
 

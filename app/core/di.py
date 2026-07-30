@@ -1,4 +1,5 @@
-"""FastAPI dependency providers for the PostgreSQL transaction boundary."""
+"""File: app/core/di.py
+FastAPI dependency providers for the PostgreSQL transaction boundary."""
 
 from __future__ import annotations
 

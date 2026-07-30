@@ -1,4 +1,5 @@
-"""Registration application services for email/password and phone/OTP flows."""
+"""File: app/modules/registration/service.py
+Registration application services for email/password and phone/OTP flows."""
 
 from __future__ import annotations
 

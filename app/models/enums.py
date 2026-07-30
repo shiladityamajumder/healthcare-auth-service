@@ -1,4 +1,5 @@
-"""Identity-domain enum values aligned with the database contract.
+"""File: app/models/enums.py
+Identity-domain enum values aligned with the database contract.
 
 The string values in this module may be persisted in PostgreSQL or included in
 internal application contracts. Existing names and values must not be renamed

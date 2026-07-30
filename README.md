@@ -1,3 +1,5 @@
+<!-- File: README.md -->
+
 # Pharmacy Identity Service
 
 Production-oriented FastAPI authentication and authorization service using Python 3.12+, Pydantic v2, SQLAlchemy 2.x async ORM, PostgreSQL, Argon2id, JWT rotation, OTP, scoped RBAC, and Redis-backed rate limiting.

@@ -1,4 +1,5 @@
-"""SQLAlchemy persistence for password and phone-OTP login workflows."""
+"""File: app/modules/login/repositories.py
+SQLAlchemy persistence for password and phone-OTP login workflows."""
 
 from __future__ import annotations
 

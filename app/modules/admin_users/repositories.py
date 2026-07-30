@@ -1,4 +1,5 @@
-"""SQLAlchemy repositories for administrative user workflows."""
+"""File: app/modules/admin_users/repositories.py
+SQLAlchemy repositories for administrative user workflows."""
 
 from __future__ import annotations
 

@@ -1,4 +1,5 @@
-"""Security primitives for password policy and Argon2id processing.
+"""File: app/auth/security/passwords.py
+Security primitives for password policy and Argon2id processing.
 
 Password hashing and verification are CPU- and memory-intensive operations.
 They are executed in worker threads so the application's asynchronous event

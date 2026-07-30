@@ -1,4 +1,5 @@
-"""Grouped unit tests for common contracts and core utilities."""
+"""File: tests/unit/test_core_and_common.py
+Grouped unit tests for common contracts and core utilities."""
 
 from __future__ import annotations
 

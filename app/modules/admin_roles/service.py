@@ -1,4 +1,5 @@
-"""Role administration application service."""
+"""File: app/modules/admin_roles/service.py
+Role administration application service."""
 
 from __future__ import annotations
 

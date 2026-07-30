@@ -1,4 +1,5 @@
-"""Security primitives for signed authentication tokens.
+"""File: app/auth/security/tokens.py
+Security primitives for signed authentication tokens.
 
 This module creates and verifies JWT access, refresh, and password-reset
 tokens. It also publishes configured RSA verification keys in JWKS-compatible

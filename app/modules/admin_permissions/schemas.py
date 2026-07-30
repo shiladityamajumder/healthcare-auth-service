@@ -1,4 +1,5 @@
-"""Permission and role-policy contracts."""
+"""File: app/modules/admin_permissions/schemas.py
+Permission and role-policy contracts."""
 
 from __future__ import annotations
 

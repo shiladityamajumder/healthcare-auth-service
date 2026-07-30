@@ -1,3 +1,5 @@
+# File: requirements.txt
+
 # Production runtime dependencies for the authentication service.
 # Development and test-only packages belong in requirements-dev.txt.
 

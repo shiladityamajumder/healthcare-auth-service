@@ -1,4 +1,5 @@
-"""Reusable OTP challenge generation and verification infrastructure.
+"""File: app/auth/workflows/otp.py
+Reusable OTP challenge generation and verification infrastructure.
 
 The service coordinates OTP issuance and verification. Each vertical
 authentication module supplies a repository implementation through

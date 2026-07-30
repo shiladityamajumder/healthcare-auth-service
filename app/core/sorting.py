@@ -1,4 +1,4 @@
-"""File: `app/core/sorting.py`
+"""File: app/core/sorting.py
     Allow-listed SQLAlchemy sorting helpers.
 """
 

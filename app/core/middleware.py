@@ -1,4 +1,4 @@
-"""File: `app/core/middleware.py`
+"""File: app/core/middleware.py
     Pure-ASGI middleware for context, security, limits, and observability.
 """
 

@@ -1,4 +1,5 @@
-"""SQLAlchemy persistence for user session inventory and revocation."""
+"""File: app/modules/session_management/repositories.py
+SQLAlchemy persistence for user session inventory and revocation."""
 
 from __future__ import annotations
 

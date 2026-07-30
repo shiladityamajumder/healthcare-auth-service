@@ -1,4 +1,5 @@
-"""Liveness, readiness and bounded PostgreSQL diagnostics."""
+"""File: app/api/health.py
+Liveness, readiness and bounded PostgreSQL diagnostics."""
 
 from __future__ import annotations
 

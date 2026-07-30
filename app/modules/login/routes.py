@@ -1,4 +1,5 @@
-"""Password and phone-OTP login endpoints."""
+"""File: app/modules/login/routes.py
+Password and phone-OTP login endpoints."""
 
 from typing import Annotated
 

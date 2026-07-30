@@ -1,4 +1,4 @@
-"""File: `app/utils/datetime_utils.py`
+"""File: app/utils/datetime_utils.py
 Timezone-aware datetime utilities.
 
 The configured application timezone is the authoritative timezone for
