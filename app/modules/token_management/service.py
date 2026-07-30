@@ -132,9 +132,11 @@ class TokenManagementService:
                         session.user_agent = context.user_agent
                         session.device_id = payload.device_id or session.device_id
                         session.device_type = payload.device_type or session.device_type
+                        profile = await repository.get_active_profile(user.id)
                         user_dto = UserResponse.model_validate(
                             public_user_data(
                                 user,
+                                profile=profile,
                                 roles=authz.roles,
                                 permissions=authz.permissions,
                             )

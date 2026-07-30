@@ -28,6 +28,15 @@ class MessageResponse(StrictModel):
     message: str
 
 
+class UserProfileResponse(StrictModel):
+    """Optional human-readable profile attached to an identity."""
+
+    first_name: str | None
+    last_name: str | None
+    preferred_name: str | None
+    avatar_object_key: str | None
+
+
 class UserResponse(StrictModel):
     """Non-sensitive identity representation returned to API clients."""
 
@@ -40,6 +49,8 @@ class UserResponse(StrictModel):
     status: str
     preferred_locale: str
     timezone: str
+    display_name: str
+    profile: UserProfileResponse | None
     roles: list[str]
     permissions: list[str]
 
@@ -69,5 +80,6 @@ __all__ = [
     "MessageResponse",
     "OtpChallengeResponse",
     "TokenPairResponse",
+    "UserProfileResponse",
     "UserResponse",
 ]

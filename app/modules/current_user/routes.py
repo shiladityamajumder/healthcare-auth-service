@@ -57,14 +57,14 @@ async def get_current_user(
 @router.patch(
     "",
     response_model=APIResponseModel[UserResponse],
-    summary="Update current user preferences",
+    summary="Update current user profile",
 )
 async def update_current_user(
     payload: UpdateCurrentUserRequest,
     principal: CurrentUserWriteAccess,
     service: CurrentUserServiceDep,
 ) -> JSONResponse:
-    """Update locale or timezone without changing login identifiers.
+    """Update profile or preferences without changing login identifiers.
 
     ``CurrentUserWriteAccess`` supplies the authenticated user's identifier and
     applies the sensitive mutation limit.

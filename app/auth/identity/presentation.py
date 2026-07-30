@@ -32,6 +32,7 @@ from app.auth.identity.normalization import (
 def public_user_data(
     user: Any,
     *,
+    profile: Any | None = None,
     roles: Iterable[str] = (),
     permissions: Iterable[str] = (),
 ) -> dict[str, object]:
@@ -49,6 +50,24 @@ def public_user_data(
         )
 
     status = getattr(user.status, "value", user.status)
+    profile_data: dict[str, object] | None = None
+    if profile is not None:
+        profile_data = {
+            "first_name": profile.first_name,
+            "last_name": profile.last_name,
+            "preferred_name": profile.preferred_name,
+            "avatar_object_key": profile.avatar_object_key,
+        }
+
+    # Prefer profile names but always provide a stable fallback for identities
+    # that have not completed an optional profile.
+    preferred_name = _nonblank(getattr(profile, "preferred_name", None))
+    first_name = _nonblank(getattr(profile, "first_name", None))
+    last_name = _nonblank(getattr(profile, "last_name", None))
+    combined_name = " ".join(value for value in (first_name, last_name) if value)
+    display_name = (
+        preferred_name or combined_name or user.email or phone_number_masked or str(user.id)[:8]
+    )
 
     return {
         "id": user.id,
@@ -60,9 +79,19 @@ def public_user_data(
         "status": status,
         "preferred_locale": user.preferred_locale,
         "timezone": user.timezone,
+        "display_name": display_name,
+        "profile": profile_data,
         "roles": sorted(set(roles)),
         "permissions": sorted(set(permissions)),
     }
+
+
+def _nonblank(value: object) -> str | None:
+    """Return a stripped string or ``None`` for missing/blank profile values."""
+    if not isinstance(value, str):
+        return None
+    normalized = value.strip()
+    return normalized or None
 
 
 def mask_email(

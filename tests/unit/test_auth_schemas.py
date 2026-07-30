@@ -18,11 +18,13 @@ from app.modules.admin_permissions.schemas import (
     CreatePermissionRequest,
     UpdatePermissionRequest,
 )
+from app.modules.current_user.schemas import UpdateCurrentUserRequest
 from app.modules.login.schemas import (
     PasswordLoginRequest,
     PhoneOtpLoginRequest,
     PhoneOtpLoginVerifyRequest,
 )
+from app.modules.registration.schemas import EmailPasswordRegistrationRequest
 from pydantic import ValidationError
 
 
@@ -79,3 +81,29 @@ def test_permission_master_update_requires_at_least_one_field() -> None:
 def test_permission_master_update_rejects_null_required_field() -> None:
     with pytest.raises(ValidationError):
         UpdatePermissionRequest(resource=None)
+
+
+def test_registration_accepts_optional_universal_profile() -> None:
+    payload = EmailPasswordRegistrationRequest(
+        email="profile@example.com",
+        password="StrongPassword!123",  # noqa: S106 - inert test input
+        first_name="Ada",
+        last_name="Lovelace",
+        preferred_name="Ada",
+        avatar_object_key="avatars/user.png",
+    )
+
+    assert payload.first_name == "Ada"
+    assert payload.preferred_name == "Ada"
+
+
+def test_profile_fields_reject_blank_strings() -> None:
+    with pytest.raises(ValidationError):
+        UpdateCurrentUserRequest(first_name="   ")
+
+
+def test_current_user_profile_allows_explicit_field_clear() -> None:
+    payload = UpdateCurrentUserRequest(preferred_name=None)
+
+    assert "preferred_name" in payload.model_fields_set
+    assert payload.preferred_name is None

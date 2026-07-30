@@ -71,9 +71,11 @@ class _LoginBase:
     ) -> TokenPairResponse:
         """Load current claims and stage a session/token pair in the active transaction."""
         claims = await repository.authorization_claims(user_id=user.id, now=utc_now())
+        profile = await repository.get_active_profile(user.id)
         user_dto = UserResponse.model_validate(
             public_user_data(
                 user,
+                profile=profile,
                 roles=claims.roles,
                 permissions=claims.permissions,
             )

@@ -2,8 +2,8 @@
 Public ORM model exports for the externally managed identity schema."""
 
 from app.models.identity import (
-    ApiClientSecrets,
     ApiClients,
+    ApiClientSecrets,
     LoginAttempts,
     MfaFactors,
     OtpChallenges,
@@ -13,6 +13,7 @@ from app.models.identity import (
     Roles,
     Sessions,
     TrustedDevices,
+    UserProfiles,
     UserRoles,
     Users,
 )
@@ -29,6 +30,7 @@ __all__ = [
     "Roles",
     "Sessions",
     "TrustedDevices",
+    "UserProfiles",
     "UserRoles",
     "Users",
 ]

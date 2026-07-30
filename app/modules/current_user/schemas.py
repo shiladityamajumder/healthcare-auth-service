@@ -20,10 +20,14 @@ from app.common.schemas import StrictModel
 
 
 class UpdateCurrentUserRequest(StrictModel):
-    """Safe identity preferences editable by the authenticated user."""
+    """Identity preferences and profile values editable by their owner."""
 
     preferred_locale: str | None = Field(default=None, min_length=2, max_length=16)
     timezone: str | None = Field(default=None, min_length=3, max_length=64)
+    first_name: str | None = Field(default=None, min_length=1, max_length=100)
+    last_name: str | None = Field(default=None, min_length=1, max_length=100)
+    preferred_name: str | None = Field(default=None, min_length=1, max_length=100)
+    avatar_object_key: str | None = Field(default=None, min_length=1, max_length=512)
 
 
 class UserRolesResponse(StrictModel):

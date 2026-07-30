@@ -1,25 +1,31 @@
 """File: app/models/identity.py
 
 Purpose:
-Maps users, credentials, roles, permissions, sessions, tokens, OTP challenges,
-and audit records in the externally managed ``identity`` schema.
+Maps authentication identities, universal user profiles, authorization roles,
+permissions, sessions, OTP challenges, trusted devices, API clients, and
+security audit records in the ``identity`` PostgreSQL schema.
 
 Dependency flow:
 Repository AsyncSession operation
--> identity ORM mapping and relationships
--> externally migrated PostgreSQL tables
--> mapped entities returned to services
+-> identity ORM mapping
+-> SQLAlchemy type conversion and constraints
+-> PostgreSQL identity tables
+-> mapped entities returned to repositories and services
 
-These mappings represent the existing PostgreSQL ``identity`` schema. Schema
-creation and migrations remain owned by the external migration process.
+``Users`` stores authentication and account lifecycle data.
+
+``UserProfiles`` stores optional human-readable profile data shared by all
+human user types, including customers, administrators, practitioners,
+employees, warehouse users, delivery users, and support users. Domain-specific
+profile information remains owned by its corresponding bounded context.
 
 All datetime attributes declared in this module use ``UTCDateTime``. Values
-must be timezone-aware when supplied by application code. They are normalized
-to naive UTC before persistence and restored as timezone-aware UTC datetimes
-when read from the database.
+supplied by application code must be timezone-aware. They are normalized to
+naive UTC before persistence and restored as timezone-aware UTC datetimes when
+read from the database.
 
 Creation and update timestamps inherited from ``AuditMixin``, ``RecordMixin``,
-and ``ImmutableRecordMixin`` must use the audit-column factories defined in
+and ``ImmutableRecordMixin`` use the audit-column factories defined in
 ``app.db.sqlalchemy_types``.
 """
 
@@ -68,7 +74,13 @@ from app.utils.datetime_utils import current_datetime
 
 
 class Users(RecordMixin):
-    """Persist user identities and account lifecycle state."""
+    """
+    Persist authentication identities and account lifecycle state.
+
+    This table intentionally excludes human-readable profile information.
+    Names and avatars are stored in ``identity.user_profiles`` so every human
+    identity can have a profile without being classified as a customer.
+    """
 
     __tablename__ = "users"
     __table_args__ = (
@@ -183,6 +195,75 @@ class Users(RecordMixin):
     )
     account_closed_at: Mapped[datetime | None] = mapped_column(
         UTCDateTime(),
+        nullable=True,
+    )
+
+
+class UserProfiles(AuditMixin):
+    """
+    Persist optional universal human-readable profile data.
+
+    A profile is optional because an identity may exist before profile
+    completion, may represent a pending invitation, or may represent a
+    non-human account.
+
+    Customer-specific, practitioner-specific, organization-specific, and
+    employee-specific attributes must remain in their respective domain
+    profile or membership tables.
+
+    Application code should resolve a display name in this order:
+
+    1. ``preferred_name``
+    2. Combined ``first_name`` and ``last_name``
+    3. User email
+    4. User phone number
+    5. Abbreviated user ID
+    """
+
+    __tablename__ = "user_profiles"
+    __table_args__ = (
+        Index(
+            "uq_identity_user_profiles_user_active",
+            "user_id",
+            unique=True,
+            postgresql_where=text("is_deleted = false"),
+        ),
+        Index(
+            "ix_identity_user_profiles_first_name",
+            "first_name",
+        ),
+        Index(
+            "ix_identity_user_profiles_last_name",
+            "last_name",
+        ),
+        {
+            "schema": "identity",
+        },
+    )
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "identity.users.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
+
+    first_name: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+    last_name: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+    preferred_name: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+    avatar_object_key: Mapped[str | None] = mapped_column(
+        String(512),
         nullable=True,
     )
 
@@ -843,6 +924,7 @@ __all__ = [
     "Roles",
     "Sessions",
     "TrustedDevices",
+    "UserProfiles",
     "UserRoles",
     "Users",
 ]

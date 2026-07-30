@@ -32,6 +32,7 @@ async def test_required_identity_tables_are_available() -> None:
 
     required = {
         "users",
+        "user_profiles",
         "roles",
         "permissions",
         "user_roles",

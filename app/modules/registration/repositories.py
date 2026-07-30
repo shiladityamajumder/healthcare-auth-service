@@ -1,8 +1,8 @@
 """File: app/modules/registration/repositories.py
 
 Purpose:
-Implements duplicate identity checks, account/password/role/session staging,
-authorization loading, and the registration OTP repository port.
+Implements duplicate identity checks, account/profile/password/role/session
+staging, authorization loading, and the registration OTP repository port.
 
 Dependency flow:
 Registration service inside SQLAlchemyUnitOfWork
@@ -25,7 +25,15 @@ from sqlalchemy import func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.authorization.claims import AuthorizationClaims, load_authorization_claims
-from app.models.identity import OtpChallenges, PasswordHistory, Roles, Sessions, UserRoles, Users
+from app.models.identity import (
+    OtpChallenges,
+    PasswordHistory,
+    Roles,
+    Sessions,
+    UserProfiles,
+    UserRoles,
+    Users,
+)
 
 
 class RegistrationRepository:
@@ -56,6 +64,10 @@ class RegistrationRepository:
     def add_user(self, user: Users) -> None:
         """Stage user in the current unit of work."""
         self._session.add(user)
+
+    def add_profile(self, profile: UserProfiles) -> None:
+        """Stage an optional universal profile with the new identity."""
+        self._session.add(profile)
 
     def add_password_history(self, *, user_id: uuid.UUID, password_hash: str) -> None:
         """Stage password history in the current unit of work."""

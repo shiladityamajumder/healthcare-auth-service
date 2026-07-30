@@ -24,7 +24,7 @@ from sqlalchemy import func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.authorization.claims import AuthorizationClaims, load_authorization_claims
-from app.models.identity import OtpChallenges, Sessions, Users
+from app.models.identity import OtpChallenges, Sessions, UserProfiles, Users
 
 
 class EmailVerificationRepository:
@@ -48,6 +48,14 @@ class EmailVerificationRepository:
     def mark_email_verified(self, user: Users, *, verified_at: datetime) -> None:
         """Mark email verified in the current unit of work."""
         user.email_verified_at = user.email_verified_at or verified_at
+
+    async def get_active_profile(self, user_id: uuid.UUID) -> UserProfiles | None:
+        """Load the non-deleted profile used in the verification response."""
+        statement = select(UserProfiles).where(
+            UserProfiles.user_id == user_id,
+            UserProfiles.is_deleted.is_(False),
+        )
+        return (await self._session.scalars(statement)).first()
 
     async def authorization_claims(
         self,

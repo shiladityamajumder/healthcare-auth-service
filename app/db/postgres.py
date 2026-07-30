@@ -112,6 +112,7 @@ class PostgreSQLDatabase:
         statement = text(
             "SELECT "
             "to_regclass('identity.users') IS NOT NULL AND "
+            "to_regclass('identity.user_profiles') IS NOT NULL AND "
             "to_regclass('identity.roles') IS NOT NULL AND "
             "to_regclass('identity.permissions') IS NOT NULL AND "
             "to_regclass('identity.user_roles') IS NOT NULL AND "

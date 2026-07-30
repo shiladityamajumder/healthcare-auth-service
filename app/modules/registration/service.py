@@ -1,7 +1,7 @@
 """File: app/modules/registration/service.py
 
 Purpose:
-Owns duplicate-safe account creation, initial active-role assignment,
+Owns duplicate-safe account/profile creation, initial active-role assignment,
 email/password setup, phone OTP consumption, and first-session issuance.
 
 Dependency flow:
@@ -44,7 +44,7 @@ from app.core.config import AppSettings
 from app.core.logging import get_logger
 from app.db.uow import SQLAlchemyUnitOfWork
 from app.models.enums import OTPChannel, OTPPurpose, UserStatus
-from app.models.identity import Roles, Users
+from app.models.identity import Roles, UserProfiles, Users
 from app.modules.registration.repositories import RegistrationRepository
 from app.modules.registration.schemas import (
     EmailPasswordRegistrationRequest,
@@ -63,11 +63,19 @@ logger = get_logger(__name__)
 def _user_response(
     user: Users,
     *,
+    profile: UserProfiles | None,
     roles: Sequence[str],
     permissions: Sequence[str],
 ) -> UserResponse:
     """Map a persisted user and its effective authorization to the API DTO."""
-    return UserResponse.model_validate(public_user_data(user, roles=roles, permissions=permissions))
+    return UserResponse.model_validate(
+        public_user_data(
+            user,
+            profile=profile,
+            roles=roles,
+            permissions=permissions,
+        )
+    )
 
 
 def _token_response(
@@ -142,9 +150,13 @@ class _RegistrationWriter:
         timezone: str,
         terms_version: str | None,
         privacy_version: str | None,
+        first_name: str | None,
+        last_name: str | None,
+        preferred_name: str | None,
+        avatar_object_key: str | None,
         requested_role_codes: list[str],
-    ) -> Users:
-        """Validate initial roles, hash the password, and stage account state."""
+    ) -> tuple[Users, UserProfiles | None]:
+        """Validate roles and stage the account with its optional profile."""
         roles = await self._registration_roles(
             repository=repository,
             requested_role_codes=requested_role_codes,
@@ -166,13 +178,25 @@ class _RegistrationWriter:
             privacy_version=privacy_version,
         )
         repository.add_user(user)
+        profile: UserProfiles | None = None
+        if any((first_name, last_name, preferred_name, avatar_object_key)):
+            profile = UserProfiles(
+                user_id=user.id,
+                first_name=first_name,
+                last_name=last_name,
+                preferred_name=preferred_name,
+                avatar_object_key=avatar_object_key,
+                created_by=user.id,
+                updated_by=user.id,
+            )
+            repository.add_profile(profile)
         if password_hash:
             repository.add_password_history(user_id=user.id, password_hash=password_hash)
         repository.assign_roles(user_id=user.id, roles=roles)
-        # Flush materializes pending account, role, and history state for later
-        # workflow steps; it does not commit the registration transaction.
+        # Flush materializes pending account, profile, role, and history state;
+        # it does not commit the registration transaction.
         await self._uow.flush()
-        return user
+        return user, profile
 
     async def _registration_roles(
         self,
@@ -246,6 +270,7 @@ class _RegistrationBase:
         self,
         *,
         user: Users,
+        profile: UserProfiles | None,
         repository: RegistrationRepository,
         context: AuthRequestContext,
         device: DeviceMetadataPort,
@@ -255,6 +280,7 @@ class _RegistrationBase:
         claims = await repository.authorization_claims(user_id=user.id, now=utc_now())
         user_dto = _user_response(
             user,
+            profile=profile,
             roles=claims.roles,
             permissions=claims.permissions,
         )
@@ -290,7 +316,7 @@ class EmailPasswordRegistrationService(_RegistrationBase):
                         "An account with this email address is already registered.",
                         details={"field": "email"},
                     )
-                user = await self._writer.create(
+                user, profile = await self._writer.create(
                     repository=repository,
                     email=email,
                     password=payload.password,
@@ -306,6 +332,10 @@ class EmailPasswordRegistrationService(_RegistrationBase):
                     timezone=payload.timezone,
                     terms_version=payload.terms_version,
                     privacy_version=payload.privacy_version,
+                    first_name=payload.first_name,
+                    last_name=payload.last_name,
+                    preferred_name=payload.preferred_name,
+                    avatar_object_key=payload.avatar_object_key,
                     requested_role_codes=payload.roles,
                 )
                 if self._settings.EMAIL_VERIFICATION_REQUIRED:
@@ -322,6 +352,7 @@ class EmailPasswordRegistrationService(_RegistrationBase):
                     result = RegistrationResponse(
                         user=_user_response(
                             user,
+                            profile=profile,
                             roles=claims.roles,
                             permissions=claims.permissions,
                         ),
@@ -333,6 +364,7 @@ class EmailPasswordRegistrationService(_RegistrationBase):
                 else:
                     tokens = await self._issue_tokens(
                         user=user,
+                        profile=profile,
                         repository=repository,
                         context=context,
                         device=payload,
@@ -439,7 +471,7 @@ class PhoneOtpRegistrationService(_RegistrationBase):
                         "An account with this country code and phone number is already registered.",
                         details={"fields": ["phone_country_code", "phone_number"]},
                     )
-                user = await self._writer.create(
+                user, profile = await self._writer.create(
                     repository=repository,
                     phone_country_code=country,
                     phone_number=phone,
@@ -450,10 +482,15 @@ class PhoneOtpRegistrationService(_RegistrationBase):
                     timezone=payload.timezone,
                     terms_version=payload.terms_version,
                     privacy_version=payload.privacy_version,
+                    first_name=payload.first_name,
+                    last_name=payload.last_name,
+                    preferred_name=payload.preferred_name,
+                    avatar_object_key=payload.avatar_object_key,
                     requested_role_codes=payload.roles,
                 )
                 return await self._issue_tokens(
                     user=user,
+                    profile=profile,
                     repository=repository,
                     context=context,
                     device=payload,

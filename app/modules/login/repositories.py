@@ -24,7 +24,7 @@ from sqlalchemy import func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.authorization.claims import AuthorizationClaims, load_authorization_claims
-from app.models.identity import LoginAttempts, OtpChallenges, Sessions, Users
+from app.models.identity import LoginAttempts, OtpChallenges, Sessions, UserProfiles, Users
 
 
 class LoginRepository:
@@ -43,6 +43,14 @@ class LoginRepository:
         statement = select(Users).where(Users.email_normalized == email)
         if for_update:
             statement = statement.with_for_update()
+        return (await self._session.scalars(statement)).first()
+
+    async def get_active_profile(self, user_id: uuid.UUID) -> UserProfiles | None:
+        """Load the non-deleted profile used in the login response."""
+        statement = select(UserProfiles).where(
+            UserProfiles.user_id == user_id,
+            UserProfiles.is_deleted.is_(False),
+        )
         return (await self._session.scalars(statement)).first()
 
     async def get_by_phone(

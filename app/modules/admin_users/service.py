@@ -59,17 +59,24 @@ class AdminUsersService:
                 search=search,
                 status=status,
             )
-            users_repository = repository
+            profiles = await repository.active_profiles_by_user_ids(
+                [user.id for user in page.items]
+            )
             now = utc_now()
             items: list[UserResponse] = []
             for user in page.items:
-                claims = await users_repository.authorization_claims(
+                claims = await repository.authorization_claims(
                     user_id=user.id,
                     now=now,
                 )
                 items.append(
                     UserResponse.model_validate(
-                        public_user_data(user, roles=claims.roles, permissions=claims.permissions)
+                        public_user_data(
+                            user,
+                            profile=profiles.get(user.id),
+                            roles=claims.roles,
+                            permissions=claims.permissions,
+                        )
                     )
                 )
             return AdminUserListResponse(users=items), page.pagination
@@ -81,12 +88,18 @@ class AdminUsersService:
             user = await repository.get_by_id(user_id)
             if user is None:
                 raise NotFoundError("The user was not found.")
+            profile = await repository.get_active_profile(user.id)
             claims = await repository.authorization_claims(
                 user_id=user.id,
                 now=utc_now(),
             )
             return UserResponse.model_validate(
-                public_user_data(user, roles=claims.roles, permissions=claims.permissions)
+                public_user_data(
+                    user,
+                    profile=profile,
+                    roles=claims.roles,
+                    permissions=claims.permissions,
+                )
             )
 
     async def update_status(
@@ -118,12 +131,18 @@ class AdminUsersService:
                     revoked_at=utc_now(),
                     reason=f"admin_status_{payload.status.value}",
                 )
+            profile = await repository.get_active_profile(user.id)
             claims = await repository.authorization_claims(
                 user_id=user.id,
                 now=utc_now(),
             )
             response = UserResponse.model_validate(
-                public_user_data(user, roles=claims.roles, permissions=claims.permissions)
+                public_user_data(
+                    user,
+                    profile=profile,
+                    roles=claims.roles,
+                    permissions=claims.permissions,
+                )
             )
         logger.info(
             "Security audit event",

@@ -150,9 +150,11 @@ class PasswordManagementService:
     ) -> TokenPairResponse:
         """Load current claims and stage the sole post-password-change session."""
         authz = await repository.authorization_claims(user_id=user.id, now=utc_now())
+        profile = await repository.get_active_profile(user.id)
         user_dto = UserResponse.model_validate(
             public_user_data(
                 user,
+                profile=profile,
                 roles=authz.roles,
                 permissions=authz.permissions,
             )

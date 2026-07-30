@@ -24,7 +24,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.authorization.claims import AuthorizationClaims, load_authorization_claims
-from app.models.identity import Sessions, Users
+from app.models.identity import Sessions, UserProfiles, Users
 
 
 class TokenRepository:
@@ -43,6 +43,14 @@ class TokenRepository:
         statement = select(Sessions).where(Sessions.id == session_id)
         if for_update:
             statement = statement.with_for_update()
+        return (await self._session.scalars(statement)).first()
+
+    async def get_active_profile(self, user_id: uuid.UUID) -> UserProfiles | None:
+        """Load the non-deleted profile returned after token rotation."""
+        statement = select(UserProfiles).where(
+            UserProfiles.user_id == user_id,
+            UserProfiles.is_deleted.is_(False),
+        )
         return (await self._session.scalars(statement)).first()
 
     async def get_user(

@@ -1,8 +1,8 @@
 """File: app/modules/current_user/repositories.py
 
 Purpose:
-Implements user-by-identifier lookup and effective authorization-claim loading
-for current-user workflows.
+Implements identity/profile lookup, profile persistence, and effective
+authorization-claim loading for current-user workflows.
 
 Dependency flow:
 CurrentUserService inside SQLAlchemyUnitOfWork
@@ -23,7 +23,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.authorization.claims import AuthorizationClaims, load_authorization_claims
-from app.models.identity import Users
+from app.models.identity import UserProfiles, Users
 
 
 class CurrentUserRepository:
@@ -43,6 +43,25 @@ class CurrentUserRepository:
         if for_update:
             statement = statement.with_for_update()
         return (await self._session.scalars(statement)).first()
+
+    async def get_active_profile(
+        self,
+        user_id: uuid.UUID,
+        *,
+        for_update: bool = False,
+    ) -> UserProfiles | None:
+        """Load the non-deleted universal profile, optionally locking it."""
+        statement = select(UserProfiles).where(
+            UserProfiles.user_id == user_id,
+            UserProfiles.is_deleted.is_(False),
+        )
+        if for_update:
+            statement = statement.with_for_update()
+        return (await self._session.scalars(statement)).first()
+
+    def add_profile(self, profile: UserProfiles) -> None:
+        """Stage a new universal profile in the current transaction."""
+        self._session.add(profile)
 
     async def authorization_claims(
         self,

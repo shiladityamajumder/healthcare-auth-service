@@ -48,7 +48,20 @@ class _RegistrationRoles(StrictModel):
         return values
 
 
-class EmailPasswordRegistrationRequest(DeviceContext, _RegistrationRoles):
+class _RegistrationProfile(StrictModel):
+    """Optional universal profile values accepted during account creation."""
+
+    first_name: str | None = Field(default=None, min_length=1, max_length=100)
+    last_name: str | None = Field(default=None, min_length=1, max_length=100)
+    preferred_name: str | None = Field(default=None, min_length=1, max_length=100)
+    avatar_object_key: str | None = Field(default=None, min_length=1, max_length=512)
+
+
+class EmailPasswordRegistrationRequest(
+    DeviceContext,
+    _RegistrationRoles,
+    _RegistrationProfile,
+):
     """Email/password registration body with optional initial role codes."""
 
     email: EmailStr
@@ -66,7 +79,11 @@ class PhoneOtpRegistrationRequest(StrictModel):
     phone_number: str = Field(min_length=6, max_length=32)
 
 
-class PhoneOtpRegistrationVerifyRequest(DeviceContext, _RegistrationRoles):
+class PhoneOtpRegistrationVerifyRequest(
+    DeviceContext,
+    _RegistrationRoles,
+    _RegistrationProfile,
+):
     """Phone OTP proof, optional password, and optional initial role codes."""
 
     challenge_id: uuid.UUID
