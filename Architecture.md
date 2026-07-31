@@ -1587,4 +1587,4 @@ Required verification commands are documented in:
 
 The complete HTTP route inventory is documented in:
 
-* [`ENDPOINT_INVENTORY.md`](ENDPOINT_INVENTORY.md)
+* [`API_DOCUMENTATION.md`](API_DOCUMENTATION.md)
