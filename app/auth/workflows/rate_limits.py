@@ -67,10 +67,7 @@ class AuthRateLimits:
             context=context,
             identity=identity,
             limit=self._settings.REGISTRATION_RATE_LIMIT,
-            window_seconds=(
-                self._settings
-                .REGISTRATION_RATE_WINDOW_SECONDS
-            ),
+            window_seconds=(self._settings.REGISTRATION_RATE_WINDOW_SECONDS),
         )
 
     async def login(
@@ -85,10 +82,7 @@ class AuthRateLimits:
             context=context,
             identity=identity,
             limit=self._settings.LOGIN_RATE_LIMIT,
-            window_seconds=(
-                self._settings
-                .LOGIN_RATE_WINDOW_SECONDS
-            ),
+            window_seconds=(self._settings.LOGIN_RATE_WINDOW_SECONDS),
         )
 
     async def otp_request(
@@ -109,10 +103,7 @@ class AuthRateLimits:
             context=context,
             identity=identity,
             limit=self._settings.OTP_REQUEST_RATE_LIMIT,
-            window_seconds=(
-                self._settings
-                .OTP_REQUEST_RATE_WINDOW_SECONDS
-            ),
+            window_seconds=(self._settings.OTP_REQUEST_RATE_WINDOW_SECONDS),
         )
 
     async def otp_verify(
@@ -133,10 +124,7 @@ class AuthRateLimits:
             context=context,
             identity=identity,
             limit=self._settings.OTP_VERIFY_RATE_LIMIT,
-            window_seconds=(
-                self._settings
-                .OTP_VERIFY_RATE_WINDOW_SECONDS
-            ),
+            window_seconds=(self._settings.OTP_VERIFY_RATE_WINDOW_SECONDS),
         )
 
     async def password_reset(
@@ -151,10 +139,7 @@ class AuthRateLimits:
             context=context,
             identity=identity,
             limit=self._settings.PASSWORD_RESET_RATE_LIMIT,
-            window_seconds=(
-                self._settings
-                .PASSWORD_RESET_RATE_WINDOW_SECONDS
-            ),
+            window_seconds=(self._settings.PASSWORD_RESET_RATE_WINDOW_SECONDS),
         )
 
     async def refresh(
@@ -169,10 +154,7 @@ class AuthRateLimits:
             context=context,
             identity=token_fingerprint,
             limit=self._settings.TOKEN_REFRESH_RATE_LIMIT,
-            window_seconds=(
-                self._settings
-                .TOKEN_REFRESH_RATE_WINDOW_SECONDS
-            ),
+            window_seconds=(self._settings.TOKEN_REFRESH_RATE_WINDOW_SECONDS),
         )
 
     async def logout(
@@ -201,9 +183,7 @@ class AuthRateLimits:
         window_seconds: int,
     ) -> None:
         """Build multidimensional keys and enforce one rate policy."""
-        normalized_operation = self._operation_name(
-            operation
-        )
+        normalized_operation = self._operation_name(operation)
         normalized_identity = self._key_value(
             identity,
             field_name="identity",
@@ -255,9 +235,7 @@ class AuthRateLimits:
 
         await enforce_rate_limit(
             self._limiter,
-            keys=list(
-                dict.fromkeys(keys)
-            ),
+            keys=list(dict.fromkeys(keys)),
             limit=limit,
             window_seconds=window_seconds,
         )
@@ -277,10 +255,7 @@ class AuthRateLimits:
             namespace=f"rate-limit:{dimension}",
         )
 
-        return (
-            f"auth:{operation}:"
-            f"{dimension}:{digest}"
-        )
+        return f"auth:{operation}:{dimension}:{digest}"
 
     @staticmethod
     def _operation_name(
@@ -290,17 +265,10 @@ class AuthRateLimits:
         normalized = value.strip().casefold()
 
         if not normalized:
-            raise ValueError(
-                "Rate-limit operation must not be blank."
-            )
+            raise ValueError("Rate-limit operation must not be blank.")
 
-        if any(
-            ord(character) < 32 or ord(character) == 127
-            for character in normalized
-        ):
-            raise ValueError(
-                "Rate-limit operation contains invalid control characters."
-            )
+        if any(ord(character) < 32 or ord(character) == 127 for character in normalized):
+            raise ValueError("Rate-limit operation contains invalid control characters.")
 
         return normalized
 
@@ -314,22 +282,13 @@ class AuthRateLimits:
         normalized = value.strip().casefold()
 
         if not normalized:
-            raise ValueError(
-                f"{field_name} must not be blank."
-            )
+            raise ValueError(f"{field_name} must not be blank.")
 
         if ":" in normalized:
-            raise ValueError(
-                f"{field_name} must not contain a colon."
-            )
+            raise ValueError(f"{field_name} must not contain a colon.")
 
-        if any(
-            ord(character) < 32 or ord(character) == 127
-            for character in normalized
-        ):
-            raise ValueError(
-                f"{field_name} contains invalid control characters."
-            )
+        if any(ord(character) < 32 or ord(character) == 127 for character in normalized):
+            raise ValueError(f"{field_name} contains invalid control characters.")
 
         return normalized
 
@@ -343,17 +302,10 @@ class AuthRateLimits:
         normalized = value.strip()
 
         if not normalized:
-            raise ValueError(
-                f"{field_name} must not be blank."
-            )
+            raise ValueError(f"{field_name} must not be blank.")
 
-        if any(
-            ord(character) < 32 or ord(character) == 127
-            for character in normalized
-        ):
-            raise ValueError(
-                f"{field_name} contains invalid control characters."
-            )
+        if any(ord(character) < 32 or ord(character) == 127 for character in normalized):
+            raise ValueError(f"{field_name} contains invalid control characters.")
 
         return normalized
 

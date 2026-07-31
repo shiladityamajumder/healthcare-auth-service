@@ -98,7 +98,8 @@ Shared response DTOs that are byte-for-byte identical across modules live in `ap
 
 ## Header security model
 
-`X-User-ID`, `X-Session-ID`, and `X-Device-ID` are assertions, not credentials.
+`Authorization: Bearer` is the only protected-request authentication input.
+`X-Device-ID` is accepted only during approved session lifecycle operations.
 
 Protected request validation follows this order:
 
@@ -106,26 +107,22 @@ Protected request validation follows this order:
 Authorization bearer token
   -> signature, issuer, audience, expiry, key id, token type
   -> JWT user and session identifiers
-  -> optional header consistency checks
-  -> persisted session ownership, expiry, revocation, and device binding
+  -> persisted session ownership, expiry, and revocation
   -> current user account state
-  -> fresh roles and permissions when enabled
+  -> current database roles and permissions
   -> endpoint permission or role requirement
 ```
 
-This prevents spoofed identity headers from escalating privileges.
-
-For access-token version 2, persisted-session validation and current database
-authorization resolution are mandatory regardless of the general refresh
-configuration. A version 2 JWT permission field is invalid; it cannot become an
-authorization source merely because it is correctly signed.
+`sub` is the authenticated user UUID and `sid` is the persisted session UUID.
+`X-User-ID` and `X-Session-ID` are not supported.
 
 Routes inject one of three narrow request-context profiles instead of exposing
 every possible metadata header on every operation:
 
 - anonymous rate limits use client and stable-device identifiers;
-- session creation/rotation additionally uses platform and device type;
-- protected routes use optional device, user, and session consistency assertions.
+- session creation additionally uses platform and device type;
+- refresh accepts an optional device consistency assertion;
+- protected routes declare no custom identity headers.
 
 The bearer token is declared as the OpenAPI `BearerAuth` security scheme, so
 Swagger collects it through **Authorize** and FastAPI resolves it before the
@@ -260,30 +257,29 @@ GET /api/v1/auth/users/me/authorization
   -> sorted, deduplicated roles and permissions
 ```
 
-The older `/api/v1/users/me/roles` and
-`/api/v1/users/me/permissions` routes remain temporarily and are deprecated in
-OpenAPI. They delegate to the same application service and therefore cannot
-drift from the consolidated result.
+`GET /api/v1/auth/capabilities` is the sole anonymous client-configuration
+endpoint. Its cacheable typed response contains only registration, login,
+verification, password-policy, and supported-platform information. It never
+publishes roles, permissions, token settings, OTP policy internals, or database
+details.
 
-### Versioned profile and token contracts
+The redundant `/api/v1/users/me/roles` and
+`/api/v1/users/me/permissions` routes have been removed.
 
-Version 1 login/refresh responses retain the historical `UserResponse`,
-including roles and permissions. Version 2 responses use a separate minimal
-profile DTO; authorization fields do not conditionally disappear from one
-schema. Administrative and registration responses remain their existing
-version 1 contracts during this migration.
+### Token and profile contracts
 
-Version 1 access tokens retain `roles` and `permissions`. Newly issued tokens
-carry `ver: 1`, while tokens issued before versioning and lacking `ver` remain
-valid as legacy version 1. Version 2 contains registered JWT claims, `sid`,
-`amr`, and `ver: 2`; it never contains global permissions. Coarse role hints
-are optional configuration and are replaced by current database roles before
-this service evaluates authorization.
+All token-producing workflows return one `TokenPairResponse` containing one
+minimal `AuthenticatedUserResponse`. Roles and permissions are absent.
 
-Full global permission arrays are removed from future tokens because they
-inflate headers, become stale after an RBAC change, and encourage downstream
-services to treat a broad identity token as an audience-specific authorization
-decision. Browser/UI permission state is likewise only a display aid.
+The access token contains registered claims plus `token_type`, `sid`, and
+`amr`. The refresh token contains registered claims plus `token_type`, `sid`,
+and `fam`. Neither token contains `user_id`, roles, permissions, profile data,
+device metadata, or a contract-version claim. Deployment invalidates all
+previous token formats and requires users to authenticate again.
+
+Global permission arrays are excluded because they become stale after an RBAC
+change and encourage consumers to treat an identity credential as an
+authorization decision. Browser/UI permission state is only a display aid.
 Downstream services should use narrowly scoped, audience-specific entitlements
 or an authenticated authorization service. An anonymous permission catalog
 would disclose internal capability names and, more importantly, would provide

@@ -1,4 +1,4 @@
-"""Version 2 bearer principals resolve authorization from current database state."""
+"""Bearer principals resolve authorization from current database state."""
 
 from __future__ import annotations
 
@@ -28,10 +28,6 @@ class _FakeTokens:
         _ = token, expected_type
         return self.payload
 
-    def access_token_version(self, payload: dict[str, object]) -> int:
-        _ = payload
-        return 2
-
 
 class _FakeResult:
     def __init__(self, row: tuple[Sessions, Users]) -> None:
@@ -60,7 +56,7 @@ class _FakeDatabase:
 
 
 @pytest.mark.asyncio
-async def test_version_2_principal_reflects_subsequent_database_authorization_changes(
+async def test_principal_reflects_subsequent_database_authorization_changes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     now = utc_now()
@@ -94,12 +90,11 @@ async def test_version_2_principal_reflects_subsequent_database_authorization_ch
         load_current_claims,
     )
     runtime = SimpleNamespace(
-        settings=build_test_settings(AUTH_REFRESH_AUTHZ_ON_EACH_REQUEST=False),
+        settings=build_test_settings(),
         tokens=_FakeTokens(
             {
                 "sub": str(user_id),
                 "sid": str(session_id),
-                "ver": 2,
                 "amr": ["password"],
             }
         ),

@@ -98,14 +98,22 @@ SQL_POOL_SIZE + SQL_MAX_OVERFLOW
 
 Multiply by Uvicorn workers and replicas. Reserve capacity for migrations, administration, failover, and incident response.
 
-## Rolling deployment and compatibility
+## Authentication contract cutover
 
 1. Deploy Redis and verify connectivity.
 2. Apply seed updates additively.
-3. Deploy the vertical-slice API.
+3. Deploy the API and configuration to every instance as one release.
 4. Wait for `/health/ready`.
 5. Validate the grouped API contract from OpenAPI.
-6. Migrate every client to the new grouped paths before promotion.
+6. Force every client to authenticate again.
+
+This is a hard cutover. Generate a new JWT signing key and key ID, remove prior
+verification keys from `JWT_PUBLIC_KEYS_B64_JSON`, and deploy that configuration
+with the code. This invalidates existing access and refresh tokens and forces
+every user to authenticate again. Login and refresh responses no longer contain roles or permissions;
+clients must call `GET /api/v1/auth/users/me/authorization`. The removed
+`/api/v1/users/me/roles` and `/api/v1/users/me/permissions` routes return 404.
+`X-User-ID` and `X-Session-ID` are no longer accepted or documented.
 
 Client-supplied non-UUID request or correlation IDs now return `400`. Coordinate this validation change with clients that previously sent arbitrary strings.
 
@@ -124,8 +132,8 @@ Update API gateway policies, downstream authorization checks, and cached token
 expectations before deploying the corresponding seed manifest.
 
 Refresh-token rotation treats persisted session device identity as immutable.
-`X-Device-ID` may be omitted for compatibility, but a supplied value must match
-an existing binding. Legacy sessions without a device binding are not upgraded
+`X-Device-ID` may be omitted, but a supplied value must match
+an existing binding. Sessions without a device binding are not upgraded
 during refresh; users must authenticate again to establish device metadata.
 
 ## Notification delivery

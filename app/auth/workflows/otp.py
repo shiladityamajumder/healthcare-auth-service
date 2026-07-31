@@ -191,9 +191,7 @@ class OTPService:
 
         now = utc_now()
 
-        destination_hash = self._hashing.destination_hash(
-            normalized_destination
-        )
+        destination_hash = self._hashing.destination_hash(normalized_destination)
 
         # Serialize issuance per destination/purpose before cooldown and resend
         # counters are evaluated.
@@ -208,39 +206,21 @@ class OTPService:
         )
 
         if latest is not None:
-            cooldown_deadline = (
-                latest.created_at
-                + timedelta(
-                    seconds=(
-                        self._settings
-                        .OTP_RESEND_COOLDOWN_SECONDS
-                    )
-                )
+            cooldown_deadline = latest.created_at + timedelta(
+                seconds=(self._settings.OTP_RESEND_COOLDOWN_SECONDS)
             )
 
             if cooldown_deadline > now:
                 retry_after_seconds = max(
                     1,
-                    math.ceil(
-                        (
-                            cooldown_deadline - now
-                        ).total_seconds()
-                    ),
+                    math.ceil((cooldown_deadline - now).total_seconds()),
                 )
 
                 raise RateLimitError(
                     retry_after_seconds=retry_after_seconds,
                 )
 
-        resend_window_start = (
-            now
-            - timedelta(
-                seconds=(
-                    self._settings
-                    .OTP_RESEND_WINDOW_SECONDS
-                )
-            )
-        )
+        resend_window_start = now - timedelta(seconds=(self._settings.OTP_RESEND_WINDOW_SECONDS))
 
         recent_count = await repository.count_recent_issues(
             destination_hash=destination_hash,
@@ -250,10 +230,7 @@ class OTPService:
 
         if recent_count >= self._settings.OTP_MAX_RESENDS:
             raise RateLimitError(
-                retry_after_seconds=(
-                    self._settings
-                    .OTP_RESEND_WINDOW_SECONDS
-                ),
+                retry_after_seconds=(self._settings.OTP_RESEND_WINDOW_SECONDS),
             )
 
         # A newly issued challenge supersedes every still-active predecessor.
@@ -277,17 +254,10 @@ class OTPService:
             ),
             attempts=0,
             max_attempts=self._settings.OTP_MAX_ATTEMPTS,
-            expires_at=(
-                now
-                + timedelta(
-                    seconds=self._settings.OTP_TTL_SECONDS
-                )
-            ),
+            expires_at=(now + timedelta(seconds=self._settings.OTP_TTL_SECONDS)),
         )
 
-        repository.add(
-            challenge
-        )
+        repository.add(challenge)
 
         return IssuedOTP(
             challenge=challenge,
@@ -333,15 +303,11 @@ class OTPService:
             destination,
             field_name="destination",
         )
-        accepted_purposes = _normalize_purposes(
-            purpose
-        )
+        accepted_purposes = _normalize_purposes(purpose)
 
         # The repository lock makes attempts, blocking, expiry, and consumption
         # atomic across concurrent verification requests.
-        challenge = await repository.get_for_update(
-            challenge_id
-        )
+        challenge = await repository.get_for_update(challenge_id)
 
         if challenge is None:
             return OTPVerification(
@@ -371,17 +337,12 @@ class OTPService:
                 failure=OTPFailure.EXPIRED,
             )
 
-        destination_hash = self._hashing.destination_hash(
-            normalized_destination
-        )
+        destination_hash = self._hashing.destination_hash(normalized_destination)
 
         metadata_matches = (
-            challenge.channel.casefold()
-            == normalized_channel
-            and challenge.purpose.casefold()
-            in accepted_purposes
-            and challenge.destination_hash
-            == destination_hash
+            challenge.channel.casefold() == normalized_channel
+            and challenge.purpose.casefold() in accepted_purposes
+            and challenge.destination_hash == destination_hash
         )
 
         if not metadata_matches:
@@ -434,11 +395,7 @@ def _normalize_purposes(
     Raises:
         ValueError: If no valid purposes are provided.
     """
-    raw_values = (
-        (value,)
-        if isinstance(value, str)
-        else tuple(value)
-    )
+    raw_values = (value,) if isinstance(value, str) else tuple(value)
 
     normalized = frozenset(
         _required_text(
@@ -450,9 +407,7 @@ def _normalize_purposes(
     )
 
     if not normalized:
-        raise ValueError(
-            "At least one OTP purpose is required."
-        )
+        raise ValueError("At least one OTP purpose is required.")
 
     return normalized
 
@@ -479,17 +434,10 @@ def _required_text(
     normalized = value.strip()
 
     if not normalized:
-        raise ValueError(
-            f"{field_name} must not be blank."
-        )
+        raise ValueError(f"{field_name} must not be blank.")
 
-    if any(
-        ord(character) < 32 or ord(character) == 127
-        for character in normalized
-    ):
-        raise ValueError(
-            f"{field_name} contains invalid control characters."
-        )
+    if any(ord(character) < 32 or ord(character) == 127 for character in normalized):
+        raise ValueError(f"{field_name} contains invalid control characters.")
 
     if casefold:
         normalized = normalized.casefold()

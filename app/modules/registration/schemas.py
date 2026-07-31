@@ -19,9 +19,9 @@ from datetime import datetime
 from pydantic import EmailStr, Field
 
 from app.common.auth_contracts import (
+    AuthenticatedUserResponse,
     OtpChallengeResponse,
     TokenPairResponse,
-    UserResponse,
 )
 from app.common.schemas import StrictModel
 
@@ -78,7 +78,7 @@ class PhoneOtpRegistrationVerifyRequest(
 class RegistrationResponse(StrictModel):
     """Registration result with either verification or session information."""
 
-    user: UserResponse
+    user: AuthenticatedUserResponse
     verification_required: bool
     challenge_id: uuid.UUID | None = None
     expires_at: datetime | None = None
@@ -87,11 +87,11 @@ class RegistrationResponse(StrictModel):
 
 
 __all__ = [
+    "AuthenticatedUserResponse",
     "EmailPasswordRegistrationRequest",
     "OtpChallengeResponse",
     "PhoneOtpRegistrationRequest",
     "PhoneOtpRegistrationVerifyRequest",
     "RegistrationResponse",
     "TokenPairResponse",
-    "UserResponse",
 ]

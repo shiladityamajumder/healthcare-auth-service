@@ -21,7 +21,7 @@ from app.modules.token_management.dependencies import (
     AuthRateLimitsDep,
     LogoutAccess,
     RateLimitRequestContextDep,
-    SessionCreationRequestContextDep,
+    RefreshRequestContextDep,
     TokenManagementServiceDep,
     TokenManagerDep,
 )
@@ -32,7 +32,6 @@ from app.modules.token_management.schemas import (
     MessageResponse,
     RefreshTokenRequest,
     TokenPairResponse,
-    TokenPairResponseV2,
 )
 from app.utils.debug import debug
 
@@ -58,12 +57,12 @@ async def jwks(tokens: TokenManagerDep) -> JSONResponse:
 
 @router.post(
     "/token/refresh",
-    response_model=APIResponseModel[TokenPairResponse | TokenPairResponseV2],
+    response_model=APIResponseModel[TokenPairResponse],
     summary="Rotate a refresh token",
 )
 async def refresh_token(
     payload: RefreshTokenRequest,
-    context: SessionCreationRequestContextDep,
+    context: RefreshRequestContextDep,
     rate_limits: AuthRateLimitsDep,
     service: TokenManagementServiceDep,
 ) -> JSONResponse:

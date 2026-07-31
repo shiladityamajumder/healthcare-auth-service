@@ -89,9 +89,7 @@ class AuthRuntime:
             hashing=hashing,
         )
 
-        notifications = AuthNotificationGateway(
-            settings
-        )
+        notifications = AuthNotificationGateway(settings)
 
         return cls(
             settings=settings,

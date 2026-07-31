@@ -15,15 +15,22 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from app.common.auth_contracts import MessageResponse, UserResponse
+from app.common.auth_contracts import AuthenticatedUserResponse, MessageResponse
 from app.common.schemas import StrictModel
 from app.models.enums import UserStatus
+
+
+class AdminUserResponse(AuthenticatedUserResponse):
+    """Administrative user projection with current authorization."""
+
+    roles: list[str]
+    permissions: list[str]
 
 
 class AdminUserListResponse(StrictModel):
     """Materialized page of users."""
 
-    users: list[UserResponse]
+    users: list[AdminUserResponse]
 
 
 class UpdateUserStatusRequest(StrictModel):
@@ -47,7 +54,7 @@ class AdminLogoutAllRequest(StrictModel):
 __all__ = [
     "AdminLogoutAllRequest",
     "AdminUserListResponse",
+    "AdminUserResponse",
     "MessageResponse",
     "UpdateUserStatusRequest",
-    "UserResponse",
 ]

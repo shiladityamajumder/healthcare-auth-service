@@ -69,9 +69,7 @@ class MongoDatabase:
             appname=settings.PROJECT_NAME,
             minPoolSize=settings.MONGO_MIN_POOL_SIZE,
             maxPoolSize=settings.MONGO_MAX_POOL_SIZE,
-            serverSelectionTimeoutMS=(
-                settings.MONGO_SERVER_SELECTION_TIMEOUT_MS
-            ),
+            serverSelectionTimeoutMS=(settings.MONGO_SERVER_SELECTION_TIMEOUT_MS),
             connectTimeoutMS=settings.MONGO_CONNECT_TIMEOUT_MS,
             socketTimeoutMS=settings.MONGO_SOCKET_TIMEOUT_MS,
             retryReads=True,

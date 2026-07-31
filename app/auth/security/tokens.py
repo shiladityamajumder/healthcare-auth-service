@@ -83,9 +83,7 @@ _BASE_REQUIRED_CLAIMS: Final[tuple[str, ...]] = (
     "aud",
 )
 
-_TOKEN_REQUIRED_CLAIMS: Final[
-    dict[TokenType, frozenset[str]]
-] = {
+_TOKEN_REQUIRED_CLAIMS: Final[dict[TokenType, frozenset[str]]] = {
     TokenType.ACCESS: frozenset(
         {
             "sid",
@@ -135,27 +133,20 @@ class TokenManager:
         )
 
         if not encoding_key:
-            raise RuntimeError(
-                "JWT encoding key is not configured."
-            )
+            raise RuntimeError("JWT encoding key is not configured.")
 
         decoding_keys = settings.jwt_decoding_keys
 
         if not decoding_keys:
-            raise RuntimeError(
-                "JWT decoding keys are not configured."
-            )
+            raise RuntimeError("JWT decoding keys are not configured.")
 
         if settings.JWT_KEY_ID not in decoding_keys:
             raise RuntimeError(
-                "The current JWT key identifier is missing from the "
-                "decoding-key registry."
+                "The current JWT key identifier is missing from the decoding-key registry."
             )
 
         self._encoding_key: str = encoding_key
-        self._decoding_keys: dict[str, str] = dict(
-            decoding_keys
-        )
+        self._decoding_keys: dict[str, str] = dict(decoding_keys)
         self._public_jwk_entries = self._build_public_jwks()
 
     def create_access_token(
@@ -163,77 +154,30 @@ class TokenManager:
         *,
         user_id: uuid.UUID,
         session_id: uuid.UUID,
-        roles: Sequence[str],
-        permissions: Sequence[str],
         auth_methods: Sequence[str],
     ) -> EncodedToken:
-        """Create a configured-version access token for one session.
+        """Create the canonical minimal access token for one session.
 
         Args:
             user_id: Authenticated user identifier.
             session_id: Persisted session identifier.
-            roles: Effective global role codes.
-            permissions: Effective global permission codes.
             auth_methods: Authentication method references.
 
         Returns:
             Signed access token.
         """
-        version = self._settings.ACCESS_TOKEN_VERSION
-        extra: dict[str, Any] = {
-            "sid": str(session_id),
-            "amr": self._normalize_string_claims(
-                auth_methods,
-                claim_name="amr",
-            ),
-            "ver": version,
-        }
-
-        if version == 1:
-            extra["roles"] = self._normalize_string_claims(
-                roles,
-                claim_name="roles",
-            )
-            extra["permissions"] = self._normalize_string_claims(
-                permissions,
-                claim_name="permissions",
-            )
-        elif self._settings.ACCESS_TOKEN_V2_INCLUDE_ROLES:
-            extra["roles"] = self._normalize_string_claims(
-                roles,
-                claim_name="roles",
-            )
-
         return self._encode(
             token_type=TokenType.ACCESS,
             subject=str(user_id),
-            ttl=timedelta(
-                minutes=self._settings.ACCESS_TOKEN_TTL_MINUTES
-            ),
-            extra=extra,
+            ttl=timedelta(minutes=self._settings.ACCESS_TOKEN_TTL_MINUTES),
+            extra={
+                "sid": str(session_id),
+                "amr": self._normalize_string_claims(
+                    auth_methods,
+                    claim_name="amr",
+                ),
+            },
         )
-
-    @staticmethod
-    def access_token_version(
-        payload: Mapping[str, Any],
-    ) -> int:
-        """Return the validated access-token contract version.
-
-        Tokens issued before versioning are treated as legacy version 1.
-        Unknown, boolean, or non-integer versions fail closed.
-        """
-        raw_version = payload.get("ver")
-        if raw_version is None:
-            return 1
-        if isinstance(raw_version, bool) or not isinstance(raw_version, int):
-            raise AuthenticationError(
-                "The access token version is invalid."
-            )
-        if raw_version not in {1, 2}:
-            raise AuthenticationError(
-                "The access token version is not supported."
-            )
-        return int(raw_version)
 
     def create_refresh_token(
         self,
@@ -255,9 +199,7 @@ class TokenManager:
         return self._encode(
             token_type=TokenType.REFRESH,
             subject=str(user_id),
-            ttl=timedelta(
-                days=self._settings.REFRESH_TOKEN_TTL_DAYS
-            ),
+            ttl=timedelta(days=self._settings.REFRESH_TOKEN_TTL_DAYS),
             extra={
                 "sid": str(session_id),
                 "fam": str(family_id),
@@ -290,24 +232,15 @@ class TokenManager:
         normalized_destination_hash = destination_hash.strip()
 
         if not normalized_channel:
-            raise ValueError(
-                "Password-reset token channel must not be blank."
-            )
+            raise ValueError("Password-reset token channel must not be blank.")
 
         if not normalized_destination_hash:
-            raise ValueError(
-                "Password-reset destination hash must not be blank."
-            )
+            raise ValueError("Password-reset destination hash must not be blank.")
 
         return self._encode(
             token_type=TokenType.PASSWORD_RESET,
             subject=str(user_id),
-            ttl=timedelta(
-                minutes=(
-                    self._settings
-                    .PASSWORD_RESET_TOKEN_TTL_MINUTES
-                )
-            ),
+            ttl=timedelta(minutes=(self._settings.PASSWORD_RESET_TOKEN_TTL_MINUTES)),
             extra={
                 "challenge_id": str(challenge_id),
                 "channel": normalized_channel,
@@ -335,25 +268,17 @@ class TokenManager:
                 claims, purpose, or token-specific claims are invalid.
         """
         if not token or not token.strip():
-            raise AuthenticationError(
-                "The supplied token is invalid or expired."
-            )
+            raise AuthenticationError("The supplied token is invalid or expired.")
 
         try:
             header = jwt.get_unverified_header(token)
 
-            key_id = self._validate_unverified_header(
-                header
-            )
+            key_id = self._validate_unverified_header(header)
 
-            decoding_key = self._decoding_keys.get(
-                key_id
-            )
+            decoding_key = self._decoding_keys.get(key_id)
 
             if decoding_key is None:
-                raise InvalidTokenError(
-                    "Unknown JWT signing key."
-                )
+                raise InvalidTokenError("Unknown JWT signing key.")
 
             payload = jwt.decode(
                 token,
@@ -364,15 +289,11 @@ class TokenManager:
                 audience=self._settings.JWT_AUDIENCE,
                 issuer=self._settings.JWT_ISSUER,
                 options={
-                    "require": list(
-                        _BASE_REQUIRED_CLAIMS
-                    ),
+                    "require": list(_BASE_REQUIRED_CLAIMS),
                 },
             )
         except InvalidTokenError as exc:
-            raise AuthenticationError(
-                "The supplied token is invalid or expired."
-            ) from exc
+            raise AuthenticationError("The supplied token is invalid or expired.") from exc
 
         self._validate_payload_contract(
             payload,
@@ -392,10 +313,7 @@ class TokenManager:
         Returns:
             Copies of configured public JWK entries.
         """
-        return [
-            dict(entry)
-            for entry in self._public_jwk_entries
-        ]
+        return [dict(entry) for entry in self._public_jwk_entries]
 
     def _encode(
         self,
@@ -422,27 +340,18 @@ class TokenManager:
         normalized_subject = subject.strip()
 
         if not normalized_subject:
-            raise ValueError(
-                "JWT subject must not be blank."
-            )
+            raise ValueError("JWT subject must not be blank.")
 
         if ttl <= timedelta(0):
-            raise ValueError(
-                "JWT lifetime must be greater than zero."
-            )
+            raise ValueError("JWT lifetime must be greater than zero.")
 
-        conflicting_claims = _REGISTERED_CLAIMS.intersection(
-            extra
-        )
+        conflicting_claims = _REGISTERED_CLAIMS.intersection(extra)
 
         if conflicting_claims:
-            conflicting_names = ", ".join(
-                sorted(conflicting_claims)
-            )
+            conflicting_names = ", ".join(sorted(conflicting_claims))
 
             raise ValueError(
-                "Token-specific claims must not override registered claims: "
-                f"{conflicting_names}"
+                f"Token-specific claims must not override registered claims: {conflicting_names}"
             )
 
         now = utc_now()
@@ -499,33 +408,22 @@ class TokenManager:
         header_algorithm = header.get("alg")
 
         if header_algorithm != self._algorithm:
-            raise InvalidTokenError(
-                "Unexpected JWT signing algorithm."
-            )
+            raise InvalidTokenError("Unexpected JWT signing algorithm.")
 
         header_type = header.get("typ")
 
-        if (
-            header_type is not None
-            and header_type != _JWT_HEADER_TYPE
-        ):
-            raise InvalidTokenError(
-                "Unexpected JWT type header."
-            )
+        if header_type is not None and header_type != _JWT_HEADER_TYPE:
+            raise InvalidTokenError("Unexpected JWT type header.")
 
         key_id = header.get("kid")
 
         if not isinstance(key_id, str):
-            raise InvalidTokenError(
-                "JWT signing-key identifier is missing."
-            )
+            raise InvalidTokenError("JWT signing-key identifier is missing.")
 
         normalized_key_id = key_id.strip()
 
         if not normalized_key_id:
-            raise InvalidTokenError(
-                "JWT signing-key identifier is missing."
-            )
+            raise InvalidTokenError("JWT signing-key identifier is missing.")
 
         return normalized_key_id
 
@@ -545,24 +443,20 @@ class TokenManager:
             AuthenticationError: If any required claim is missing or malformed.
         """
         if payload.get("token_type") != expected_type.value:
-            raise AuthenticationError(
-                "The supplied token type is not accepted here."
-            )
+            raise AuthenticationError("The supplied token type is not accepted here.")
 
-        required_claims = _TOKEN_REQUIRED_CLAIMS[
-            expected_type
-        ]
+        required_claims = _TOKEN_REQUIRED_CLAIMS[expected_type]
 
         missing_claims = sorted(
-            claim_name
-            for claim_name in required_claims
-            if claim_name not in payload
+            claim_name for claim_name in required_claims if claim_name not in payload
         )
 
         if missing_claims:
-            raise AuthenticationError(
-                "The supplied token contains incomplete claims."
-            )
+            raise AuthenticationError("The supplied token contains incomplete claims.")
+
+        allowed_claims = set(_BASE_REQUIRED_CLAIMS) | set(required_claims)
+        if set(payload) != allowed_claims:
+            raise AuthenticationError("The supplied token contains unexpected claims.")
 
         self._require_uuid_claim(
             payload,
@@ -574,56 +468,30 @@ class TokenManager:
         )
 
         if expected_type is TokenType.ACCESS:
-            self._validate_access_claims(
-                payload
-            )
+            self._validate_access_claims(payload)
             return
 
         if expected_type is TokenType.REFRESH:
-            self._validate_refresh_claims(
-                payload
-            )
+            self._validate_refresh_claims(payload)
             return
 
-        self._validate_password_reset_claims(
-            payload
-        )
+        self._validate_password_reset_claims(payload)
 
     def _validate_access_claims(
         self,
         payload: Mapping[str, Any],
     ) -> None:
-        """Validate strict version-specific access-token claims."""
-        version = self.access_token_version(payload)
+        """Validate canonical access-token claims."""
         self._require_uuid_claim(
             payload,
             claim_name="sid",
         )
-        self._require_string_collection(
+        auth_methods = self._require_string_collection(
             payload,
             claim_name="amr",
         )
-
-        if version == 1:
-            self._require_string_collection(
-                payload,
-                claim_name="roles",
-            )
-            self._require_string_collection(
-                payload,
-                claim_name="permissions",
-            )
-            return
-
-        if "permissions" in payload:
-            raise AuthenticationError(
-                "Version 2 access tokens must not contain permissions."
-            )
-        if "roles" in payload:
-            self._require_string_collection(
-                payload,
-                claim_name="roles",
-            )
+        if not auth_methods:
+            raise AuthenticationError("The supplied token contains invalid claims.")
 
     def _validate_refresh_claims(
         self,
@@ -669,59 +537,40 @@ class TokenManager:
             RuntimeError: If configured RSA public keys cannot be loaded or
                 converted into valid JWK entries.
         """
-        if (
-            self._settings.JWT_ALGORITHM
-            is not JWTAlgorithm.RS256
-        ):
+        if self._settings.JWT_ALGORITHM is not JWTAlgorithm.RS256:
             return ()
 
         keys: list[dict[str, str]] = []
 
         for key_id in sorted(self._decoding_keys):
-            public_key_pem = self._decoding_keys[
-                key_id
-            ]
+            public_key_pem = self._decoding_keys[key_id]
 
             try:
-                key_object = load_pem_public_key(
-                    public_key_pem.encode()
-                )
+                key_object = load_pem_public_key(public_key_pem.encode())
             except (
                 TypeError,
                 ValueError,
                 UnsupportedAlgorithm,
             ) as exc:
-                raise RuntimeError(
-                    f"JWT public key {key_id!r} cannot be loaded."
-                ) from exc
+                raise RuntimeError(f"JWT public key {key_id!r} cannot be loaded.") from exc
 
             if not isinstance(
                 key_object,
                 rsa.RSAPublicKey,
             ):
-                raise RuntimeError(
-                    f"JWT public key {key_id!r} is not an RSA key."
-                )
+                raise RuntimeError(f"JWT public key {key_id!r} is not an RSA key.")
 
             try:
-                raw_jwk = json.loads(
-                    RSAAlgorithm.to_jwk(
-                        key_object
-                    )
-                )
+                raw_jwk = json.loads(RSAAlgorithm.to_jwk(key_object))
             except (
                 TypeError,
                 ValueError,
                 json.JSONDecodeError,
             ) as exc:
-                raise RuntimeError(
-                    f"JWT public key {key_id!r} produced invalid JWK data."
-                ) from exc
+                raise RuntimeError(f"JWT public key {key_id!r} produced invalid JWK data.") from exc
 
             if not isinstance(raw_jwk, dict):
-                raise RuntimeError(
-                    f"JWT public key {key_id!r} produced invalid JWK data."
-                )
+                raise RuntimeError(f"JWT public key {key_id!r} produced invalid JWK data.")
 
             modulus = raw_jwk.get("n")
             exponent = raw_jwk.get("e")
@@ -732,9 +581,7 @@ class TokenManager:
                 or not isinstance(exponent, str)
                 or not exponent
             ):
-                raise RuntimeError(
-                    f"JWT public key {key_id!r} produced incomplete JWK data."
-                )
+                raise RuntimeError(f"JWT public key {key_id!r} produced incomplete JWK data.")
 
             keys.append(
                 {
@@ -769,31 +616,28 @@ class TokenManager:
                 values.
         """
         if isinstance(values, (str, bytes)):
-            raise ValueError(
-                f"{claim_name} must be a collection of strings."
-            )
+            raise ValueError(f"{claim_name} must be a collection of strings.")
 
         normalized: list[str] = []
         seen: set[str] = set()
 
         for value in values:
             if not isinstance(value, str):
-                raise ValueError(
-                    f"{claim_name} must contain only strings."
-                )
+                raise ValueError(f"{claim_name} must contain only strings.")
 
             item = value.strip()
 
             if not item:
-                raise ValueError(
-                    f"{claim_name} must not contain blank values."
-                )
+                raise ValueError(f"{claim_name} must not contain blank values.")
 
             if item in seen:
                 continue
 
             seen.add(item)
             normalized.append(item)
+
+        if not normalized:
+            raise ValueError(f"{claim_name} must contain at least one value.")
 
         return normalized
 
@@ -815,23 +659,15 @@ class TokenManager:
         Raises:
             AuthenticationError: If the claim is missing or malformed.
         """
-        raw_value = payload.get(
-            claim_name
-        )
+        raw_value = payload.get(claim_name)
 
         if not isinstance(raw_value, str):
-            raise AuthenticationError(
-                "The supplied token contains invalid claims."
-            )
+            raise AuthenticationError("The supplied token contains invalid claims.")
 
         try:
-            return uuid.UUID(
-                raw_value
-            )
+            return uuid.UUID(raw_value)
         except ValueError as exc:
-            raise AuthenticationError(
-                "The supplied token contains invalid claims."
-            ) from exc
+            raise AuthenticationError("The supplied token contains invalid claims.") from exc
 
     @staticmethod
     def _require_nonblank_string_claim(
@@ -851,21 +687,15 @@ class TokenManager:
         Raises:
             AuthenticationError: If the claim is missing, non-string, or blank.
         """
-        raw_value = payload.get(
-            claim_name
-        )
+        raw_value = payload.get(claim_name)
 
         if not isinstance(raw_value, str):
-            raise AuthenticationError(
-                "The supplied token contains invalid claims."
-            )
+            raise AuthenticationError("The supplied token contains invalid claims.")
 
         normalized = raw_value.strip()
 
         if not normalized:
-            raise AuthenticationError(
-                "The supplied token contains invalid claims."
-            )
+            raise AuthenticationError("The supplied token contains invalid claims.")
 
         return normalized
 
@@ -888,37 +718,25 @@ class TokenManager:
             AuthenticationError: If the claim is missing, not an array, or
                 contains invalid values.
         """
-        raw_value = payload.get(
-            claim_name
-        )
+        raw_value = payload.get(claim_name)
 
         if not isinstance(raw_value, list):
-            raise AuthenticationError(
-                "The supplied token contains invalid claims."
-            )
+            raise AuthenticationError("The supplied token contains invalid claims.")
 
         values: list[str] = []
 
         for item in raw_value:
             if not isinstance(item, str):
-                raise AuthenticationError(
-                    "The supplied token contains invalid claims."
-                )
+                raise AuthenticationError("The supplied token contains invalid claims.")
 
             normalized = item.strip()
 
             if not normalized:
-                raise AuthenticationError(
-                    "The supplied token contains invalid claims."
-                )
+                raise AuthenticationError("The supplied token contains invalid claims.")
 
-            values.append(
-                normalized
-            )
+            values.append(normalized)
 
-        return tuple(
-            values
-        )
+        return tuple(values)
 
 
 __all__ = [

@@ -123,20 +123,14 @@ def _load_manifest(path: Path) -> tuple[BootstrapUser, ...]:
         if not isinstance(role_codes, list) or not role_codes:
             raise ValueError(f"users[{index}].role_codes must be a non-empty array.")
         normalized_roles = tuple(
-            dict.fromkeys(
-                _required_string({"role": role}, "role")
-                for role in role_codes
-            )
+            dict.fromkeys(_required_string({"role": role}, "role") for role in role_codes)
         )
 
         if email in seen_emails:
             raise ValueError(f"Duplicate email in manifest: {email}")
         phone_key = (country_code, phone_number)
         if phone_key in seen_phones:
-            raise ValueError(
-                "Duplicate phone in manifest: "
-                f"{country_code}{phone_number}"
-            )
+            raise ValueError(f"Duplicate phone in manifest: {country_code}{phone_number}")
         seen_emails.add(email)
         seen_phones.add(phone_key)
 
@@ -149,12 +143,8 @@ def _load_manifest(path: Path) -> tuple[BootstrapUser, ...]:
                 first_name=_required_string(raw_user, "first_name"),
                 last_name=_optional_string(raw_user, "last_name"),
                 preferred_name=_optional_string(raw_user, "preferred_name"),
-                preferred_locale=(
-                    _optional_string(raw_user, "preferred_locale") or "en-IN"
-                ),
-                timezone_name=(
-                    _optional_string(raw_user, "timezone") or "Asia/Kolkata"
-                ),
+                preferred_locale=(_optional_string(raw_user, "preferred_locale") or "en-IN"),
+                timezone_name=(_optional_string(raw_user, "timezone") or "Asia/Kolkata"),
                 role_codes=normalized_roles,
             )
         )
@@ -178,8 +168,7 @@ async def _active_roles(
     missing = role_codes - by_code.keys()
     if missing:
         raise RuntimeError(
-            "Required roles are missing. Run seed_identity_master_data first: "
-            f"{sorted(missing)}"
+            f"Required roles are missing. Run seed_identity_master_data first: {sorted(missing)}"
         )
     return by_code
 
@@ -189,9 +178,7 @@ async def _existing_user(
     user: BootstrapUser,
 ) -> Users | None:
     by_email = await session.scalar(
-        select(Users)
-        .where(Users.email_normalized == user.email)
-        .with_for_update()
+        select(Users).where(Users.email_normalized == user.email).with_for_update()
     )
     by_phone = await session.scalar(
         select(Users)
@@ -268,9 +255,7 @@ async def _assign_missing_roles(
         )
     )
     missing_roles = [
-        roles[code]
-        for code in requested_codes
-        if roles[code].id not in current_role_ids
+        roles[code] for code in requested_codes if roles[code].id not in current_role_ids
     ]
     session.add_all(
         UserRoles(
@@ -402,16 +387,11 @@ async def bootstrap_users(
     """Create and synchronize bootstrap identities in one transaction."""
     database = PostgreSQLDatabase(settings)
     passwords = PasswordManager(settings)
-    required_roles = frozenset(
-        code for seed in seeds for code in seed.role_codes
-    )
+    required_roles = frozenset(code for seed in seeds for code in seed.role_codes)
     try:
         async with database.session() as session, SQLAlchemyUnitOfWork(session):
             await session.execute(
-                text(
-                    "SELECT pg_advisory_xact_lock("
-                    "hashtextextended(:key, 0))"
-                ),
+                text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
                 {"key": "identity-bootstrap-users-v1"},
             )
             roles = await _active_roles(session, required_roles)

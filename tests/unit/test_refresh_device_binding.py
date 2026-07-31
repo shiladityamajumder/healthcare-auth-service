@@ -24,7 +24,6 @@ from app.modules.token_management.schemas import RefreshTokenRequest
 from app.modules.token_management.service import TokenManagementService
 from app.utils.datetime_utils import utc_now
 from starlette.requests import Request
-from tests.conftest import build_test_settings
 
 REFRESH_TOKEN = "r" * 64
 
@@ -112,15 +111,6 @@ class _FakeRepository:
         _ = user_id, for_update
         return self.user
 
-    async def authorization_claims(
-        self,
-        *,
-        user_id: uuid.UUID,
-        now: object,
-    ) -> SimpleNamespace:
-        _ = user_id, now
-        return SimpleNamespace(roles=["customer"], permissions=[])
-
     async def get_active_profile(self, user_id: uuid.UUID) -> None:
         _ = user_id
         return None
@@ -186,7 +176,6 @@ def _service(
     *,
     session: Sessions,
     user: Users,
-    response_version: int = 1,
     uow: _FakeUnitOfWork | None = None,
 ) -> tuple[TokenManagementService, _FakeTokens, _FakeRepository]:
     repository = _FakeRepository(session=session, user=user)
@@ -201,9 +190,6 @@ def _service(
     )
     service = TokenManagementService(
         uow=cast(Any, uow or _FakeUnitOfWork()),
-        settings=build_test_settings(
-            AUTH_LOGIN_REFRESH_RESPONSE_VERSION=response_version,
-        ),
         hashing=cast(Any, _FakeHashing()),
         tokens=cast(Any, tokens),
     )
@@ -211,7 +197,7 @@ def _service(
 
 
 @pytest.mark.asyncio
-async def test_refresh_version_2_returns_minimal_profile(
+async def test_refresh_returns_minimal_profile(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     session, user = _records(stored_device_id="device-a")
@@ -219,7 +205,6 @@ async def test_refresh_version_2_returns_minimal_profile(
         monkeypatch,
         session=session,
         user=user,
-        response_version=2,
     )
 
     result = await service.refresh(
@@ -283,7 +268,24 @@ async def test_refresh_rejects_mismatching_device_id_with_generic_401(
 
 
 @pytest.mark.asyncio
-async def test_refresh_does_not_bind_first_time_device_id_to_legacy_session(
+async def test_refresh_cannot_change_the_session_owner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session, user = _records(stored_device_id="device-a")
+    service, tokens, _ = _service(monkeypatch, session=session, user=user)
+    tokens.claims["sub"] = str(uuid.uuid4())
+
+    with pytest.raises(AuthenticationError):
+        await service.refresh(
+            RefreshTokenRequest(refresh_token=REFRESH_TOKEN),
+            AuthRequestContext(device_id="device-a"),
+        )
+
+    assert tokens.rotation_count == 0
+
+
+@pytest.mark.asyncio
+async def test_refresh_does_not_bind_first_time_device_id_to_unbound_session(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     session, user = _records(
@@ -442,9 +444,6 @@ async def test_logout_all_and_others_scope_session_revocation(
         (user.id, session.id, "user_logout_others"),
         (user.id, None, "user_logout_all"),
     ]
-    events = {
-        getattr(record, "event", None)
-        for record in caplog.records
-    }
+    events = {getattr(record, "event", None) for record in caplog.records}
     assert {"other_sessions_logged_out", "all_sessions_logged_out"}.issubset(events)
     assert REFRESH_TOKEN not in caplog.text

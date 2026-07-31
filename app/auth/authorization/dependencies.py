@@ -62,9 +62,7 @@ def require_permissions(
         ],
     ) -> UserPrincipal:
         """Return the principal only when every required permission is present."""
-        missing = normalized.difference(
-            principal.permissions
-        )
+        missing = normalized.difference(principal.permissions)
 
         if missing:
             raise AuthorizationError(
@@ -105,9 +103,7 @@ def require_roles(
         ],
     ) -> UserPrincipal:
         """Return the principal only when every required role is present."""
-        missing = normalized.difference(
-            principal.roles
-        )
+        missing = normalized.difference(principal.roles)
 
         if missing:
             raise AuthorizationError(
@@ -128,16 +124,10 @@ def _normalize_required_codes(
     requirement_name: str,
 ) -> frozenset[str]:
     """Normalize required role or permission codes."""
-    normalized = frozenset(
-        value.strip()
-        for value in values
-        if value and value.strip()
-    )
+    normalized = frozenset(value.strip() for value in values if value and value.strip())
 
     if not normalized:
-        raise ValueError(
-            f"At least one {requirement_name} code is required."
-        )
+        raise ValueError(f"At least one {requirement_name} code is required.")
 
     return normalized
 

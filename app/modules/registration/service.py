@@ -16,21 +16,23 @@ EmailPasswordRegistrationDep or PhoneOtpRegistrationDep
 from __future__ import annotations
 
 import uuid
-from collections.abc import Sequence
 from datetime import datetime
 
 from sqlalchemy.exc import IntegrityError
 
 from app.auth.authorization.policies import OtpVerificationPolicy
 from app.auth.identity.normalization import normalize_email, normalize_phone, phone_destination
-from app.auth.identity.presentation import public_user_data
+from app.auth.identity.presentation import authenticated_user_data
 from app.auth.request_context.context import AuthRequestContext
 from app.auth.security.hashing import SecureHashing
 from app.auth.security.passwords import PasswordManager
 from app.auth.security.tokens import TokenManager
 from app.auth.workflows.notifications import AuthNotificationGateway, NotificationDispatcher
 from app.auth.workflows.otp import IssuedOTP, OTPService
-from app.auth.workflows.session_tokens import IssuedSessionTokens, SessionTokenIssuer
+from app.auth.workflows.session_tokens import (
+    SessionTokenIssuer,
+    build_token_pair_response,
+)
 from app.common.exceptions import IdentityAlreadyExistsError, InfrastructureUnavailableError
 from app.core.config import AppSettings
 from app.core.logging import get_logger
@@ -39,13 +41,13 @@ from app.models.enums import OTPChannel, OTPPurpose, UserStatus
 from app.models.identity import Roles, UserProfiles, Users
 from app.modules.registration.repositories import RegistrationRepository
 from app.modules.registration.schemas import (
+    AuthenticatedUserResponse,
     EmailPasswordRegistrationRequest,
     OtpChallengeResponse,
     PhoneOtpRegistrationRequest,
     PhoneOtpRegistrationVerifyRequest,
     RegistrationResponse,
     TokenPairResponse,
-    UserResponse,
 )
 from app.utils.datetime_utils import utc_now
 
@@ -56,33 +58,9 @@ def _user_response(
     user: Users,
     *,
     profile: UserProfiles | None,
-    roles: Sequence[str],
-    permissions: Sequence[str],
-) -> UserResponse:
-    """Map a persisted user and its effective authorization to the API DTO."""
-    return UserResponse.model_validate(
-        public_user_data(
-            user,
-            profile=profile,
-            roles=roles,
-            permissions=permissions,
-        )
-    )
-
-
-def _token_response(
-    issued: IssuedSessionTokens,
-    *,
-    user: UserResponse,
-) -> TokenPairResponse:
-    """Combine raw issued tokens with the public user representation."""
-    return TokenPairResponse(
-        access_token=issued.access_token,
-        refresh_token=issued.refresh_token,
-        access_expires_at=issued.access_expires_at,
-        refresh_expires_at=issued.refresh_expires_at,
-        user=user,
-    )
+) -> AuthenticatedUserResponse:
+    """Map a persisted user to the minimal authenticated identity DTO."""
+    return AuthenticatedUserResponse.model_validate(authenticated_user_data(user, profile=profile))
 
 
 class _OtpResponseFactory:
@@ -247,23 +225,14 @@ class _RegistrationBase:
         context: AuthRequestContext,
         auth_methods: list[str],
     ) -> TokenPairResponse:
-        """Issue the first session using current roles and request metadata."""
-        claims = await repository.authorization_claims(user_id=user.id, now=utc_now())
-        user_dto = _user_response(
-            user,
-            profile=profile,
-            roles=claims.roles,
-            permissions=claims.permissions,
-        )
+        """Issue the first session using validated request metadata."""
         issued = self._issuer.issue(
             user_id=user.id,
-            roles=claims.roles,
-            permissions=claims.permissions,
             session_writer=repository,
             request_context=context,
             auth_methods=auth_methods,
         )
-        return _token_response(issued, user=user_dto)
+        return build_token_pair_response(issued=issued, user=user, profile=profile)
 
 
 class EmailPasswordRegistrationService(_RegistrationBase):
@@ -314,16 +283,10 @@ class EmailPasswordRegistrationService(_RegistrationBase):
                         destination=email,
                         purpose=OTPPurpose.VERIFY_EMAIL.value,
                     )
-                    claims = await repository.authorization_claims(
-                        user_id=user.id,
-                        now=utc_now(),
-                    )
                     result = RegistrationResponse(
                         user=_user_response(
                             user,
                             profile=profile,
-                            roles=claims.roles,
-                            permissions=claims.permissions,
                         ),
                         verification_required=True,
                         challenge_id=issued_otp.challenge.id,

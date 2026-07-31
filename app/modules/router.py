@@ -21,6 +21,7 @@ from app.modules.admin_permissions.routes import (
 from app.modules.admin_roles.routes import router as admin_roles_router
 from app.modules.admin_user_roles.routes import router as admin_user_roles_router
 from app.modules.admin_users.routes import router as admin_users_router
+from app.modules.capabilities.routes import router as capabilities_router
 from app.modules.current_user.routes import (
     authorization_router as current_authorization_router,
 )
@@ -36,6 +37,7 @@ router = APIRouter()
 
 for child_router in (
     registration_router,
+    capabilities_router,
     email_verification_router,
     login_router,
     token_router,

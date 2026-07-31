@@ -5,6 +5,12 @@
 .env
 .env.*
 !.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.backup
+*.dump
 .venv
 venv
 __pycache__
@@ -15,5 +21,6 @@ __pycache__
 .coverage
 htmlcov
 logs
+*.log
 tests
 cicd

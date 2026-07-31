@@ -93,10 +93,7 @@ class Users(RecordMixin):
             "phone_country_code",
             "phone_number",
             unique=True,
-            postgresql_where=text(
-                "phone_country_code IS NOT NULL "
-                "AND phone_number IS NOT NULL"
-            ),
+            postgresql_where=text("phone_country_code IS NOT NULL AND phone_number IS NOT NULL"),
         ),
         CheckConstraint(
             "email_normalized IS NOT NULL OR phone_number IS NOT NULL",
@@ -356,9 +353,7 @@ class UserRoles(RecordMixin):
             postgresql_nulls_not_distinct=True,
         ),
         CheckConstraint(
-            "valid_until IS NULL "
-            "OR valid_from IS NULL "
-            "OR valid_until > valid_from",
+            "valid_until IS NULL OR valid_from IS NULL OR valid_until > valid_from",
             name="valid_window",
         ),
         Index(

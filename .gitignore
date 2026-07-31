@@ -11,6 +11,12 @@ venv/
 .env
 .env.*
 !.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.backup
+*.dump
 logs/
 *.log
 .pytest_cache/

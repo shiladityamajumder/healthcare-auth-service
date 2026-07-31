@@ -182,9 +182,7 @@ class APIResponse:
             raise ValueError("Use an empty Response for HTTP 204")
 
         if not 200 <= status_code < 400:
-            raise ValueError(
-                "Success status_code must be between 200 and 399"
-            )
+            raise ValueError("Success status_code must be between 200 and 399")
 
         body = APIResponseModel[Any](
             success=True,
@@ -233,9 +231,7 @@ class APIResponse:
             ValueError: If ``status_code`` is outside the HTTP error range.
         """
         if not 400 <= status_code <= 599:
-            raise ValueError(
-                "Error status_code must be between 400 and 599"
-            )
+            raise ValueError("Error status_code must be between 400 and 599")
 
         body = APIResponseModel[Any](
             success=False,

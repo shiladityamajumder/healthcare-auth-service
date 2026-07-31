@@ -35,9 +35,8 @@ from app.core.request_context import (
 
 logger = get_logger(__name__)
 
-_TRACEPARENT_PATTERN = re.compile(
-    r"^[0-9a-f]{2}-([0-9a-f]{32})-[0-9a-f]{16}-[0-9a-f]{2}$"
-)
+_TRACEPARENT_PATTERN = re.compile(r"^[0-9a-f]{2}-([0-9a-f]{32})-[0-9a-f]{16}-[0-9a-f]{2}$")
+
 
 def _validated_uuid_header(value: str | None) -> str | None:
     """Validate an optional UUID header without accepting arbitrary identifiers."""
@@ -126,17 +125,15 @@ class RequestContextMiddleware:
         correlation_id = request_id
         invalid_header: tuple[str, str] | None = None
         try:
-            request_id = _validated_uuid_header(
-                headers.get("x-request-id")
-            ) or request_id
+            request_id = _validated_uuid_header(headers.get("x-request-id")) or request_id
         except ValueError:
             invalid_header = ("INVALID_REQUEST_ID", "X-Request-ID must be a valid UUID.")
 
         if invalid_header is None:
             try:
-                correlation_id = _validated_uuid_header(
-                    headers.get("x-correlation-id")
-                ) or request_id
+                correlation_id = (
+                    _validated_uuid_header(headers.get("x-correlation-id")) or request_id
+                )
             except ValueError:
                 invalid_header = (
                     "INVALID_CORRELATION_ID",
@@ -249,11 +246,7 @@ class RequestLoggingMiddleware:
                 "unmatched",
             )
 
-            log_method = (
-                logger.warning
-                if duration_ms >= self.slow_threshold_ms
-                else logger.info
-            )
+            log_method = logger.warning if duration_ms >= self.slow_threshold_ms else logger.info
 
             log_method(
                 "HTTP request completed",
@@ -474,9 +467,7 @@ class TrustedHostValidationMiddleware:
         self.enabled = enabled
 
         self.allowed_hosts = tuple(
-            host.strip().casefold().rstrip(".")
-            for host in allowed_hosts
-            if host and host.strip()
+            host.strip().casefold().rstrip(".") for host in allowed_hosts if host and host.strip()
         )
 
     def _is_allowed(
@@ -493,10 +484,7 @@ class TrustedHostValidationMiddleware:
             if allowed == normalized:
                 return True
 
-            if (
-                allowed.startswith("*.")
-                and normalized.endswith(allowed[1:])
-            ):
+            if allowed.startswith("*.") and normalized.endswith(allowed[1:]):
                 return True
 
         return False
@@ -577,15 +565,11 @@ def register_middleware(
                 "Accept",
                 "Authorization",
                 "Content-Type",
-                "Idempotency-Key",
-                "Traceparent",
                 "User-Agent",
                 "X-Client-ID",
-                "X-Client-Secret",
-                "X-Client-Version",
                 "X-Correlation-ID",
                 "X-Device-ID",
-                "X-Device-Name",
+                "X-Device-Type",
                 "X-Forwarded-For",
                 "X-Platform",
                 "X-Request-ID",

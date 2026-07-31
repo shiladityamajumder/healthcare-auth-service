@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import uuid
 
-from app.auth.identity.presentation import public_user_data
+from app.auth.identity.presentation import admin_user_data
 from app.common.exceptions import ConflictError, NotFoundError
 from app.common.response import PaginationMeta
 from app.core.logging import get_logger
@@ -29,9 +29,9 @@ from app.modules.admin_users.repositories import AdminUserRepository
 from app.modules.admin_users.schemas import (
     AdminLogoutAllRequest,
     AdminUserListResponse,
+    AdminUserResponse,
     MessageResponse,
     UpdateUserStatusRequest,
-    UserResponse,
 )
 from app.utils.datetime_utils import utc_now
 
@@ -63,15 +63,15 @@ class AdminUsersService:
                 [user.id for user in page.items]
             )
             now = utc_now()
-            items: list[UserResponse] = []
+            items: list[AdminUserResponse] = []
             for user in page.items:
                 claims = await repository.authorization_claims(
                     user_id=user.id,
                     now=now,
                 )
                 items.append(
-                    UserResponse.model_validate(
-                        public_user_data(
+                    AdminUserResponse.model_validate(
+                        admin_user_data(
                             user,
                             profile=profiles.get(user.id),
                             roles=claims.roles,
@@ -81,7 +81,7 @@ class AdminUsersService:
                 )
             return AdminUserListResponse(users=items), page.pagination
 
-    async def get_user(self, *, user_id: uuid.UUID) -> UserResponse:
+    async def get_user(self, *, user_id: uuid.UUID) -> AdminUserResponse:
         """Return one user and effective authorization claims."""
         async with self._uow:
             repository = AdminUserRepository(self._uow.session)
@@ -93,8 +93,8 @@ class AdminUsersService:
                 user_id=user.id,
                 now=utc_now(),
             )
-            return UserResponse.model_validate(
-                public_user_data(
+            return AdminUserResponse.model_validate(
+                admin_user_data(
                     user,
                     profile=profile,
                     roles=claims.roles,
@@ -108,7 +108,7 @@ class AdminUsersService:
         user_id: uuid.UUID,
         payload: UpdateUserStatusRequest,
         actor_user_id: uuid.UUID,
-    ) -> UserResponse:
+    ) -> AdminUserResponse:
         """Apply a validated status transition and optionally revoke sessions."""
         if user_id == actor_user_id and payload.status != UserStatus.ACTIVE:
             raise ConflictError("Administrators cannot disable their own account here.")
@@ -136,8 +136,8 @@ class AdminUsersService:
                 user_id=user.id,
                 now=utc_now(),
             )
-            response = UserResponse.model_validate(
-                public_user_data(
+            response = AdminUserResponse.model_validate(
+                admin_user_data(
                     user,
                     profile=profile,
                     roles=claims.roles,

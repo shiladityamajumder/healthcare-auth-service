@@ -19,32 +19,27 @@ import uuid
 
 from app.auth.authorization.model_adapters import account_access_state
 from app.auth.authorization.policies import AccountAccessPolicy
-from app.auth.identity.presentation import (
-    authenticated_user_profile_data,
-    public_user_data,
-)
 from app.auth.request_context.context import AuthRequestContext
 from app.auth.security.hashing import SecureHashing
 from app.auth.security.tokens import TokenManager, TokenType
+from app.auth.workflows.session_tokens import (
+    IssuedSessionTokens,
+    build_token_pair_response,
+)
 from app.common.exceptions import (
     AuthenticationError,
     RefreshTokenReuseError,
     SessionRevokedError,
 )
-from app.core.config import AppSettings
 from app.core.logging import get_logger
 from app.db.uow import SQLAlchemyUnitOfWork
 from app.models.identity import Sessions
 from app.modules.token_management.repositories import TokenRepository
 from app.modules.token_management.schemas import (
-    AuthenticatedUserProfileResponse,
     LogoutRequest,
     MessageResponse,
     RefreshTokenRequest,
     TokenPairResponse,
-    TokenPairResponseContract,
-    TokenPairResponseV2,
-    UserResponse,
 )
 from app.utils.datetime_utils import utc_now
 
@@ -58,12 +53,10 @@ class TokenManagementService:
         self,
         *,
         uow: SQLAlchemyUnitOfWork,
-        settings: AppSettings,
         hashing: SecureHashing,
         tokens: TokenManager,
     ) -> None:
         self._uow = uow
-        self._settings = settings
         self._hashing = hashing
         self._tokens = tokens
 
@@ -71,7 +64,7 @@ class TokenManagementService:
         self,
         payload: RefreshTokenRequest,
         context: AuthRequestContext,
-    ) -> TokenPairResponseContract:
+    ) -> TokenPairResponse:
         """Rotate the refresh token and return a new token pair."""
         claims = self._tokens.decode(
             payload.refresh_token,
@@ -86,7 +79,7 @@ class TokenManagementService:
 
         pending_error: AuthenticationError | None = None
         audit_event: dict[str, str] | None = None
-        result: TokenPairResponseContract | None = None
+        result: TokenPairResponse | None = None
         async with self._uow:
             repository = TokenRepository(self._uow.session)
             # The session row lock serializes refresh rotation and reuse
@@ -143,10 +136,6 @@ class TokenManagementService:
                         session.revoke_reason = "account_not_available"
                         pending_error = exc
                     else:
-                        authz = await repository.authorization_claims(
-                            user_id=user.id,
-                            now=now,
-                        )
                         refresh = self._tokens.create_refresh_token(
                             user_id=user.id,
                             session_id=session.id,
@@ -155,8 +144,6 @@ class TokenManagementService:
                         access = self._tokens.create_access_token(
                             user_id=user.id,
                             session_id=session.id,
-                            roles=authz.roles,
-                            permissions=authz.permissions,
                             auth_methods=["refresh_token"],
                         )
                         session.refresh_token_hash = self._hashing.token_hash(refresh.token)
@@ -166,36 +153,18 @@ class TokenManagementService:
                         session.user_agent = context.user_agent
                         # Device identity/type are fixed when the session is
                         # created. Refresh never rebinds an existing session or
-                        # silently upgrades a legacy unbound session.
+                        # silently upgrades an existing unbound session.
                         profile = await repository.get_active_profile(user.id)
-                        token_data = {
-                            "access_token": access.token,
-                            "refresh_token": refresh.token,
-                            "access_expires_at": access.expires_at,
-                            "refresh_expires_at": refresh.expires_at,
-                        }
-                        if self._settings.AUTH_LOGIN_REFRESH_RESPONSE_VERSION == 2:
-                            result = TokenPairResponseV2(
-                                **token_data,
-                                user=AuthenticatedUserProfileResponse.model_validate(
-                                    authenticated_user_profile_data(
-                                        user,
-                                        profile=profile,
-                                    )
-                                ),
-                            )
-                        else:
-                            result = TokenPairResponse(
-                                **token_data,
-                                user=UserResponse.model_validate(
-                                    public_user_data(
-                                        user,
-                                        profile=profile,
-                                        roles=authz.roles,
-                                        permissions=authz.permissions,
-                                    )
-                                ),
-                            )
+                        result = build_token_pair_response(
+                            issued=IssuedSessionTokens(
+                                access_token=access.token,
+                                refresh_token=refresh.token,
+                                access_expires_at=access.expires_at,
+                                refresh_expires_at=refresh.expires_at,
+                            ),
+                            user=user,
+                            profile=profile,
+                        )
         # Defer the error until family/session revocation mutations commit.
         if audit_event is not None:
             logger.warning("Security audit event", extra=audit_event)
@@ -242,9 +211,7 @@ class TokenManagementService:
     ) -> MessageResponse:
         """Revoke every user session except the current session."""
         async with self._uow:
-            revoked_count = await TokenRepository(
-                self._uow.session
-            ).revoke_user_sessions(
+            revoked_count = await TokenRepository(self._uow.session).revoke_user_sessions(
                 user_id=user_id,
                 revoked_at=utc_now(),
                 reason="user_logout_others",
@@ -264,9 +231,7 @@ class TokenManagementService:
     async def logout_all(self, *, user_id: uuid.UUID) -> MessageResponse:
         """Revoke every active session for the user."""
         async with self._uow:
-            revoked_count = await TokenRepository(
-                self._uow.session
-            ).revoke_user_sessions(
+            revoked_count = await TokenRepository(self._uow.session).revoke_user_sessions(
                 user_id=user_id,
                 revoked_at=utc_now(),
                 reason="user_logout_all",
@@ -289,7 +254,7 @@ def _refresh_device_identity_matches(
 ) -> bool:
     """Validate an optional refresh device assertion without rebinding.
 
-    Omission remains compatible. A legacy session without a stored device ID
+    Omission is allowed. A session without a stored device ID
     also remains unbound; it can acquire a binding only by creating a new
     authenticated session, never through refresh-token rotation.
     """

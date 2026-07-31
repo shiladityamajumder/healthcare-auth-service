@@ -108,15 +108,11 @@ async def lifespan(
         "Application startup initiated",
         extra={
             "environment": settings.ENVIRONMENT.value,
-            "database_startup_check": (
-                settings.DATABASE_STARTUP_CHECK
-            ),
+            "database_startup_check": (settings.DATABASE_STARTUP_CHECK),
             "database_fail_fast": settings.DATABASE_FAIL_FAST,
             "redis_enabled": settings.redis_enabled,
             "mongo_enabled": settings.ENABLE_MONGO,
-            "rate_limit_backend": (
-                settings.RATE_LIMIT_BACKEND.value
-            ),
+            "rate_limit_backend": (settings.RATE_LIMIT_BACKEND.value),
         },
     )
 
@@ -141,11 +137,7 @@ async def lifespan(
 
         rate_limiter = build_rate_limiter(
             settings,
-            redis_client=(
-                redis_adapter.client
-                if redis_adapter is not None
-                else None
-            ),
+            redis_client=(redis_adapter.client if redis_adapter is not None else None),
         )
 
         # AuthRuntime must consume the already-created rate limiter. It must
@@ -170,9 +162,7 @@ async def lifespan(
                 "postgresql_configured": True,
                 "redis_initialized": redis_adapter is not None,
                 "mongo_initialized": mongo_database is not None,
-                "rate_limit_backend": (
-                    settings.RATE_LIMIT_BACKEND.value
-                ),
+                "rate_limit_backend": (settings.RATE_LIMIT_BACKEND.value),
             },
         )
 
@@ -320,9 +310,7 @@ async def _initialize_postgresql(
     )
 
     if settings.DATABASE_FAIL_FAST:
-        raise RuntimeError(
-            "PostgreSQL connectivity or identity schema validation failed"
-        )
+        raise RuntimeError("PostgreSQL connectivity or identity schema validation failed")
 
     return "degraded"
 
@@ -352,9 +340,7 @@ async def _initialize_redis(
     except ImportError as exc:
         app.state.redis_health = False
 
-        raise RuntimeError(
-            "Redis is enabled but the redis package is unavailable"
-        ) from exc
+        raise RuntimeError("Redis is enabled but the redis package is unavailable") from exc
 
     redis_adapter = RedisClient.from_settings(settings)
 
@@ -380,9 +366,7 @@ async def _initialize_redis(
         "Redis startup validation succeeded",
         extra={
             "max_connections": settings.REDIS_MAX_CONNECTIONS,
-            "rate_limit_backend": (
-                settings.RATE_LIMIT_BACKEND.value
-            ),
+            "rate_limit_backend": (settings.RATE_LIMIT_BACKEND.value),
         },
     )
 
@@ -414,9 +398,7 @@ async def _initialize_mongodb(
     except ImportError as exc:
         app.state.mongo_health = False
 
-        raise RuntimeError(
-            "MongoDB is enabled but the pymongo package is unavailable"
-        ) from exc
+        raise RuntimeError("MongoDB is enabled but the pymongo package is unavailable") from exc
 
     mongo_database = MongoDatabase.from_settings(settings)
 

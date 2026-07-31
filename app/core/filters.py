@@ -120,11 +120,7 @@ def _escape_like(value: str) -> str:
     Returns:
         Escaped search value.
     """
-    return (
-        value.replace("\\", "\\\\")
-        .replace("%", "\\%")
-        .replace("_", "\\_")
-    )
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 def apply_text_search(
@@ -359,14 +355,8 @@ def apply_date_range_filter(
     Raises:
         ValidationError: If the start value is after the end value.
     """
-    if (
-        start_date is not None
-        and end_date is not None
-        and start_date > end_date
-    ):
-        raise ValidationError(
-            "start_date must not be after end_date"
-        )
+    if start_date is not None and end_date is not None and start_date > end_date:
+        raise ValidationError("start_date must not be after end_date")
 
     if start_date is not None:
         statement = statement.where(
@@ -439,9 +429,7 @@ def apply_dynamic_filters(
                 continue
 
             condition = (
-                build_true_condition(column)
-                if normalized
-                else build_false_condition(column)
+                build_true_condition(column) if normalized else build_false_condition(column)
             )
 
             conditions.append(condition)

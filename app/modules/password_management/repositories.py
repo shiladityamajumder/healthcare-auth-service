@@ -23,7 +23,6 @@ from datetime import datetime
 from sqlalchemy import func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.authorization.claims import AuthorizationClaims, load_authorization_claims
 from app.models.identity import OtpChallenges, PasswordHistory, Sessions, UserProfiles, Users
 
 
@@ -110,19 +109,6 @@ class PasswordRepository:
             .limit(limit)
         )
         return list((await self._session.scalars(statement)).all())
-
-    async def authorization_claims(
-        self,
-        *,
-        user_id: uuid.UUID,
-        now: datetime,
-    ) -> AuthorizationClaims:
-        """Load effective roles and permissions for a user."""
-        return await load_authorization_claims(
-            self._session,
-            user_id=user_id,
-            now=now,
-        )
 
     def add_session(self, session_record: Sessions) -> None:
         """Stage a newly issued session for persistence."""

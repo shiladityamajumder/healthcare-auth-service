@@ -1,8 +1,7 @@
 """File: app/modules/current_user/routes.py
 
 Purpose:
-Defines ``/users/me`` authenticated profile, preference, role, and permission
-endpoints.
+Defines current-user profile, preference, and authorization endpoints.
 
 Dependency flow:
 HTTP request
@@ -24,11 +23,9 @@ from app.modules.current_user.dependencies import (
 )
 from app.modules.current_user.openapi import RESPONSES, TAG
 from app.modules.current_user.schemas import (
+    AuthenticatedUserResponse,
     CurrentAuthorizationResponse,
     UpdateCurrentUserRequest,
-    UserPermissionsResponse,
-    UserResponse,
-    UserRolesResponse,
 )
 
 router = APIRouter(
@@ -51,27 +48,26 @@ authorization_router = APIRouter(
 )
 async def get_current_authorization(
     principal: CurrentUserReadAccess,
-    service: CurrentUserServiceDep,
 ) -> JSONResponse:
-    """Return database-resolved effective roles and permissions."""
+    """Return authorization resolved by the request-scoped principal query."""
     return APIResponse.success(
-        data=await service.authorization(
-            user_id=principal.user_id,
-            session_id=principal.session_id,
+        data=CurrentAuthorizationResponse(
+            roles=sorted(principal.roles),
+            permissions=sorted(principal.permissions),
         )
     )
 
 
 @router.get(
     "",
-    response_model=APIResponseModel[UserResponse],
+    response_model=APIResponseModel[AuthenticatedUserResponse],
     summary="Get current user",
 )
 async def get_current_user(
     principal: CurrentUserReadAccess,
     service: CurrentUserServiceDep,
 ) -> JSONResponse:
-    """Return authenticated identity details and effective authorization.
+    """Return authenticated identity details without authorization lists.
 
     ``CurrentUserReadAccess`` validates the bearer principal/session and applies
     the standard authenticated API limit.
@@ -81,7 +77,7 @@ async def get_current_user(
 
 @router.patch(
     "",
-    response_model=APIResponseModel[UserResponse],
+    response_model=APIResponseModel[AuthenticatedUserResponse],
     summary="Update current user profile",
 )
 async def update_current_user(
@@ -96,51 +92,6 @@ async def update_current_user(
     """
     return APIResponse.success(
         data=await service.update(user_id=principal.user_id, payload=payload)
-    )
-
-
-@router.get(
-    "/roles",
-    response_model=APIResponseModel[UserRolesResponse],
-    summary="Get current user's roles",
-    deprecated=True,
-)
-async def get_current_user_roles(
-    principal: CurrentUserReadAccess,
-    service: CurrentUserServiceDep,
-) -> JSONResponse:
-    """Return effective active role codes for the authenticated caller.
-
-    Current-user read access validates the principal before claims are loaded
-    from current database state.
-    """
-    return APIResponse.success(
-        data=await service.roles(
-            user_id=principal.user_id,
-            session_id=principal.session_id,
-        )
-    )
-
-
-@router.get(
-    "/permissions",
-    response_model=APIResponseModel[UserPermissionsResponse],
-    summary="Get current user's permissions",
-    deprecated=True,
-)
-async def get_current_user_permissions(
-    principal: CurrentUserReadAccess,
-    service: CurrentUserServiceDep,
-) -> JSONResponse:
-    """Return effective active permission codes for the authenticated caller.
-
-    ``CurrentUserReadAccess`` protects and rate-limits this self-service read.
-    """
-    return APIResponse.success(
-        data=await service.permissions(
-            user_id=principal.user_id,
-            session_id=principal.session_id,
-        )
     )
 
 

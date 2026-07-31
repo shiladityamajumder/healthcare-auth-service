@@ -28,10 +28,7 @@ def enum_column[EnumT: StrEnum](
 ) -> SAEnum:
     """Map a string enum exactly as the healthcare database defines it."""
 
-    max_length = max(
-        len(member.value)
-        for member in enum_type
-    )
+    max_length = max(len(member.value) for member in enum_type)
 
     return SAEnum(
         enum_type,
@@ -39,10 +36,7 @@ def enum_column[EnumT: StrEnum](
         native_enum=False,
         create_constraint=True,
         validate_strings=True,
-        values_callable=lambda enum_class: [
-            member.value
-            for member in enum_class
-        ],
+        values_callable=lambda enum_class: [member.value for member in enum_class],
         length=max(16, max_length),
     )
 

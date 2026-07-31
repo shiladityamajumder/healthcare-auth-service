@@ -77,29 +77,34 @@ async def test_password_hash_is_verified_and_rejects_wrong_password() -> None:
 
 
 def test_access_token_has_expected_type_and_subject() -> None:
-    """Require access tokens to carry the expected type and identity claims."""
+    """Require the exact minimal access-token contract."""
     manager = TokenManager(auth_settings())
     user_id = uuid.uuid4()
     session_id = uuid.uuid4()
     encoded = manager.create_access_token(
         user_id=user_id,
         session_id=session_id,
-        roles=["customer"],
-        permissions=["orders.read"],
         auth_methods=["password"],
     )
     payload = manager.decode(encoded.token, expected_type=TokenType.ACCESS)
     assert payload["sub"] == str(user_id)
     assert payload["sid"] == str(session_id)
-    assert payload["ver"] == 1
-    assert payload["permissions"] == ["orders.read"]
-    assert {
-        "password",
-        "password_hash",
-        "email",
-        "phone_number",
-        "refresh_token",
-    }.isdisjoint(payload)
+    assert payload["token_type"] == "access"  # noqa: S105 - token type assertion
+    assert uuid.UUID(payload["jti"])
+    assert payload["amr"] == ["password"]
+    assert set(payload) == {
+        "sub",
+        "token_type",
+        "jti",
+        "sid",
+        "iat",
+        "nbf",
+        "exp",
+        "iss",
+        "aud",
+        "amr",
+    }
+    assert {"user_id", "roles", "permissions", "ver"}.isdisjoint(payload)
 
 
 @pytest.mark.parametrize(
@@ -108,6 +113,7 @@ def test_access_token_has_expected_type_and_subject() -> None:
         ("iss", "wrong-issuer"),
         ("aud", "wrong-audience"),
         ("exp", 0),
+        ("nbf", 4_102_444_800),
     ],
 )
 def test_access_token_rejects_wrong_registered_claims(
@@ -119,8 +125,6 @@ def test_access_token_rejects_wrong_registered_claims(
     encoded = manager.create_access_token(
         user_id=uuid.uuid4(),
         session_id=uuid.uuid4(),
-        roles=["customer"],
-        permissions=[],
         auth_methods=["password"],
     )
     payload = jwt.decode(encoded.token, options={"verify_signature": False})
@@ -159,8 +163,6 @@ def test_algorithm_and_key_identifier_confusion_are_rejected() -> None:
     encoded = manager.create_access_token(
         user_id=uuid.uuid4(),
         session_id=uuid.uuid4(),
-        roles=[],
-        permissions=[],
         auth_methods=["password"],
     )
     payload = jwt.decode(encoded.token, options={"verify_signature": False})
@@ -177,99 +179,60 @@ def test_algorithm_and_key_identifier_confusion_are_rejected() -> None:
         )
 
 
-def test_version_2_access_token_omits_full_authorization() -> None:
-    """Keep v2 tokens small and free of permission snapshots."""
-    manager = TokenManager(
-        auth_settings().model_copy(
-            update={
-                "ACCESS_TOKEN_VERSION": 2,
-                "ACCESS_TOKEN_V2_INCLUDE_ROLES": False,
-            }
-        )
-    )
-    encoded = manager.create_access_token(
-        user_id=uuid.uuid4(),
-        session_id=uuid.uuid4(),
-        roles=["customer"],
-        permissions=["orders.read", "orders.write"],
-        auth_methods=["password"],
-    )
-
-    payload = manager.decode(encoded.token, expected_type=TokenType.ACCESS)
-
-    assert payload["ver"] == 2
-    assert "permissions" not in payload
-    assert "roles" not in payload
-    assert payload["amr"] == ["password"]
-
-
-def test_version_2_access_token_can_include_coarse_roles() -> None:
-    """Allow an explicitly configured coarse role hint without permissions."""
-    manager = TokenManager(
-        auth_settings().model_copy(
-            update={
-                "ACCESS_TOKEN_VERSION": 2,
-                "ACCESS_TOKEN_V2_INCLUDE_ROLES": True,
-            }
-        )
-    )
-    encoded = manager.create_access_token(
-        user_id=uuid.uuid4(),
-        session_id=uuid.uuid4(),
-        roles=["customer"],
-        permissions=["orders.read"],
-        auth_methods=["password"],
-    )
-
-    payload = manager.decode(encoded.token, expected_type=TokenType.ACCESS)
-
-    assert payload["roles"] == ["customer"]
-    assert "permissions" not in payload
-
-
-def test_version_2_access_token_rejects_injected_permissions() -> None:
-    """Fail closed when a correctly signed v2 payload violates its schema."""
-    settings = auth_settings().model_copy(update={"ACCESS_TOKEN_VERSION": 2})
-    manager = TokenManager(settings)
-    encoded = manager.create_access_token(
-        user_id=uuid.uuid4(),
-        session_id=uuid.uuid4(),
-        roles=[],
-        permissions=[],
-        auth_methods=["password"],
-    )
-    payload = jwt.decode(encoded.token, options={"verify_signature": False})
-    payload["permissions"] = ["admin.users.write"]
-    tampered_contract = jwt.encode(
-        payload,
-        settings.jwt_secret_value,
-        algorithm=settings.JWT_ALGORITHM.value,
-        headers={"kid": settings.JWT_KEY_ID, "typ": "JWT"},
-    )
-
-    with pytest.raises(AuthenticationError):
-        manager.decode(tampered_contract, expected_type=TokenType.ACCESS)
-
-
-@pytest.mark.parametrize("version", [0, 3, "2", True])
-def test_access_token_rejects_unknown_or_malformed_version(version: object) -> None:
-    """Accept only integer version 1 or 2 contracts."""
-    with pytest.raises(AuthenticationError):
-        TokenManager.access_token_version({"ver": version})
-
-
-@pytest.mark.parametrize("missing_claim", ["roles", "permissions"])
-def test_version_1_access_token_rejects_missing_authorization_claims(
-    missing_claim: str,
+@pytest.mark.parametrize(
+    ("claim_name", "claim_value"),
+    [
+        ("roles", ["platform_admin"]),
+        ("permissions", ["identity.users.manage"]),
+        ("user_id", "11111111-1111-1111-1111-111111111111"),
+        ("ver", 1),
+        ("email", "attacker@example.com"),
+    ],
+)
+def test_access_token_rejects_any_injected_claim(
+    claim_name: str,
+    claim_value: object,
 ) -> None:
-    """Never reinterpret an incomplete v1 authorization snapshot as allow."""
+    """Fail closed when a signed access token exceeds the canonical schema."""
     settings = auth_settings()
     manager = TokenManager(settings)
     encoded = manager.create_access_token(
         user_id=uuid.uuid4(),
         session_id=uuid.uuid4(),
-        roles=["customer"],
-        permissions=["orders.read"],
+        auth_methods=["password"],
+    )
+    payload = jwt.decode(encoded.token, options={"verify_signature": False})
+    payload[claim_name] = claim_value
+
+    with pytest.raises(AuthenticationError):
+        manager.decode(
+            _resign_hs256(settings, payload),
+            expected_type=TokenType.ACCESS,
+        )
+
+
+def test_access_token_requires_at_least_one_authentication_method() -> None:
+    with pytest.raises(ValueError, match="at least one value"):
+        TokenManager(auth_settings()).create_access_token(
+            user_id=uuid.uuid4(),
+            session_id=uuid.uuid4(),
+            auth_methods=[],
+        )
+
+
+@pytest.mark.parametrize(
+    "missing_claim",
+    ["sub", "token_type", "jti", "sid", "iat", "nbf", "exp", "iss", "aud", "amr"],
+)
+def test_access_token_rejects_missing_mandatory_claim(
+    missing_claim: str,
+) -> None:
+    """Reject every incomplete access-token contract."""
+    settings = auth_settings()
+    manager = TokenManager(settings)
+    encoded = manager.create_access_token(
+        user_id=uuid.uuid4(),
+        session_id=uuid.uuid4(),
         auth_methods=["password"],
     )
     payload = jwt.decode(encoded.token, options={"verify_signature": False})
@@ -285,48 +248,35 @@ def test_version_1_access_token_rejects_missing_authorization_claims(
         manager.decode(incomplete_token, expected_type=TokenType.ACCESS)
 
 
-def test_legacy_unversioned_access_token_remains_valid_as_version_1() -> None:
-    """Accept already-issued v1 tokens that predate the explicit version claim."""
+def test_refresh_token_has_exact_minimal_contract() -> None:
     settings = auth_settings()
     manager = TokenManager(settings)
-    encoded = manager.create_access_token(
+    encoded = manager.create_refresh_token(
         user_id=uuid.uuid4(),
         session_id=uuid.uuid4(),
-        roles=["customer"],
-        permissions=["orders.read"],
-        auth_methods=["password"],
+        family_id=uuid.uuid4(),
     )
-    payload = jwt.decode(encoded.token, options={"verify_signature": False})
-    payload.pop("ver")
-    legacy_token = jwt.encode(
-        payload,
-        settings.jwt_secret_value,
-        algorithm=settings.JWT_ALGORITHM.value,
-        headers={"kid": settings.JWT_KEY_ID, "typ": "JWT"},
-    )
-
-    decoded = manager.decode(legacy_token, expected_type=TokenType.ACCESS)
-
-    assert manager.access_token_version(decoded) == 1
-    assert decoded["permissions"] == ["orders.read"]
-
-
-def test_version_2_token_size_does_not_scale_with_permissions() -> None:
-    """Guard against accidentally restoring the full permission array to v2."""
-    permissions = [f"resource.{index}.manage" for index in range(500)]
-    common = {
-        "user_id": uuid.uuid4(),
-        "session_id": uuid.uuid4(),
-        "roles": ["customer"],
-        "permissions": permissions,
-        "auth_methods": ["password"],
+    payload = manager.decode(encoded.token, expected_type=TokenType.REFRESH)
+    assert set(payload) == {
+        "sub",
+        "token_type",
+        "jti",
+        "sid",
+        "fam",
+        "iat",
+        "nbf",
+        "exp",
+        "iss",
+        "aud",
     }
-    version_1 = TokenManager(auth_settings()).create_access_token(**common)
-    version_2 = TokenManager(
-        auth_settings().model_copy(update={"ACCESS_TOKEN_VERSION": 2})
-    ).create_access_token(**common)
+    assert {"user_id", "roles", "permissions", "ver", "amr"}.isdisjoint(payload)
 
-    assert len(version_2.token) < len(version_1.token) // 4
+    payload["roles"] = ["platform_admin"]
+    with pytest.raises(AuthenticationError):
+        manager.decode(
+            _resign_hs256(settings, payload),
+            expected_type=TokenType.REFRESH,
+        )
 
 
 @pytest.mark.parametrize(
@@ -350,8 +300,6 @@ def test_session_issuer_uses_header_context_for_device_metadata(
 
     issuer.issue(
         user_id=uuid.uuid4(),
-        roles=["customer"],
-        permissions=[],
         session_writer=writer,
         request_context=AuthRequestContext(
             platform=platform,
@@ -418,8 +366,6 @@ def test_rs256_access_token_and_jwks_round_trip() -> None:
     encoded = manager.create_access_token(
         user_id=user_id,
         session_id=session_id,
-        roles=["customer"],
-        permissions=["catalog.read"],
         auth_methods=["password"],
     )
     payload = manager.decode(encoded.token, expected_type=TokenType.ACCESS)
@@ -444,6 +390,8 @@ def test_authentication_secrets_are_redacted_from_structured_logs() -> None:
             "password": "StrongPassword!123",
             "refresh_token": "raw-refresh-token",
             "reset_token": "eyJabc.def.ghi",
+            "session_secret": "session-secret",
+            "verification_token": "verification-secret",
             "nested": {"password_hash": "argon2-hash"},
         }
     )
@@ -454,6 +402,8 @@ def test_authentication_secrets_are_redacted_from_structured_logs() -> None:
     assert sanitized["password"] == "[REDACTED]"  # noqa: S105
     assert sanitized["refresh_token"] == "[REDACTED]"  # noqa: S105
     assert sanitized["reset_token"] == "[REDACTED_JWT]"  # noqa: S105
+    assert sanitized["session_secret"] == "[REDACTED]"  # noqa: S105
+    assert sanitized["verification_token"] == "[REDACTED]"  # noqa: S105
     assert sanitized["nested"]["password_hash"] == "[REDACTED]"  # noqa: S105
 
 

@@ -81,34 +81,22 @@ class SecureHashing:
             ValueError: If the value is empty or the namespace is invalid.
         """
         if not value:
-            raise ValueError(
-                "Hashing value must not be empty."
-            )
+            raise ValueError("Hashing value must not be empty.")
 
         normalized_namespace = namespace.strip()
 
         if not normalized_namespace:
-            raise ValueError(
-                "Hashing namespace must not be blank."
-            )
+            raise ValueError("Hashing namespace must not be blank.")
 
         if len(normalized_namespace) > _MAX_NAMESPACE_LENGTH:
             raise ValueError(
-                "Hashing namespace must not exceed "
-                f"{_MAX_NAMESPACE_LENGTH} characters."
+                f"Hashing namespace must not exceed {_MAX_NAMESPACE_LENGTH} characters."
             )
 
-        if any(
-            ord(character) < 32 or ord(character) == 127
-            for character in normalized_namespace
-        ):
-            raise ValueError(
-                "Hashing namespace contains invalid control characters."
-            )
+        if any(ord(character) < 32 or ord(character) == 127 for character in normalized_namespace):
+            raise ValueError("Hashing namespace contains invalid control characters.")
 
-        message = (
-            f"{normalized_namespace}:{value}"
-        ).encode()
+        message = (f"{normalized_namespace}:{value}").encode()
 
         return hmac.new(
             self._pepper,
@@ -177,9 +165,7 @@ class SecureHashing:
             ValueError: If the OTP value is empty.
         """
         if not otp:
-            raise ValueError(
-                "OTP value must not be empty."
-            )
+            raise ValueError("OTP value must not be empty.")
 
         return self.digest(
             f"{challenge_id}:{otp}",

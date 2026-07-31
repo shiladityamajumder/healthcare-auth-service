@@ -22,6 +22,8 @@ from app.auth.security_policy import RateLimitPolicy, RouteSecurityPolicy
 from app.main import create_app
 from app.modules.router import router as modules_router
 from fastapi.routing import APIRoute
+from fastapi.testclient import TestClient
+from tests.conftest import build_test_settings
 
 EXPECTED_IDENTITY_PATHS = {
     "/api/v1/auth/register/email",
@@ -33,6 +35,8 @@ EXPECTED_IDENTITY_PATHS = {
     "/api/v1/auth/login/phone/request-otp",
     "/api/v1/auth/login/phone/verify-otp",
     "/api/v1/auth/token/refresh",
+    "/api/v1/auth/capabilities",
+    "/api/v1/auth/.well-known/jwks.json",
     "/api/v1/auth/logout",
     "/api/v1/auth/logout/others",
     "/api/v1/auth/logout/all",
@@ -44,8 +48,6 @@ EXPECTED_IDENTITY_PATHS = {
     "/api/v1/auth/password/reset",
     "/api/v1/auth/password",
     "/api/v1/users/me",
-    "/api/v1/users/me/roles",
-    "/api/v1/users/me/permissions",
     "/api/v1/admin/users",
     "/api/v1/admin/users/{user_id}",
     "/api/v1/admin/users/{user_id}/status",
@@ -65,7 +67,7 @@ def test_vertical_identity_routes_and_security_contract_are_exposed() -> None:
     schema = create_app().openapi()
     paths = set(schema["paths"])
 
-    assert EXPECTED_IDENTITY_PATHS.issubset(paths)
+    assert {path for path in paths if path.startswith("/api/v1/")} == EXPECTED_IDENTITY_PATHS
     assert not any("/mfa" in path for path in paths)
 
     security_schemes = schema["components"]["securitySchemes"]
@@ -79,6 +81,7 @@ def test_auth_metadata_headers_are_narrow_and_non_authoritative() -> None:
     rate_limited = schema["paths"]["/api/v1/auth/login/phone/request-otp"]["post"]
     login = schema["paths"]["/api/v1/auth/login/password"]["post"]
     protected = schema["paths"]["/api/v1/auth/sessions"]["get"]
+    refresh = schema["paths"]["/api/v1/auth/token/refresh"]["post"]
 
     def headers(operation: dict[str, object]) -> dict[str, dict[str, Any]]:
         parameters = operation.get("parameters", [])
@@ -92,6 +95,7 @@ def test_auth_metadata_headers_are_narrow_and_non_authoritative() -> None:
     rate_headers = headers(rate_limited)
     login_headers = headers(login)
     protected_headers = headers(protected)
+    refresh_headers = headers(refresh)
 
     assert set(rate_headers) == {"X-Client-ID", "X-Device-ID"}
     assert set(login_headers) == {
@@ -100,13 +104,12 @@ def test_auth_metadata_headers_are_narrow_and_non_authoritative() -> None:
         "X-Device-ID",
         "X-Device-Type",
     }
-    assert set(protected_headers) == {"X-Device-ID", "X-User-ID", "X-Session-ID"}
+    assert protected_headers == {}
+    assert set(refresh_headers) == {"X-Client-ID", "X-Device-ID"}
 
-    for operation_headers in (rate_headers, login_headers, protected_headers):
+    for operation_headers in (rate_headers, login_headers, refresh_headers):
         assert all(item["required"] is False for item in operation_headers.values())
 
-    assert "consistency assertion" in protected_headers["X-User-ID"]["description"].lower()
-    assert "consistency assertion" in protected_headers["X-Session-ID"]["description"].lower()
     assert "body" not in login_headers["X-Device-ID"]["description"].lower()
     assert "body" not in login_headers["X-Device-Type"]["description"].lower()
 
@@ -124,6 +127,11 @@ def test_role_and_permission_headers_are_never_authorization_inputs() -> None:
         "x-roles",
         "x-permission",
         "x-permissions",
+        "x-user-id",
+        "x-session-id",
+        "x-client-version",
+        "x-device-name",
+        "idempotency-key",
     }
 
     for path_item in schema["paths"].values():
@@ -179,51 +187,53 @@ def test_public_registration_contract_does_not_expose_role_assignment() -> None:
         assert "roles" not in properties, schema_name
 
 
-def test_authorization_contract_is_consolidated_and_legacy_routes_are_deprecated() -> None:
-    """Publish one protected DTO while retaining documented v1 projections."""
+def test_authorization_contract_is_single_and_redundant_routes_are_removed() -> None:
+    """Publish one protected authorization DTO and no duplicate projections."""
     schema = create_app().openapi()
     paths = schema["paths"]
     authorization = paths["/api/v1/auth/users/me/authorization"]["get"]
 
     assert authorization["security"] == [{"BearerAuth": []}]
     assert authorization.get("deprecated") is not True
-    assert paths["/api/v1/users/me/roles"]["get"]["deprecated"] is True
-    assert paths["/api/v1/users/me/permissions"]["get"]["deprecated"] is True
+    assert "/api/v1/users/me/roles" not in paths
+    assert "/api/v1/users/me/permissions" not in paths
 
-    properties = schema["components"]["schemas"]["CurrentAuthorizationResponse"][
-        "properties"
-    ]
+    properties = schema["components"]["schemas"]["CurrentAuthorizationResponse"]["properties"]
     assert set(properties) == {"roles", "permissions"}
 
 
-def test_login_and_refresh_publish_separate_v1_and_v2_response_contracts() -> None:
-    """Keep the v1 schema visible and make the minimal v2 profile explicit."""
+def test_every_token_response_uses_one_minimal_profile_contract() -> None:
+    """Expose one token pair and one authorization-free user schema."""
     schemas = create_app().openapi()["components"]["schemas"]
-    legacy_user = schemas["UserResponse"]["properties"]
-    minimal_user = schemas["AuthenticatedUserProfileResponse"]["properties"]
+    user = schemas["AuthenticatedUserResponse"]["properties"]
 
-    assert {"roles", "permissions"}.issubset(legacy_user)
-    assert "roles" not in minimal_user
-    assert "permissions" not in minimal_user
+    assert "roles" not in user
+    assert "permissions" not in user
     assert "TokenPairResponse" in schemas
-    assert "TokenPairResponseV2" in schemas
+    assert not any("V1" in name or "V2" in name for name in schemas)
+    assert schemas["TokenPairResponse"]["properties"]["user"]["$ref"].endswith(
+        "/AuthenticatedUserResponse"
+    )
+    assert schemas["RegistrationResponse"]["properties"]["user"]["$ref"].endswith(
+        "/AuthenticatedUserResponse"
+    )
 
 
-def test_non_migrated_identity_surfaces_retain_version_1_response_contracts() -> None:
-    """Prevent the login/refresh migration from silently changing other APIs."""
+def test_all_token_producing_surfaces_share_the_token_pair_contract() -> None:
+    """Require every token-producing route to publish the same response model."""
     schema = create_app().openapi()
     paths = schema["paths"]
 
     assert (
-        paths["/api/v1/auth/email-verification/verify"]["post"]["responses"]["200"][
-            "content"
-        ]["application/json"]["schema"]["$ref"]
+        paths["/api/v1/auth/email-verification/verify"]["post"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"]
         == "#/components/schemas/APIResponseModel_TokenPairResponse_"
     )
     assert (
-        paths["/api/v1/auth/register/phone/verify-otp"]["post"]["responses"]["201"][
-            "content"
-        ]["application/json"]["schema"]["$ref"]
+        paths["/api/v1/auth/register/phone/verify-otp"]["post"]["responses"]["201"]["content"][
+            "application/json"
+        ]["schema"]["$ref"]
         == "#/components/schemas/APIResponseModel_TokenPairResponse_"
     )
     assert (
@@ -233,11 +243,29 @@ def test_non_migrated_identity_surfaces_retain_version_1_response_contracts() ->
         == "#/components/schemas/APIResponseModel_TokenPairResponse_"
     )
     assert (
-        paths["/api/v1/users/me"]["get"]["responses"]["200"]["content"][
-            "application/json"
-        ]["schema"]["$ref"]
-        == "#/components/schemas/APIResponseModel_UserResponse_"
+        paths["/api/v1/users/me"]["get"]["responses"]["200"]["content"]["application/json"][
+            "schema"
+        ]["$ref"]
+        == "#/components/schemas/APIResponseModel_AuthenticatedUserResponse_"
     )
+
+
+def test_public_capabilities_are_anonymous_and_do_not_publish_authorization() -> None:
+    schema = create_app().openapi()
+    operation = schema["paths"]["/api/v1/auth/capabilities"]["get"]
+    properties = schema["components"]["schemas"]["AuthCapabilitiesResponse"]["properties"]
+
+    assert "security" not in operation
+    assert {"roles", "permissions"}.isdisjoint(properties)
+    assert {"schema", "registration", "login", "verification", "password_policy"} <= set(properties)
+
+
+def test_public_capabilities_work_and_removed_authorization_routes_are_404() -> None:
+    app = create_app(build_test_settings())
+    with TestClient(app) as client:
+        assert client.get("/api/v1/auth/capabilities").status_code == 200
+        assert client.get("/api/v1/users/me/roles").status_code == 404
+        assert client.get("/api/v1/users/me/permissions").status_code == 404
 
 
 def test_auth_operations_publish_unified_error_responses() -> None:

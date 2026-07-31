@@ -17,9 +17,7 @@ from contextvars import ContextVar, Token
 from dataclasses import dataclass
 
 _request_id: ContextVar[str | None] = ContextVar("request_id", default=None)
-_correlation_id: ContextVar[str | None] = ContextVar(
-    "correlation_id", default=None
-)
+_correlation_id: ContextVar[str | None] = ContextVar("correlation_id", default=None)
 _trace_id: ContextVar[str | None] = ContextVar("trace_id", default=None)
 _api_version: ContextVar[str] = ContextVar("api_version", default="v1")
 

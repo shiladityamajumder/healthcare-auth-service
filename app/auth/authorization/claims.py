@@ -53,46 +53,6 @@ class AuthorizationClaims:
     roles: tuple[str, ...]
     permissions: tuple[str, ...]
 
-    @classmethod
-    def empty(cls) -> AuthorizationClaims:
-        """Return an empty authorization claim set."""
-        return cls(
-            roles=(),
-            permissions=(),
-        )
-
-    def has_role(self, role_code: str) -> bool:
-        """Return whether the claim set contains a role.
-
-        Args:
-            role_code: Exact normalized role code.
-
-        Returns:
-            ``True`` when the role is present.
-        """
-        normalized_role = role_code.strip()
-
-        if not normalized_role:
-            return False
-
-        return normalized_role in self.roles
-
-    def has_permission(self, permission_code: str) -> bool:
-        """Return whether the claim set contains a permission.
-
-        Args:
-            permission_code: Exact normalized permission code.
-
-        Returns:
-            ``True`` when the permission is present.
-        """
-        normalized_permission = permission_code.strip()
-
-        if not normalized_permission:
-            return False
-
-        return normalized_permission in self.permissions
-
 
 async def load_authorization_claims(
     session: AsyncSession,

@@ -24,11 +24,13 @@ import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol
+from typing import Any, Protocol
 
+from app.auth.identity.presentation import authenticated_user_data
 from app.auth.request_context.context import AuthRequestContext
 from app.auth.security.hashing import SecureHashing
 from app.auth.security.tokens import TokenManager
+from app.common.auth_contracts import AuthenticatedUserResponse, TokenPairResponse
 from app.models.identity import Sessions
 from app.utils.datetime_utils import utc_now
 
@@ -71,8 +73,6 @@ class SessionTokenIssuer:
         self,
         *,
         user_id: uuid.UUID,
-        roles: Sequence[str],
-        permissions: Sequence[str],
         session_writer: SessionWriterPort,
         request_context: AuthRequestContext,
         auth_methods: Sequence[str],
@@ -85,8 +85,6 @@ class SessionTokenIssuer:
 
         Args:
             user_id: Authenticated user identifier.
-            roles: Effective global role codes.
-            permissions: Effective global permission codes.
             session_writer: Session persistence implementation.
             request_context: Validated request and header metadata.
             auth_methods: Authentication method references.
@@ -107,8 +105,6 @@ class SessionTokenIssuer:
         access = self.tokens.create_access_token(
             user_id=user_id,
             session_id=session_id,
-            roles=roles,
-            permissions=permissions,
             auth_methods=auth_methods,
         )
 
@@ -123,9 +119,7 @@ class SessionTokenIssuer:
         session_record = Sessions(
             id=session_id,
             user_id=user_id,
-            refresh_token_hash=self.hashing.token_hash(
-                refresh.token
-            ),
+            refresh_token_hash=self.hashing.token_hash(refresh.token),
             token_family_id=family_id,
             device_id=request_context.device_id,
             device_type=device_type,
@@ -135,9 +129,7 @@ class SessionTokenIssuer:
             last_seen_at=now,
         )
 
-        session_writer.add_session(
-            session_record
-        )
+        session_writer.add_session(session_record)
 
         return IssuedSessionTokens(
             access_token=access.token,
@@ -145,6 +137,24 @@ class SessionTokenIssuer:
             access_expires_at=access.expires_at,
             refresh_expires_at=refresh.expires_at,
         )
+
+
+def build_token_pair_response(
+    *,
+    issued: IssuedSessionTokens,
+    user: Any,
+    profile: Any | None,
+) -> TokenPairResponse:
+    """Build the one public response used by every token-producing workflow."""
+    return TokenPairResponse(
+        access_token=issued.access_token,
+        refresh_token=issued.refresh_token,
+        access_expires_at=issued.access_expires_at,
+        refresh_expires_at=issued.refresh_expires_at,
+        user=AuthenticatedUserResponse.model_validate(
+            authenticated_user_data(user, profile=profile)
+        ),
+    )
 
 
 def _first_nonblank(
@@ -167,4 +177,5 @@ __all__ = [
     "IssuedSessionTokens",
     "SessionTokenIssuer",
     "SessionWriterPort",
+    "build_token_pair_response",
 ]

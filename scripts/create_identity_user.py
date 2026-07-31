@@ -66,9 +66,7 @@ async def create_user(args: argparse.Namespace, password: str) -> uuid.UUID:
                 )
             )
             if existing is not None:
-                raise RuntimeError(
-                    "A user already exists with this email or phone number."
-                )
+                raise RuntimeError("A user already exists with this email or phone number.")
 
             role_codes = tuple(dict.fromkeys(args.role))
             role_records = list(
@@ -82,9 +80,7 @@ async def create_user(args: argparse.Namespace, password: str) -> uuid.UUID:
             roles_by_code = {role.code: role for role in role_records}
             missing = set(role_codes) - roles_by_code.keys()
             if missing:
-                raise RuntimeError(
-                    "Unknown or inactive roles: " f"{sorted(missing)}"
-                )
+                raise RuntimeError(f"Unknown or inactive roles: {sorted(missing)}")
 
             now = datetime.now(UTC)
             user_id = uuid.uuid4()
@@ -112,11 +108,7 @@ async def create_user(args: argparse.Namespace, password: str) -> uuid.UUID:
                     user_id=user_id,
                     first_name=args.first_name.strip(),
                     last_name=args.last_name.strip() if args.last_name else None,
-                    preferred_name=(
-                        args.preferred_name.strip()
-                        if args.preferred_name
-                        else None
-                    ),
+                    preferred_name=(args.preferred_name.strip() if args.preferred_name else None),
                     created_by=user_id,
                     updated_by=user_id,
                 )

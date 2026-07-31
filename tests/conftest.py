@@ -41,10 +41,7 @@ def build_test_settings(**overrides: Any) -> AppSettings:
         "_env_file": None,
         "ENVIRONMENT": Environment.TESTING,
         "DEBUG": False,
-        "POSTGRES_URL": (
-            "postgresql+asyncpg://test:test@127.0.0.1:5432/"
-            "pharmacy_identity_test"
-        ),
+        "POSTGRES_URL": ("postgresql+asyncpg://test:test@127.0.0.1:5432/pharmacy_identity_test"),
         "DATABASE_STARTUP_CHECK": False,
         "DATABASE_SCHEMA_CHECK": False,
         "AUTH_PEPPER": "p" * 64,

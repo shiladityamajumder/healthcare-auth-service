@@ -37,25 +37,13 @@ from argon2.low_level import Type
 from app.common.exceptions import ValidationError
 from app.core.config import AppSettings
 
-_LOWERCASE_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"[a-z]"
-)
-_UPPERCASE_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"[A-Z]"
-)
-_DIGIT_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"[0-9]"
-)
-_SYMBOL_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"[^A-Za-z0-9]"
-)
-_NON_DIGIT_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"\D+"
-)
+_LOWERCASE_PATTERN: Final[re.Pattern[str]] = re.compile(r"[a-z]")
+_UPPERCASE_PATTERN: Final[re.Pattern[str]] = re.compile(r"[A-Z]")
+_DIGIT_PATTERN: Final[re.Pattern[str]] = re.compile(r"[0-9]")
+_SYMBOL_PATTERN: Final[re.Pattern[str]] = re.compile(r"[^A-Za-z0-9]")
+_NON_DIGIT_PATTERN: Final[re.Pattern[str]] = re.compile(r"\D+")
 
-_PASSWORD_CATEGORY_PATTERNS: Final[
-    tuple[re.Pattern[str], ...]
-] = (
+_PASSWORD_CATEGORY_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
     _LOWERCASE_PATTERN,
     _UPPERCASE_PATTERN,
     _DIGIT_PATTERN,
@@ -155,9 +143,7 @@ class PasswordManager:
             ValueError: If the password is empty.
         """
         if not password:
-            raise ValueError(
-                "Password must not be empty."
-            )
+            raise ValueError("Password must not be empty.")
 
         return await to_thread.run_sync(
             self._hasher.hash,
@@ -224,9 +210,7 @@ class PasswordManager:
             return True
 
         try:
-            return self._hasher.check_needs_rehash(
-                password_hash
-            )
+            return self._hasher.check_needs_rehash(password_hash)
         except InvalidHashError:
             return True
 
@@ -238,16 +222,10 @@ class PasswordManager:
         minimum_length = self._settings.PASSWORD_MIN_LENGTH
 
         if len(password) < minimum_length:
-            raise ValidationError(
-                "Password must contain at least "
-                f"{minimum_length} characters."
-            )
+            raise ValidationError(f"Password must contain at least {minimum_length} characters.")
 
         if len(password) > _MAX_PASSWORD_LENGTH:
-            raise ValidationError(
-                "Password must not exceed "
-                f"{_MAX_PASSWORD_LENGTH} characters."
-            )
+            raise ValidationError(f"Password must not exceed {_MAX_PASSWORD_LENGTH} characters.")
 
     @staticmethod
     def _validate_whitespace(
@@ -255,9 +233,7 @@ class PasswordManager:
     ) -> None:
         """Reject leading or trailing password whitespace."""
         if password.strip() != password:
-            raise ValidationError(
-                "Password must not start or end with whitespace."
-            )
+            raise ValidationError("Password must not start or end with whitespace.")
 
     @staticmethod
     def _validate_control_characters(
@@ -265,9 +241,7 @@ class PasswordManager:
     ) -> None:
         """Reject null characters from passwords."""
         if "\x00" in password:
-            raise ValidationError(
-                "Password contains an invalid null character."
-            )
+            raise ValidationError("Password contains an invalid null character.")
 
     @staticmethod
     def _validate_character_categories(
@@ -275,14 +249,12 @@ class PasswordManager:
     ) -> None:
         """Require at least three supported character categories."""
         category_count = sum(
-            bool(pattern.search(password))
-            for pattern in _PASSWORD_CATEGORY_PATTERNS
+            bool(pattern.search(password)) for pattern in _PASSWORD_CATEGORY_PATTERNS
         )
 
         if category_count < 3:
             raise ValidationError(
-                "Password must use at least three of uppercase, lowercase, "
-                "number, and symbol."
+                "Password must use at least three of uppercase, lowercase, number, and symbol."
             )
 
     @staticmethod
@@ -296,19 +268,13 @@ class PasswordManager:
         normalized_password = password.casefold()
 
         if email:
-            local_part = (
-                email.split("@", 1)[0]
-                .strip()
-                .casefold()
-            )
+            local_part = email.split("@", 1)[0].strip().casefold()
 
             if (
                 len(local_part) >= _MIN_IDENTITY_FRAGMENT_LENGTH
                 and local_part in normalized_password
             ):
-                raise ValidationError(
-                    "Password must not contain the email username."
-                )
+                raise ValidationError("Password must not contain the email username.")
 
         if phone_number:
             normalized_phone = _NON_DIGIT_PATTERN.sub(
@@ -317,14 +283,10 @@ class PasswordManager:
             )
 
             if len(normalized_phone) >= _PHONE_COMPARISON_SUFFIX_LENGTH:
-                phone_suffix = normalized_phone[
-                    -_PHONE_COMPARISON_SUFFIX_LENGTH:
-                ]
+                phone_suffix = normalized_phone[-_PHONE_COMPARISON_SUFFIX_LENGTH:]
 
                 if phone_suffix in password:
-                    raise ValidationError(
-                        "Password must not contain the phone number."
-                    )
+                    raise ValidationError("Password must not contain the phone number.")
 
     def _verify_sync(
         self,

@@ -5,7 +5,7 @@ Verifies public profile projection and deterministic display-name fallbacks.
 
 Dependency flow:
 Identity/profile values
--> public_user_data()
+-> authenticated_user_data()
 -> transport-safe user dictionary
 -> projection assertions
 """
@@ -15,7 +15,7 @@ from __future__ import annotations
 import uuid
 from types import SimpleNamespace
 
-from app.auth.identity.presentation import public_user_data
+from app.auth.identity.presentation import authenticated_user_data
 from app.models.enums import UserStatus
 
 
@@ -35,7 +35,7 @@ def _user(**overrides: object) -> SimpleNamespace:
     return SimpleNamespace(**values)
 
 
-def test_public_user_data_projects_profile_and_preferred_display_name() -> None:
+def test_authenticated_user_data_projects_profile_and_display_name() -> None:
     profile = SimpleNamespace(
         first_name="Augusta",
         last_name="Lovelace",
@@ -43,7 +43,7 @@ def test_public_user_data_projects_profile_and_preferred_display_name() -> None:
         avatar_object_key="avatars/ada.png",
     )
 
-    result = public_user_data(_user(), profile=profile)
+    result = authenticated_user_data(_user(), profile=profile)
 
     assert result["display_name"] == "Ada"
     assert result["profile"] == {
@@ -54,7 +54,7 @@ def test_public_user_data_projects_profile_and_preferred_display_name() -> None:
     }
 
 
-def test_public_user_data_uses_combined_name_then_identity_fallbacks() -> None:
+def test_authenticated_user_data_uses_identity_fallbacks() -> None:
     profile = SimpleNamespace(
         first_name="Ada",
         last_name="Lovelace",
@@ -62,13 +62,22 @@ def test_public_user_data_uses_combined_name_then_identity_fallbacks() -> None:
         avatar_object_key=None,
     )
 
-    assert public_user_data(_user(), profile=profile)["display_name"] == "Ada Lovelace"
-    assert public_user_data(_user(), profile=None)["display_name"] == "ada@example.com"
-    assert public_user_data(_user(email=None), profile=None)["display_name"] == "+91******3210"
+    assert authenticated_user_data(_user(), profile=profile)["display_name"] == "Ada Lovelace"
+    assert authenticated_user_data(_user(), profile=None)["display_name"] == "ada@example.com"
     assert (
-        public_user_data(
+        authenticated_user_data(_user(email=None), profile=None)["display_name"] == "+91******3210"
+    )
+    assert (
+        authenticated_user_data(
             _user(email=None, phone_country_code=None, phone_number=None),
             profile=None,
         )["display_name"]
         == "11111111"
     )
+
+
+def test_authenticated_user_data_contains_no_authorization() -> None:
+    result = authenticated_user_data(_user(), profile=None)
+
+    assert "roles" not in result
+    assert "permissions" not in result

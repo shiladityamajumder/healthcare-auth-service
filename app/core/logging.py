@@ -37,9 +37,7 @@ from app.core.request_context import (
     get_trace_id,
 )
 
-_LOG_RECORD_BUILTINS = frozenset(
-    logging.LogRecord("", 0, "", 0, "", (), None).__dict__
-)
+_LOG_RECORD_BUILTINS = frozenset(logging.LogRecord("", 0, "", 0, "", (), None).__dict__)
 _SENSITIVE_KEYS = frozenset(
     {
         "access_token",
@@ -73,17 +71,15 @@ _SENSITIVE_KEYS = frozenset(
         "refresh_token",
         "secret",
         "secret_hash",
+        "session_secret",
         "set_cookie",
         "token",
+        "verification_token",
     }
 )
-_AUTH_PATTERN = re.compile(
-    r"(?i)\b(?:authorization|bearer)\b\s*[:=]?\s*[^\s,;]+"
-)
+_AUTH_PATTERN = re.compile(r"(?i)\b(?:authorization|bearer)\b\s*[:=]?\s*[^\s,;]+")
 _URI_PASSWORD_PATTERN = re.compile(r"(://[^:/\s]+:)([^@/\s]+)(@)")
-_JWT_PATTERN = re.compile(
-    r"\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b"
-)
+_JWT_PATTERN = re.compile(r"\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b")
 
 _log_queue: Queue[logging.LogRecord] | None = None
 _listener: logging.handlers.QueueListener | None = None
@@ -182,9 +178,7 @@ class StructuredFormatter(logging.Formatter):
             payload[key] = sanitize_log_value(value, key=key)
 
         if record.exc_info:
-            payload["exception"] = _redact_text(
-                self.formatException(record.exc_info)
-            )
+            payload["exception"] = _redact_text(self.formatException(record.exc_info))
 
         if self._json_mode:
             return json.dumps(
@@ -234,9 +228,7 @@ def setup_logging(settings: AppSettings | None = None) -> None:
         root.setLevel(resolved.LOG_LEVEL.upper())
         root.handlers.clear()
 
-        json_mode = resolved.LOG_JSON or (
-            resolved.ENVIRONMENT == Environment.PRODUCTION
-        )
+        json_mode = resolved.LOG_JSON or (resolved.ENVIRONMENT == Environment.PRODUCTION)
         formatter = StructuredFormatter(
             json_mode=json_mode,
             timezone_name=resolved.TIMEZONE,

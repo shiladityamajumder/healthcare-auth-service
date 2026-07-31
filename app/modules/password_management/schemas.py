@@ -19,9 +19,9 @@ from datetime import datetime
 from pydantic import EmailStr, Field, model_validator
 
 from app.common.auth_contracts import (
+    AuthenticatedUserResponse,
     OtpChallengeResponse,
     TokenPairResponse,
-    UserResponse,
 )
 from app.common.schemas import StrictModel
 
@@ -83,6 +83,7 @@ class SetPasswordRequest(StrictModel):
 
 
 __all__ = [
+    "AuthenticatedUserResponse",
     "ChangePasswordRequest",
     "ForgotPasswordRequest",
     "IdentityRequest",
@@ -91,6 +92,5 @@ __all__ = [
     "ResetPasswordWithTokenRequest",
     "SetPasswordRequest",
     "TokenPairResponse",
-    "UserResponse",
     "VerifyResetOtpRequest",
 ]

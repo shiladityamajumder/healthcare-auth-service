@@ -99,13 +99,9 @@ def test_forwarded_for_is_used_only_for_trusted_proxy() -> None:
 
 
 @pytest.mark.asyncio
-async def test_missing_authentication_cannot_be_replaced_by_identity_headers() -> None:
-    """Reject custom identity/authorization assertions without a bearer token."""
-    context = AuthRequestContext(
-        asserted_user_id=uuid.uuid4(),
-        asserted_session_id=uuid.uuid4(),
-        device_id="attacker-device",
-    )
+async def test_missing_authentication_cannot_be_replaced_by_custom_headers() -> None:
+    """Reject a protected request without a bearer token."""
+    context = AuthRequestContext()
 
     with pytest.raises(AuthenticationError):
         await get_current_user_principal(

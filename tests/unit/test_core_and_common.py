@@ -123,10 +123,7 @@ def test_text_search_escapes_sql_wildcards() -> None:
         dialect=postgresql.dialect(),
     )
 
-    assert any(
-        value == r"%50\%\_off%"
-        for value in compiled.params.values()
-    )
+    assert any(value == r"%50\%\_off%" for value in compiled.params.values())
 
 
 def test_sorting_rejects_non_allow_listed_field() -> None:

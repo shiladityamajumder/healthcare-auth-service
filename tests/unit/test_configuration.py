@@ -168,35 +168,6 @@ def test_self_registration_role_allowlist_rejects_invalid_codes() -> None:
         )
 
 
-def test_default_registration_role_cannot_be_optional() -> None:
-    with pytest.raises(
-        ValidationError,
-        match="DEFAULT_ROLE_REQUIRED must remain true",
-    ):
-        AppSettings(
-            **{
-                **BASE,
-                "DEFAULT_ROLE_REQUIRED": False,
-            }
-        )
-
-
-def test_access_token_version_2_requires_persisted_session_checks() -> None:
-    """Prevent v2 issuance where database-backed authorization cannot run."""
-    with pytest.raises(
-        ValidationError,
-        match="ACCESS_TOKEN_VERSION=2 requires",
-    ):
-        AppSettings(
-            **{
-                **BASE,
-                "ACCESS_TOKEN_VERSION": 2,
-                "AUTH_CHECK_SESSION_ON_EACH_REQUEST": False,
-                "AUTH_REFRESH_AUTHZ_ON_EACH_REQUEST": False,
-            }
-        )
-
-
 def test_production_rejects_example_placeholder_secrets() -> None:
     """Prevent copied example credentials from satisfying production policy."""
     with pytest.raises(
@@ -209,17 +180,11 @@ def test_production_rejects_example_placeholder_secrets() -> None:
                 **_rsa_settings(),
                 "ENVIRONMENT": Environment.PRODUCTION,
                 "POSTGRES_URL": (
-                    "postgresql+asyncpg://identity:"
-                    "database-credential-7f2b@database/identity"
+                    "postgresql+asyncpg://identity:database-credential-7f2b@database/identity"
                 ),
-                "AUTH_PEPPER": (
-                    "replace-this-with-at-least-32-random-characters-0000000000000000"
-                ),
+                "AUTH_PEPPER": ("replace-this-with-at-least-32-random-characters-0000000000000000"),
                 "RATE_LIMIT_BACKEND": "redis",
-                "REDIS_URL": (
-                    "rediss://identity:"
-                    "redis-credential-8c3d@redis.example.com:6379/0"
-                ),
+                "REDIS_URL": ("rediss://identity:redis-credential-8c3d@redis.example.com:6379/0"),
                 "DOCS_ENABLED": False,
                 "LOG_JSON": True,
                 "SECURE_HEADERS_ENABLED": True,

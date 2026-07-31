@@ -38,17 +38,11 @@ from email_validator import (
 
 from app.common.exceptions import ValidationError
 
-_COUNTRY_CODE_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"^\+[1-9][0-9]{0,2}$"
-)
+_COUNTRY_CODE_PATTERN: Final[re.Pattern[str]] = re.compile(r"^\+[1-9][0-9]{0,2}$")
 
-_NATIONAL_PHONE_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"^[0-9]{6,14}$"
-)
+_NATIONAL_PHONE_PATTERN: Final[re.Pattern[str]] = re.compile(r"^[0-9]{6,14}$")
 
-_PHONE_FORMATTING_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"[\s().-]+"
-)
+_PHONE_FORMATTING_PATTERN: Final[re.Pattern[str]] = re.compile(r"[\s().-]+")
 
 _E164_MIN_DIGITS: Final[int] = 7
 _E164_MAX_DIGITS: Final[int] = 15
@@ -78,9 +72,7 @@ def normalize_email(
     normalized_input = value.strip()
 
     if not normalized_input:
-        raise ValidationError(
-            "The email address is required."
-        )
+        raise ValidationError("The email address is required.")
 
     try:
         validation = validate_email(
@@ -88,9 +80,7 @@ def normalize_email(
             check_deliverability=False,
         )
     except EmailNotValidError as exc:
-        raise ValidationError(
-            "The email address is invalid."
-        ) from exc
+        raise ValidationError("The email address is invalid.") from exc
 
     return validation.normalized.casefold()
 
@@ -114,17 +104,13 @@ def normalize_country_code(
     normalized = value.strip().replace(" ", "")
 
     if not normalized:
-        raise ValidationError(
-            "The phone country code is required."
-        )
+        raise ValidationError("The phone country code is required.")
 
     if not normalized.startswith("+"):
         normalized = f"+{normalized}"
 
     if not _COUNTRY_CODE_PATTERN.fullmatch(normalized):
-        raise ValidationError(
-            "The phone country code is invalid."
-        )
+        raise ValidationError("The phone country code is invalid.")
 
     return normalized
 
@@ -151,14 +137,10 @@ def normalize_phone_number(
     stripped_value = value.strip()
 
     if not stripped_value:
-        raise ValidationError(
-            "The phone number is required."
-        )
+        raise ValidationError("The phone number is required.")
 
     if stripped_value.startswith("+"):
-        raise ValidationError(
-            "Provide the country code separately from the phone number."
-        )
+        raise ValidationError("Provide the country code separately from the phone number.")
 
     normalized = _PHONE_FORMATTING_PATTERN.sub(
         "",
@@ -166,9 +148,7 @@ def normalize_phone_number(
     )
 
     if not _NATIONAL_PHONE_PATTERN.fullmatch(normalized):
-        raise ValidationError(
-            "The phone number is invalid."
-        )
+        raise ValidationError("The phone number is invalid.")
 
     return normalized
 
@@ -193,22 +173,13 @@ def normalize_phone(
         ValidationError: If either component or the combined destination is
             invalid.
     """
-    normalized_country_code = normalize_country_code(
-        country_code
-    )
-    normalized_phone_number = normalize_phone_number(
-        phone_number
-    )
+    normalized_country_code = normalize_country_code(country_code)
+    normalized_phone_number = normalize_phone_number(phone_number)
 
-    total_digits = (
-        len(normalized_country_code) - 1
-        + len(normalized_phone_number)
-    )
+    total_digits = len(normalized_country_code) - 1 + len(normalized_phone_number)
 
     if not _E164_MIN_DIGITS <= total_digits <= _E164_MAX_DIGITS:
-        raise ValidationError(
-            "The complete phone number is invalid."
-        )
+        raise ValidationError("The complete phone number is invalid.")
 
     return (
         normalized_country_code,
@@ -237,10 +208,7 @@ def phone_destination(
         phone_number,
     )
 
-    return (
-        f"{normalized_country_code}"
-        f"{normalized_phone_number}"
-    )
+    return f"{normalized_country_code}{normalized_phone_number}"
 
 
 __all__ = [

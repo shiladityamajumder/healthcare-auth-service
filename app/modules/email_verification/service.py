@@ -18,13 +18,15 @@ from __future__ import annotations
 from app.auth.authorization.model_adapters import account_access_state
 from app.auth.authorization.policies import AccountAccessPolicy
 from app.auth.identity.normalization import normalize_email
-from app.auth.identity.presentation import public_user_data
 from app.auth.request_context.context import AuthRequestContext
 from app.auth.security.hashing import SecureHashing
 from app.auth.security.tokens import TokenManager
 from app.auth.workflows.notifications import AuthNotificationGateway, NotificationDispatcher
 from app.auth.workflows.otp import IssuedOTP, OTPService
-from app.auth.workflows.session_tokens import SessionTokenIssuer
+from app.auth.workflows.session_tokens import (
+    SessionTokenIssuer,
+    build_token_pair_response,
+)
 from app.common.exceptions import AuthenticationError
 from app.core.config import AppSettings
 from app.db.uow import SQLAlchemyUnitOfWork
@@ -36,7 +38,6 @@ from app.modules.email_verification.schemas import (
     EmailVerificationRequest,
     OtpChallengeResponse,
     TokenPairResponse,
-    UserResponse,
 )
 from app.utils.datetime_utils import utc_now
 
@@ -157,32 +158,15 @@ class EmailVerificationService:
         repository: EmailVerificationRepository,
         context: AuthRequestContext,
     ) -> TokenPairResponse:
-        """Load current claims and stage the verified user's first session."""
-        claims = await repository.authorization_claims(user_id=user.id, now=utc_now())
+        """Stage the verified user's first session."""
         profile = await repository.get_active_profile(user.id)
-        user_dto = UserResponse.model_validate(
-            public_user_data(
-                user,
-                profile=profile,
-                roles=claims.roles,
-                permissions=claims.permissions,
-            )
-        )
         issued = self._issuer.issue(
             user_id=user.id,
-            roles=claims.roles,
-            permissions=claims.permissions,
             session_writer=repository,
             request_context=context,
             auth_methods=["email_verification"],
         )
-        return TokenPairResponse(
-            access_token=issued.access_token,
-            refresh_token=issued.refresh_token,
-            access_expires_at=issued.access_expires_at,
-            refresh_expires_at=issued.refresh_expires_at,
-            user=user_dto,
-        )
+        return build_token_pair_response(issued=issued, user=user, profile=profile)
 
 
 __all__ = ["EmailVerificationService"]

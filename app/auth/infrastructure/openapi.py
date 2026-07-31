@@ -47,43 +47,27 @@ def _error_response(
     }
 
 
-_AUTH_ERROR_RESPONSE_DEFINITIONS: Final[
-    dict[int, OpenAPIResponseSpec]
-] = {
-    400: _error_response(
-        "The request is malformed or contains unsupported input."
-    ),
+_AUTH_ERROR_RESPONSE_DEFINITIONS: Final[dict[int, OpenAPIResponseSpec]] = {
+    400: _error_response("The request is malformed or contains unsupported input."),
     401: _error_response(
         "Authentication credentials, token, OTP, session, or recovery proof "
         "is missing, expired, or invalid."
     ),
     403: _error_response(
-        "The authenticated principal does not have permission to perform "
-        "the requested operation."
+        "The authenticated principal does not have permission to perform the requested operation."
     ),
-    404: _error_response(
-        "The requested authentication or identity resource was not found."
-    ),
-    409: _error_response(
-        "The requested operation conflicts with the current persisted state."
-    ),
-    422: _error_response(
-        "The request failed field validation or an authentication policy."
-    ),
+    404: _error_response("The requested authentication or identity resource was not found."),
+    409: _error_response("The requested operation conflicts with the current persisted state."),
+    422: _error_response("The request failed field validation or an authentication policy."),
     429: _error_response(
-        "A rate limit, OTP cooldown, resend limit, or verification-attempt "
-        "limit was exceeded."
+        "A rate limit, OTP cooldown, resend limit, or verification-attempt limit was exceeded."
     ),
     500: _error_response(
-        "An unexpected internal error occurred. Implementation details are "
-        "not exposed."
+        "An unexpected internal error occurred. Implementation details are not exposed."
     ),
-    503: _error_response(
-        "A required database or infrastructure dependency is unavailable."
-    ),
+    503: _error_response("A required database or infrastructure dependency is unavailable."),
     504: _error_response(
-        "A bounded database or infrastructure operation exceeded its "
-        "configured deadline."
+        "A bounded database or infrastructure operation exceeded its configured deadline."
     ),
 }
 
@@ -122,20 +106,12 @@ def auth_error_responses(
     ]
 
     if unsupported_codes:
-        formatted_codes = ", ".join(
-            str(status_code)
-            for status_code in sorted(unsupported_codes)
-        )
+        formatted_codes = ", ".join(str(status_code) for status_code in sorted(unsupported_codes))
 
-        raise ValueError(
-            "Unsupported authentication OpenAPI response status: "
-            f"{formatted_codes}"
-        )
+        raise ValueError(f"Unsupported authentication OpenAPI response status: {formatted_codes}")
 
     return {
-        status_code: dict(
-            _AUTH_ERROR_RESPONSE_DEFINITIONS[status_code]
-        )
+        status_code: dict(_AUTH_ERROR_RESPONSE_DEFINITIONS[status_code])
         for status_code in selected_codes
     }
 
@@ -143,9 +119,7 @@ def auth_error_responses(
 # Backward-compatible complete response mapping. Existing route imports can
 # continue using this constant during migration, but new routes should select
 # their applicable responses through ``auth_error_responses``.
-AUTH_ERROR_RESPONSES: Final[
-    dict[int, OpenAPIResponseSpec]
-] = auth_error_responses()
+AUTH_ERROR_RESPONSES: Final[dict[int, OpenAPIResponseSpec]] = auth_error_responses()
 
 
 __all__ = [

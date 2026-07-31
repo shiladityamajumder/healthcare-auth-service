@@ -159,67 +159,37 @@ class AccountAccessPolicy:
         """
         now = utc_now()
 
-        if (
-            user.account_closed_at is not None
-            or user.status == UserStatus.CLOSED
-        ):
-            raise AccountDisabledError(
-                "The account has been closed."
-            )
+        if user.account_closed_at is not None or user.status == UserStatus.CLOSED:
+            raise AccountDisabledError("The account has been closed.")
 
         if user.status == UserStatus.SUSPENDED:
-            raise AccountDisabledError(
-                "The account has been suspended."
-            )
+            raise AccountDisabledError("The account has been suspended.")
 
-        if (
-            user.status == UserStatus.LOCKED
-            or cls._has_active_temporary_lock(
-                user,
-                now=now,
-            )
+        if user.status == UserStatus.LOCKED or cls._has_active_temporary_lock(
+            user,
+            now=now,
         ):
             raise AccountLockedError()
 
-        channel = cls._normalize_channel(
-            verified_channel
-        )
+        channel = cls._normalize_channel(verified_channel)
 
-        if (
-            channel == OTPChannel.EMAIL
-            and (
-                user.email is None
-                or user.email_verified_at is None
-            )
-        ):
-            raise AccountDisabledError(
-                "Email verification is required before login."
-            )
+        if channel == OTPChannel.EMAIL and (user.email is None or user.email_verified_at is None):
+            raise AccountDisabledError("Email verification is required before login.")
 
-        if (
-            channel == OTPChannel.SMS
-            and (
-                user.phone_number is None
-                or user.phone_verified_at is None
-            )
+        if channel == OTPChannel.SMS and (
+            user.phone_number is None or user.phone_verified_at is None
         ):
-            raise AccountDisabledError(
-                "Phone verification is required before login."
-            )
+            raise AccountDisabledError("Phone verification is required before login.")
 
         allowed_statuses = {
             UserStatus.ACTIVE,
         }
 
         if allow_pending:
-            allowed_statuses.add(
-                UserStatus.PENDING
-            )
+            allowed_statuses.add(UserStatus.PENDING)
 
         if user.status not in allowed_statuses:
-            raise AccountDisabledError(
-                "The account is not permitted to log in."
-            )
+            raise AccountDisabledError("The account is not permitted to log in.")
 
     @staticmethod
     def is_active(
@@ -258,10 +228,7 @@ class AccountAccessPolicy:
         now: datetime,
     ) -> bool:
         """Return whether an account has a non-expired timed lock."""
-        return (
-            user.locked_until is not None
-            and user.locked_until > now
-        )
+        return user.locked_until is not None and user.locked_until > now
 
     @staticmethod
     def _normalize_channel(
@@ -292,9 +259,7 @@ class AccountAccessPolicy:
         try:
             return OTPChannel(normalized)
         except ValueError as exc:
-            raise ValueError(
-                f"Unsupported OTP channel: {value}"
-            ) from exc
+            raise ValueError(f"Unsupported OTP channel: {value}") from exc
 
 
 class PasswordHistoryPolicy:
@@ -341,11 +306,9 @@ class PasswordHistoryPolicy:
         historical_hashes: list[str] = []
 
         if history_limit > 0:
-            historical_hashes = (
-                await users.recent_password_hashes(
-                    user_id=user.id,
-                    limit=history_limit,
-                )
+            historical_hashes = await users.recent_password_hashes(
+                user_id=user.id,
+                limit=history_limit,
             )
 
         candidate_hashes = self._build_candidate_hashes(
@@ -360,9 +323,7 @@ class PasswordHistoryPolicy:
             )
 
             if reused:
-                raise ValidationError(
-                    "The new password was used recently."
-                )
+                raise ValidationError("The new password was used recently.")
 
     @staticmethod
     def _build_candidate_hashes(
@@ -374,20 +335,13 @@ class PasswordHistoryPolicy:
         candidates: list[str] = []
 
         if current_hash and current_hash.strip():
-            candidates.append(
-                current_hash.strip()
-            )
+            candidates.append(current_hash.strip())
 
         for password_hash in historical_hashes:
             normalized_hash = password_hash.strip()
 
-            if (
-                normalized_hash
-                and normalized_hash not in candidates
-            ):
-                candidates.append(
-                    normalized_hash
-                )
+            if normalized_hash and normalized_hash not in candidates:
+                candidates.append(normalized_hash)
 
         return tuple(candidates)
 

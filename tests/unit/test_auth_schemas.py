@@ -142,8 +142,7 @@ def test_registration_accepts_optional_universal_profile() -> None:
 )
 def test_public_registration_rejects_client_controlled_roles(
     role_code: str,
-    schema: type[EmailPasswordRegistrationRequest]
-    | type[PhoneOtpRegistrationVerifyRequest],
+    schema: type[EmailPasswordRegistrationRequest] | type[PhoneOtpRegistrationVerifyRequest],
     payload: dict[str, object],
 ) -> None:
     """Reject privilege-related role input on both public registration flows."""

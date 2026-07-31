@@ -15,7 +15,10 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from app.common.auth_contracts import CurrentAuthorizationResponse, UserResponse
+from app.common.auth_contracts import (
+    AuthenticatedUserResponse,
+    CurrentAuthorizationResponse,
+)
 from app.common.schemas import StrictModel
 
 
@@ -30,22 +33,8 @@ class UpdateCurrentUserRequest(StrictModel):
     avatar_object_key: str | None = Field(default=None, min_length=1, max_length=512)
 
 
-class UserRolesResponse(StrictModel):
-    """Effective global role codes."""
-
-    roles: list[str]
-
-
-class UserPermissionsResponse(StrictModel):
-    """Effective global permission codes."""
-
-    permissions: list[str]
-
-
 __all__ = [
+    "AuthenticatedUserResponse",
     "CurrentAuthorizationResponse",
     "UpdateCurrentUserRequest",
-    "UserPermissionsResponse",
-    "UserResponse",
-    "UserRolesResponse",
 ]

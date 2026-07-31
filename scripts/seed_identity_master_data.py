@@ -1249,16 +1249,20 @@ DOCTOR_PERMISSIONS = ORGANIZATION_READ | _codes(
     REPORTS_CLINICAL_READ,
 )
 
-PHARMACIST_PERMISSIONS = ORGANIZATION_READ | CATALOG_READ | _codes(
-    COMMERCE_ORDERS_READ,
-    CLINICAL_PATIENTS_READ,
-    CLINICAL_PRESCRIPTIONS_READ,
-    CLINICAL_PRESCRIPTIONS_VERIFY,
-    CLINICAL_PRESCRIPTIONS_REJECT,
-    CLINICAL_DISPENSING_READ,
-    CLINICAL_DISPENSING_MANAGE,
-    WAREHOUSE_INVENTORY_READ,
-    FULFILLMENT_ORDERS_READ,
+PHARMACIST_PERMISSIONS = (
+    ORGANIZATION_READ
+    | CATALOG_READ
+    | _codes(
+        COMMERCE_ORDERS_READ,
+        CLINICAL_PATIENTS_READ,
+        CLINICAL_PRESCRIPTIONS_READ,
+        CLINICAL_PRESCRIPTIONS_VERIFY,
+        CLINICAL_PRESCRIPTIONS_REJECT,
+        CLINICAL_DISPENSING_READ,
+        CLINICAL_DISPENSING_MANAGE,
+        WAREHOUSE_INVENTORY_READ,
+        FULFILLMENT_ORDERS_READ,
+    )
 )
 PHARMACY_MANAGER_PERMISSIONS = PHARMACIST_PERMISSIONS | _codes(
     CLINICAL_DISPENSING_APPROVE,
@@ -1291,22 +1295,34 @@ LAB_MANAGER_PERMISSIONS = PATHOLOGIST_PERMISSIONS | _codes(
     REPORTS_OPERATIONS_READ,
 )
 
-WAREHOUSE_RECEIVER_PERMISSIONS = ORGANIZATION_READ | CATALOG_READ | _codes(
-    WAREHOUSE_INVENTORY_READ,
-    WAREHOUSE_RECEIVING_READ,
-    WAREHOUSE_RECEIVING_MANAGE,
-    WAREHOUSE_LAYOUT_READ,
+WAREHOUSE_RECEIVER_PERMISSIONS = (
+    ORGANIZATION_READ
+    | CATALOG_READ
+    | _codes(
+        WAREHOUSE_INVENTORY_READ,
+        WAREHOUSE_RECEIVING_READ,
+        WAREHOUSE_RECEIVING_MANAGE,
+        WAREHOUSE_LAYOUT_READ,
+    )
 )
-WAREHOUSE_PICKER_PERMISSIONS = ORGANIZATION_READ | CATALOG_READ | _codes(
-    WAREHOUSE_INVENTORY_READ,
-    WAREHOUSE_LAYOUT_READ,
-    FULFILLMENT_ORDERS_READ,
-    FULFILLMENT_PICK,
+WAREHOUSE_PICKER_PERMISSIONS = (
+    ORGANIZATION_READ
+    | CATALOG_READ
+    | _codes(
+        WAREHOUSE_INVENTORY_READ,
+        WAREHOUSE_LAYOUT_READ,
+        FULFILLMENT_ORDERS_READ,
+        FULFILLMENT_PICK,
+    )
 )
-WAREHOUSE_PACKER_PERMISSIONS = ORGANIZATION_READ | CATALOG_READ | _codes(
-    FULFILLMENT_ORDERS_READ,
-    FULFILLMENT_PACK,
-    LOGISTICS_SHIPMENTS_READ,
+WAREHOUSE_PACKER_PERMISSIONS = (
+    ORGANIZATION_READ
+    | CATALOG_READ
+    | _codes(
+        FULFILLMENT_ORDERS_READ,
+        FULFILLMENT_PACK,
+        LOGISTICS_SHIPMENTS_READ,
+    )
 )
 WAREHOUSE_OPERATOR_PERMISSIONS = (
     WAREHOUSE_RECEIVER_PERMISSIONS
@@ -1342,14 +1358,19 @@ LOGISTICS_MANAGER_PERMISSIONS = DELIVERY_DISPATCHER_PERMISSIONS | _codes(
     FULFILLMENT_ORDERS_MANAGE,
 )
 
-PROCUREMENT_OFFICER_PERMISSIONS = ORGANIZATION_READ | CATALOG_READ | PROCUREMENT_READ | _codes(
-    PROCUREMENT_SUPPLIERS_MANAGE,
-    PROCUREMENT_REQUISITIONS_MANAGE,
-    PROCUREMENT_ORDERS_MANAGE,
-    PROCUREMENT_RETURNS_MANAGE,
-    PROCUREMENT_INVOICES_MANAGE,
-    WAREHOUSE_INVENTORY_READ,
-    WAREHOUSE_RECEIVING_READ,
+PROCUREMENT_OFFICER_PERMISSIONS = (
+    ORGANIZATION_READ
+    | CATALOG_READ
+    | PROCUREMENT_READ
+    | _codes(
+        PROCUREMENT_SUPPLIERS_MANAGE,
+        PROCUREMENT_REQUISITIONS_MANAGE,
+        PROCUREMENT_ORDERS_MANAGE,
+        PROCUREMENT_RETURNS_MANAGE,
+        PROCUREMENT_INVOICES_MANAGE,
+        WAREHOUSE_INVENTORY_READ,
+        WAREHOUSE_RECEIVING_READ,
+    )
 )
 PROCUREMENT_MANAGER_PERMISSIONS = PROCUREMENT_OFFICER_PERMISSIONS | _codes(
     REPORTS_OPERATIONS_READ,
@@ -1358,16 +1379,20 @@ PROCUREMENT_MANAGER_PERMISSIONS = PROCUREMENT_OFFICER_PERMISSIONS | _codes(
     FINANCE_RECONCILIATION_READ,
 )
 
-SELLER_ADMIN_PERMISSIONS = ORGANIZATION_READ | CATALOG_READ | _codes(
-    MARKETPLACE_SELLERS_READ,
-    MARKETPLACE_LISTINGS_READ,
-    MARKETPLACE_LISTINGS_MANAGE,
-    MARKETPLACE_COMMISSIONS_READ,
-    COMMERCE_ORDERS_READ,
-    FULFILLMENT_ORDERS_READ,
-    LOGISTICS_SHIPMENTS_READ,
-    FINANCE_RECONCILIATION_READ,
-    REPORTS_OPERATIONS_READ,
+SELLER_ADMIN_PERMISSIONS = (
+    ORGANIZATION_READ
+    | CATALOG_READ
+    | _codes(
+        MARKETPLACE_SELLERS_READ,
+        MARKETPLACE_LISTINGS_READ,
+        MARKETPLACE_LISTINGS_MANAGE,
+        MARKETPLACE_COMMISSIONS_READ,
+        COMMERCE_ORDERS_READ,
+        FULFILLMENT_ORDERS_READ,
+        LOGISTICS_SHIPMENTS_READ,
+        FINANCE_RECONCILIATION_READ,
+        REPORTS_OPERATIONS_READ,
+    )
 )
 MARKETPLACE_MANAGER_PERMISSIONS = SELLER_ADMIN_PERMISSIONS | _codes(
     MARKETPLACE_SELLERS_MANAGE,
@@ -1451,32 +1476,36 @@ INSURANCE_MANAGER_PERMISSIONS = INSURANCE_COORDINATOR_PERMISSIONS | _codes(
     COMPLIANCE_AUDIT_READ,
 )
 
-COMPLIANCE_AUDITOR_PERMISSIONS = IDENTITY_READ | ORGANIZATION_READ | _codes(
-    CATALOG_REGULATORY_READ,
-    COMMERCE_ORDERS_READ,
-    COMMERCE_RETURNS_READ,
-    PAYMENTS_READ,
-    FINANCE_INVOICES_READ,
-    FINANCE_RECONCILIATION_READ,
-    CLINICAL_PATIENTS_READ,
-    CLINICAL_PRESCRIPTIONS_READ,
-    CLINICAL_CONSULTATIONS_READ,
-    CLINICAL_DISPENSING_READ,
-    DIAGNOSTICS_ORDERS_READ,
-    DIAGNOSTICS_SAMPLES_READ,
-    DIAGNOSTICS_RESULTS_READ,
-    PROCUREMENT_SUPPLIERS_READ,
-    MARKETPLACE_SELLERS_READ,
-    INSURANCE_CLAIMS_READ,
-    COMPLIANCE_AUDIT_READ,
-    COMPLIANCE_CONSENTS_READ,
-    COMPLIANCE_PRIVACY_READ,
-    COMPLIANCE_ADVERSE_EVENTS_READ,
-    RISK_SIGNALS_READ,
-    RISK_RULES_READ,
-    REPORTS_OPERATIONS_READ,
-    REPORTS_FINANCE_READ,
-    REPORTS_CLINICAL_READ,
+COMPLIANCE_AUDITOR_PERMISSIONS = (
+    IDENTITY_READ
+    | ORGANIZATION_READ
+    | _codes(
+        CATALOG_REGULATORY_READ,
+        COMMERCE_ORDERS_READ,
+        COMMERCE_RETURNS_READ,
+        PAYMENTS_READ,
+        FINANCE_INVOICES_READ,
+        FINANCE_RECONCILIATION_READ,
+        CLINICAL_PATIENTS_READ,
+        CLINICAL_PRESCRIPTIONS_READ,
+        CLINICAL_CONSULTATIONS_READ,
+        CLINICAL_DISPENSING_READ,
+        DIAGNOSTICS_ORDERS_READ,
+        DIAGNOSTICS_SAMPLES_READ,
+        DIAGNOSTICS_RESULTS_READ,
+        PROCUREMENT_SUPPLIERS_READ,
+        MARKETPLACE_SELLERS_READ,
+        INSURANCE_CLAIMS_READ,
+        COMPLIANCE_AUDIT_READ,
+        COMPLIANCE_CONSENTS_READ,
+        COMPLIANCE_PRIVACY_READ,
+        COMPLIANCE_ADVERSE_EVENTS_READ,
+        RISK_SIGNALS_READ,
+        RISK_RULES_READ,
+        REPORTS_OPERATIONS_READ,
+        REPORTS_FINANCE_READ,
+        REPORTS_CLINICAL_READ,
+    )
 )
 COMPLIANCE_OFFICER_PERMISSIONS = COMPLIANCE_AUDITOR_PERMISSIONS | _codes(
     ORGANIZATION_LICENSES_MANAGE,
@@ -1503,31 +1532,40 @@ RISK_MANAGER_PERMISSIONS = RISK_ANALYST_PERMISSIONS | _codes(
     REPORTS_FINANCE_READ,
 )
 
-ORGANIZATION_ADMIN_PERMISSIONS = IDENTITY_READ | ORGANIZATION_READ | _codes(
-    IDENTITY_PROFILES_MANAGE,
-    IDENTITY_USER_ROLES_MANAGE,
-    ORGANIZATIONS_MANAGE,
-    ORGANIZATION_LOCATIONS_MANAGE,
-    ORGANIZATION_DEPARTMENTS_MANAGE,
-    ORGANIZATION_MEMBERSHIPS_MANAGE,
-    ORGANIZATION_LICENSES_MANAGE,
+ORGANIZATION_ADMIN_PERMISSIONS = (
+    IDENTITY_READ
+    | ORGANIZATION_READ
+    | _codes(
+        IDENTITY_PROFILES_MANAGE,
+        IDENTITY_USER_ROLES_MANAGE,
+        ORGANIZATIONS_MANAGE,
+        ORGANIZATION_LOCATIONS_MANAGE,
+        ORGANIZATION_DEPARTMENTS_MANAGE,
+        ORGANIZATION_MEMBERSHIPS_MANAGE,
+        ORGANIZATION_LICENSES_MANAGE,
+    )
 )
 IDENTITY_ADMIN_PERMISSIONS = IDENTITY_ADMIN | _codes(COMPLIANCE_AUDIT_READ)
 
-OPERATIONS_MANAGER_PERMISSIONS = ORGANIZATION_READ | CATALOG_READ | WAREHOUSE_READ | _codes(
-    COMMERCE_ORDERS_READ,
-    COMMERCE_ORDERS_MANAGE,
-    COMMERCE_ORDERS_CANCEL,
-    COMMERCE_RETURNS_READ,
-    COMMERCE_RETURNS_MANAGE,
-    FULFILLMENT_ORDERS_READ,
-    FULFILLMENT_ORDERS_MANAGE,
-    LOGISTICS_SHIPMENTS_READ,
-    LOGISTICS_SHIPMENTS_MANAGE,
-    LOGISTICS_ASSIGN,
-    SUPPORT_TICKETS_READ,
-    SUPPORT_TICKETS_MANAGE,
-    REPORTS_OPERATIONS_READ,
+OPERATIONS_MANAGER_PERMISSIONS = (
+    ORGANIZATION_READ
+    | CATALOG_READ
+    | WAREHOUSE_READ
+    | _codes(
+        COMMERCE_ORDERS_READ,
+        COMMERCE_ORDERS_MANAGE,
+        COMMERCE_ORDERS_CANCEL,
+        COMMERCE_RETURNS_READ,
+        COMMERCE_RETURNS_MANAGE,
+        FULFILLMENT_ORDERS_READ,
+        FULFILLMENT_ORDERS_MANAGE,
+        LOGISTICS_SHIPMENTS_READ,
+        LOGISTICS_SHIPMENTS_MANAGE,
+        LOGISTICS_ASSIGN,
+        SUPPORT_TICKETS_READ,
+        SUPPORT_TICKETS_MANAGE,
+        REPORTS_OPERATIONS_READ,
+    )
 )
 
 PLATFORM_ADMIN_PERMISSIONS = (
@@ -1588,8 +1626,7 @@ ROLE_SEEDS: tuple[RoleSeed, ...] = (
         code="doctor",
         name="Doctor",
         description=(
-            "Practitioner managing assigned appointments, consultations, "
-            "and prescriptions."
+            "Practitioner managing assigned appointments, consultations, and prescriptions."
         ),
         permission_codes=DOCTOR_PERMISSIONS,
     ),
@@ -1609,8 +1646,7 @@ ROLE_SEEDS: tuple[RoleSeed, ...] = (
         code="lab_technician",
         name="Lab Technician",
         description=(
-            "Diagnostic technician collecting and processing samples and "
-            "recording results."
+            "Diagnostic technician collecting and processing samples and recording results."
         ),
         permission_codes=LAB_TECHNICIAN_PERMISSIONS,
     ),
@@ -1678,8 +1714,7 @@ ROLE_SEEDS: tuple[RoleSeed, ...] = (
         code="procurement_officer",
         name="Procurement Officer",
         description=(
-            "Procurement staff managing suppliers, requisitions, orders, "
-            "returns, and invoices."
+            "Procurement staff managing suppliers, requisitions, orders, returns, and invoices."
         ),
         permission_codes=PROCUREMENT_OFFICER_PERMISSIONS,
     ),
@@ -1693,8 +1728,7 @@ ROLE_SEEDS: tuple[RoleSeed, ...] = (
         code="seller_admin",
         name="Seller Administrator",
         description=(
-            "Seller-side administrator maintaining own listings and "
-            "operational visibility."
+            "Seller-side administrator maintaining own listings and operational visibility."
         ),
         permission_codes=SELLER_ADMIN_PERMISSIONS,
     ),
@@ -1708,8 +1742,7 @@ ROLE_SEEDS: tuple[RoleSeed, ...] = (
         code="catalog_manager",
         name="Catalog Manager",
         description=(
-            "Merchandising staff maintaining products, categories, content, "
-            "and search metadata."
+            "Merchandising staff maintaining products, categories, content, and search metadata."
         ),
         permission_codes=CATALOG_MANAGER_PERMISSIONS,
     ),
@@ -1732,8 +1765,7 @@ ROLE_SEEDS: tuple[RoleSeed, ...] = (
         code="support_manager",
         name="Support Manager",
         description=(
-            "Support supervisor handling escalations, returns, cancellations, "
-            "and eligible refunds."
+            "Support supervisor handling escalations, returns, cancellations, and eligible refunds."
         ),
         permission_codes=SUPPORT_MANAGER_PERMISSIONS,
     ),
@@ -1741,8 +1773,7 @@ ROLE_SEEDS: tuple[RoleSeed, ...] = (
         code="finance_analyst",
         name="Finance Analyst",
         description=(
-            "Read-focused finance staff reviewing payments, invoices, "
-            "settlements, and ledgers."
+            "Read-focused finance staff reviewing payments, invoices, settlements, and ledgers."
         ),
         permission_codes=FINANCE_ANALYST_PERMISSIONS,
     ),
@@ -1777,8 +1808,7 @@ ROLE_SEEDS: tuple[RoleSeed, ...] = (
         code="compliance_officer",
         name="Compliance Officer",
         description=(
-            "Compliance staff managing consent, privacy, regulatory, and "
-            "adverse-event workflows."
+            "Compliance staff managing consent, privacy, regulatory, and adverse-event workflows."
         ),
         permission_codes=COMPLIANCE_OFFICER_PERMISSIONS,
     ),
@@ -1807,8 +1837,7 @@ ROLE_SEEDS: tuple[RoleSeed, ...] = (
         code="operations_manager",
         name="Operations Manager",
         description=(
-            "Operations staff coordinating orders, fulfillment, warehouse, "
-            "support, and delivery."
+            "Operations staff coordinating orders, fulfillment, warehouse, support, and delivery."
         ),
         permission_codes=OPERATIONS_MANAGER_PERMISSIONS,
     ),
@@ -1851,21 +1880,13 @@ def validate_seed_manifest() -> None:
 
     for permission_seed in PERMISSION_SEEDS:
         if not _RESOURCE_PATTERN.fullmatch(permission_seed.resource):
-            raise ValueError(
-                f"Invalid permission resource: {permission_seed.resource}"
-            )
+            raise ValueError(f"Invalid permission resource: {permission_seed.resource}")
         if not _ACTION_PATTERN.fullmatch(permission_seed.action):
-            raise ValueError(
-                f"Invalid permission action: {permission_seed.action}"
-            )
+            raise ValueError(f"Invalid permission action: {permission_seed.action}")
         if len(permission_seed.code) > 128:
-            raise ValueError(
-                f"Permission code is too long: {permission_seed.code}"
-            )
+            raise ValueError(f"Permission code is too long: {permission_seed.code}")
         if not permission_seed.description.strip():
-            raise ValueError(
-                f"Permission '{permission_seed.code}' requires a description."
-            )
+            raise ValueError(f"Permission '{permission_seed.code}' requires a description.")
 
     role_codes = [seed.code for seed in ROLE_SEEDS]
     if len(role_codes) != len(set(role_codes)):
@@ -1875,19 +1896,14 @@ def validate_seed_manifest() -> None:
         if not _ROLE_CODE_PATTERN.fullmatch(role_seed.code):
             raise ValueError(f"Invalid role code: {role_seed.code}")
         if not role_seed.name.strip() or not role_seed.description.strip():
-            raise ValueError(
-                f"Role '{role_seed.code}' requires a name and description."
-            )
+            raise ValueError(f"Role '{role_seed.code}' requires a name and description.")
         if not role_seed.permission_codes:
-            raise ValueError(
-                f"Role '{role_seed.code}' must contain at least one permission."
-            )
+            raise ValueError(f"Role '{role_seed.code}' must contain at least one permission.")
 
         missing = role_seed.permission_codes - ALL_PERMISSION_CODES
         if missing:
             raise ValueError(
-                f"Role '{role_seed.code}' references unknown permissions: "
-                f"{sorted(missing)}"
+                f"Role '{role_seed.code}' references unknown permissions: {sorted(missing)}"
             )
 
         # Mutation permissions should normally include the corresponding read
@@ -1901,17 +1917,12 @@ def validate_seed_manifest() -> None:
                 and read_code not in role_seed.permission_codes
             ):
                 raise ValueError(
-                    f"Role '{role_seed.code}' can '{action}' '{resource}' "
-                    "without read access."
+                    f"Role '{role_seed.code}' can '{action}' '{resource}' without read access."
                 )
 
-    super_admin = next(
-        seed for seed in ROLE_SEEDS if seed.code == "super_admin"
-    )
+    super_admin = next(seed for seed in ROLE_SEEDS if seed.code == "super_admin")
     if super_admin.permission_codes != ALL_PERMISSION_CODES:
-        raise ValueError(
-            "The super_admin role must contain every managed permission."
-        )
+        raise ValueError("The super_admin role must contain every managed permission.")
 
 
 async def seed_identity_master_data(settings: AppSettings) -> SeedSummary:
@@ -1923,11 +1934,7 @@ async def seed_identity_master_data(settings: AppSettings) -> SeedSummary:
         async with database.session() as session, SQLAlchemyUnitOfWork(session):
             # Serialize concurrent deployments running this deterministic seed.
             await session.execute(
-                text(
-                    "SELECT pg_advisory_xact_lock("
-                    "hashtextextended(:key, 0)"
-                    ")"
-                ),
+                text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
                 {"key": "identity-master-data-seed-v2"},
             )
 
@@ -2061,8 +2068,7 @@ async def _ensure_default_role(
     )
     if role_id is None:
         raise RuntimeError(
-            f"DEFAULT_ROLE_CODE '{default_role_code}' does not identify "
-            "an active role."
+            f"DEFAULT_ROLE_CODE '{default_role_code}' does not identify an active role."
         )
 
 
@@ -2083,10 +2089,7 @@ async def _synchronize_role_permissions(
             )
         ).all()
     )
-    current_by_pair = {
-        (record.role_id, record.permission_id): record
-        for record in current_records
-    }
+    current_by_pair = {(record.role_id, record.permission_id): record for record in current_records}
     target_pairs = {
         (roles[role.code].id, permissions[permission_code].id)
         for role in ROLE_SEEDS
@@ -2117,9 +2120,7 @@ async def _synchronize_role_permissions(
 def _parser() -> argparse.ArgumentParser:
     """Build the command-line parser without accepting database secrets."""
     parser = argparse.ArgumentParser(
-        description=(
-            "Seed healthcare-platform identity roles and permissions."
-        ),
+        description=("Seed healthcare-platform identity roles and permissions."),
     )
     parser.add_argument(
         "--check-only",
@@ -2135,16 +2136,10 @@ def main() -> int:
     validate_seed_manifest()
 
     if args.check_only:
-        print(
-            "Manifest valid: "
-            f"{len(ROLE_SEEDS)} roles, "
-            f"{len(PERMISSION_SEEDS)} permissions."
-        )
+        print(f"Manifest valid: {len(ROLE_SEEDS)} roles, {len(PERMISSION_SEEDS)} permissions.")
         return 0
 
-    summary = asyncio.run(
-        seed_identity_master_data(AppSettings())
-    )
+    summary = asyncio.run(seed_identity_master_data(AppSettings()))
     print(
         "Identity master data seeded: "
         f"permissions(created={summary.permissions_created}, "

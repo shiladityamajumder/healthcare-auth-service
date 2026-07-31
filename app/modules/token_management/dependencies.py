@@ -20,7 +20,7 @@ from app.auth.request_context.dependencies import (
     AuthRateLimitsDep,
     AuthRuntimeDep,
     RateLimitRequestContextDep,
-    SessionCreationRequestContextDep,
+    RefreshRequestContextDep,
     TokenManagerDep,
 )
 from app.auth.request_context.principals import UserPrincipal
@@ -37,7 +37,6 @@ def get_token_management_service(
     """Construct token workflows from explicit request dependencies."""
     return TokenManagementService(
         uow=uow,
-        settings=runtime.settings,
         hashing=runtime.hashing,
         tokens=runtime.tokens,
     )
@@ -61,7 +60,7 @@ __all__ = [
     "AuthRateLimitsDep",
     "LogoutAccess",
     "RateLimitRequestContextDep",
-    "SessionCreationRequestContextDep",
+    "RefreshRequestContextDep",
     "TokenManagementServiceDep",
     "TokenManagerDep",
     "get_token_management_service",

@@ -23,7 +23,6 @@ from datetime import datetime
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.authorization.claims import AuthorizationClaims, load_authorization_claims
 from app.models.identity import Sessions, UserProfiles, Users
 
 
@@ -64,19 +63,6 @@ class TokenRepository:
         if for_update:
             statement = statement.with_for_update()
         return (await self._session.scalars(statement)).first()
-
-    async def authorization_claims(
-        self,
-        *,
-        user_id: uuid.UUID,
-        now: datetime,
-    ) -> AuthorizationClaims:
-        """Load effective roles and permissions for a user."""
-        return await load_authorization_claims(
-            self._session,
-            user_id=user_id,
-            now=now,
-        )
 
     async def revoke_family(
         self,

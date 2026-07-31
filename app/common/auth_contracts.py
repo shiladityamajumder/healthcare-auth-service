@@ -37,30 +37,7 @@ class UserProfileResponse(StrictModel):
     avatar_object_key: str | None
 
 
-class UserResponse(StrictModel):
-    """Version 1 identity response retained for API compatibility.
-
-    New token-response consumers should migrate to
-    ``AuthenticatedUserProfileResponse`` plus the dedicated current-
-    authorization endpoint.
-    """
-
-    id: uuid.UUID
-    email: str | None
-    email_verified: bool
-    phone_country_code: str | None
-    phone_number_masked: str | None
-    phone_verified: bool
-    status: str
-    preferred_locale: str
-    timezone: str
-    display_name: str
-    profile: UserProfileResponse | None
-    roles: list[str]
-    permissions: list[str]
-
-
-class AuthenticatedUserProfileResponse(StrictModel):
+class AuthenticatedUserResponse(StrictModel):
     """Minimal authenticated identity profile without authorization lists."""
 
     id: uuid.UUID
@@ -84,28 +61,14 @@ class CurrentAuthorizationResponse(StrictModel):
 
 
 class TokenPairResponse(StrictModel):
-    """Version 1 token response retaining embedded authorization fields."""
+    """Canonical token response with a minimal authenticated profile."""
 
     access_token: str
     refresh_token: str
     token_type: str = "Bearer"  # noqa: S105
     access_expires_at: datetime
     refresh_expires_at: datetime
-    user: UserResponse
-
-
-class TokenPairResponseV2(StrictModel):
-    """Version 2 token response with a minimal user-profile projection."""
-
-    access_token: str
-    refresh_token: str
-    token_type: str = "Bearer"  # noqa: S105
-    access_expires_at: datetime
-    refresh_expires_at: datetime
-    user: AuthenticatedUserProfileResponse
-
-
-TokenPairResponseContract = TokenPairResponse | TokenPairResponseV2
+    user: AuthenticatedUserResponse
 
 
 class OtpChallengeResponse(StrictModel):
@@ -119,13 +82,10 @@ class OtpChallengeResponse(StrictModel):
 
 
 __all__ = [
-    "AuthenticatedUserProfileResponse",
+    "AuthenticatedUserResponse",
     "CurrentAuthorizationResponse",
     "MessageResponse",
     "OtpChallengeResponse",
     "TokenPairResponse",
-    "TokenPairResponseContract",
-    "TokenPairResponseV2",
     "UserProfileResponse",
-    "UserResponse",
 ]

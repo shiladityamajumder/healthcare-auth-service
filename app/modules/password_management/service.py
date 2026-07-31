@@ -21,14 +21,16 @@ from dataclasses import dataclass
 from app.auth.authorization.model_adapters import account_access_state, password_history_state
 from app.auth.authorization.policies import AccountAccessPolicy, PasswordHistoryPolicy
 from app.auth.identity.normalization import normalize_email, normalize_phone, phone_destination
-from app.auth.identity.presentation import public_user_data
 from app.auth.request_context.context import AuthRequestContext
 from app.auth.security.hashing import SecureHashing
 from app.auth.security.passwords import PasswordManager
 from app.auth.security.tokens import TokenManager, TokenType
 from app.auth.workflows.notifications import AuthNotificationGateway, NotificationDispatcher
 from app.auth.workflows.otp import IssuedOTP, OTPService
-from app.auth.workflows.session_tokens import SessionTokenIssuer
+from app.auth.workflows.session_tokens import (
+    SessionTokenIssuer,
+    build_token_pair_response,
+)
 from app.common.exceptions import AuthenticationError, ConflictError, NotFoundError, ValidationError
 from app.core.config import AppSettings
 from app.db.uow import SQLAlchemyUnitOfWork
@@ -44,7 +46,6 @@ from app.modules.password_management.schemas import (
     ResetPasswordWithTokenRequest,
     SetPasswordRequest,
     TokenPairResponse,
-    UserResponse,
     VerifyResetOtpRequest,
 )
 from app.utils.datetime_utils import utc_now
@@ -146,32 +147,15 @@ class PasswordManagementService:
         context: AuthRequestContext,
         auth_method: str,
     ) -> TokenPairResponse:
-        """Load current claims and stage the sole post-password-change session."""
-        authz = await repository.authorization_claims(user_id=user.id, now=utc_now())
+        """Stage the sole post-password-change session."""
         profile = await repository.get_active_profile(user.id)
-        user_dto = UserResponse.model_validate(
-            public_user_data(
-                user,
-                profile=profile,
-                roles=authz.roles,
-                permissions=authz.permissions,
-            )
-        )
         issued = self._issuer.issue(
             user_id=user.id,
-            roles=authz.roles,
-            permissions=authz.permissions,
             session_writer=repository,
             request_context=context,
             auth_methods=[auth_method],
         )
-        return TokenPairResponse(
-            access_token=issued.access_token,
-            refresh_token=issued.refresh_token,
-            access_expires_at=issued.access_expires_at,
-            refresh_expires_at=issued.refresh_expires_at,
-            user=user_dto,
-        )
+        return build_token_pair_response(issued=issued, user=user, profile=profile)
 
     async def forgot(self, payload: ForgotPasswordRequest) -> OtpChallengeResponse:
         """Issue a generic password-reset challenge without account enumeration."""

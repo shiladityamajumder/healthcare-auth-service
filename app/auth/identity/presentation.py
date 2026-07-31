@@ -29,20 +29,20 @@ from app.auth.identity.normalization import (
 )
 
 
-def public_user_data(
+def admin_user_data(
     user: Any,
     *,
     profile: Any | None = None,
     roles: Iterable[str] = (),
     permissions: Iterable[str] = (),
 ) -> dict[str, object]:
-    """Build the version 1 user representation used by compatibility APIs.
+    """Build an administrative user representation with authorization data.
 
     Password hashes, lockout counters, and other internal account state are
     intentionally excluded. Authorization codes are sorted so responses are
     deterministic when callers supply sets or database-derived collections.
     """
-    data = authenticated_user_profile_data(
+    data = authenticated_user_data(
         user,
         profile=profile,
     )
@@ -55,7 +55,7 @@ def public_user_data(
     return data
 
 
-def authenticated_user_profile_data(
+def authenticated_user_data(
     user: Any,
     *,
     profile: Any | None = None,
@@ -144,11 +144,7 @@ def mask_email(
         3,
     )
 
-    return (
-        f"{visible_part}"
-        f"{'*' * hidden_length}"
-        f"@{domain}"
-    )
+    return f"{visible_part}{'*' * hidden_length}@{domain}"
 
 
 def mask_phone(
@@ -182,25 +178,19 @@ def mask_phone(
         4,
         len(normalized_phone_number),
     )
-    visible_suffix = normalized_phone_number[
-        -visible_suffix_length:
-    ]
+    visible_suffix = normalized_phone_number[-visible_suffix_length:]
 
     hidden_length = max(
         len(normalized_phone_number) - visible_suffix_length,
         2,
     )
 
-    return (
-        f"{normalized_country_code}"
-        f"{'*' * hidden_length}"
-        f"{visible_suffix}"
-    )
+    return f"{normalized_country_code}{'*' * hidden_length}{visible_suffix}"
 
 
 __all__ = [
-    "authenticated_user_profile_data",
+    "admin_user_data",
+    "authenticated_user_data",
     "mask_email",
     "mask_phone",
-    "public_user_data",
 ]

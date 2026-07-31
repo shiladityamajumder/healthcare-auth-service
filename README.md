@@ -148,6 +148,9 @@ no global authorization-bypass setting.
 
 ## Public API groups
 
+The reviewed method, authentication, permission, purpose, consumer, and
+keep/remove decisions are recorded in `ENDPOINT_INVENTORY.md`.
+
 ### Registration
 
 ```text
@@ -174,6 +177,7 @@ POST /api/v1/auth/login/phone/verify-otp
 ### Token and logout lifecycle
 
 ```text
+GET  /api/v1/auth/capabilities
 GET  /api/v1/auth/.well-known/jwks.json
 POST /api/v1/auth/token/refresh
 POST /api/v1/auth/logout
@@ -204,66 +208,43 @@ POST /api/v1/auth/password
 GET   /api/v1/users/me
 PATCH /api/v1/users/me
 GET   /api/v1/auth/users/me/authorization
-GET   /api/v1/users/me/roles        (deprecated compatibility projection)
-GET   /api/v1/users/me/permissions  (deprecated compatibility projection)
 ```
 
-## Authorization-contract migration
+## Authentication and authorization contract
 
-The repository-wide consumer inventory, manual-review gates, version-removal
-criteria, cache contract, and rollback procedure are recorded in
-`AUTHORIZATION_CONTRACT_IMPACT_AUDIT.md`.
+Every login, verification, registration-completion, password-completion, and
+refresh flow returns one `TokenPairResponse` containing a minimal
+`AuthenticatedUserResponse`. The user object never contains roles or
+permissions.
 
-Login and refresh support two explicit response contracts:
+The access token contains only registered JWT claims plus `token_type`, `sid`,
+and `amr`. `sub` is the authenticated user UUID; there is no `user_id` claim.
+Access and refresh tokens contain no roles, permissions, profile data, device
+data, or contract-version claim.
 
-- `AUTH_LOGIN_REFRESH_RESPONSE_VERSION=1` is the default and preserves the
-  existing `user.roles` and `user.permissions` properties.
-- `AUTH_LOGIN_REFRESH_RESPONSE_VERSION=2` returns the minimal authenticated
-  user profile. Clients then obtain current authorization from
-  `GET /api/v1/auth/users/me/authorization`.
+Every protected request validates the access token and then loads the active
+session, account, and current effective authorization from PostgreSQL. Clients
+fetch their current roles and permissions from:
 
-Access-token issuance is controlled independently:
-
-- `ACCESS_TOKEN_VERSION=1` is the default and retains the existing role and
-  permission claims. Already-issued legacy tokens without `ver` are treated as
-  version 1.
-- `ACCESS_TOKEN_VERSION=2` adds `ver: 2`, always omits permissions, and includes
-  coarse roles only when `ACCESS_TOKEN_V2_INCLUDE_ROLES=true`. The default for
-  that setting is false.
-
-Version 2 principals always require a current active persisted session and
-load effective roles and permissions from PostgreSQL before route authorization,
-even if the general authorization-refresh setting is disabled. The same
-effective-authorization query applies global scope, assignment activity,
-validity windows, and role/permission soft-delete rules.
+```text
+GET /api/v1/auth/users/me/authorization
+Authorization: Bearer <access-token>
+```
 
 Frontend permissions are presentation hints, not a security boundary. A user
 can alter browser state and request payloads; every protected operation must
 still enforce authorization on the server. For the same reason, this service
 does not expose an anonymous permission-catalog endpoint.
 
-### Downstream rollout
+This deployment is a hard authentication-contract cutover. Rotate the JWT
+signing key and remove the prior public key from the decoding-key registry when
+the release is deployed; existing access and refresh tokens then become
+invalid and every user must authenticate again. Removed
+`/api/v1/users/me/roles` and `/api/v1/users/me/permissions` routes return 404.
 
-1. Keep both version settings at `1` while inventorying JWT and login-response
-   consumers.
-2. Migrate UI clients to the protected current-authorization endpoint and
-   invalidate their cached authorization after login, refresh, and account or
-   role changes.
-3. Migrate APIs that currently inspect global `permissions` claims. Prefer
-   audience-specific entitlements minted for that API, or an authenticated
-   authorization service with a fail-closed cache and bounded TTL.
-4. Test each consumer with version 2 tokens; it must not treat missing
-   permissions as authorization and must preserve strict issuer, audience,
-   signature, expiry, key ID, and token-type checks.
-5. Set `AUTH_LOGIN_REFRESH_RESPONSE_VERSION=2` for audited clients, then set
-   `ACCESS_TOKEN_VERSION=2` for issuance. Do not change production defaults
-   before that audit.
-
-Version 1 access tokens remain accepted throughout the migration. Acceptance
-must continue for at least one configured access-token TTL after the last
-version 1 token is issued. Removing version 1 validation is a future breaking
-release and requires a completed downstream audit; this release does not
-provide a switch that can accidentally disable it.
+`GET /api/v1/auth/capabilities` is anonymous and cacheable. It exposes only
+client-safe registration, login, verification, password, and platform
+capabilities; it is not an authorization catalog.
 
 ### Administrative users
 
@@ -310,26 +291,21 @@ DELETE /api/v1/admin/users/{user_id}/roles/{user_role_id}
 OpenAPI exposes only headers used by each endpoint:
 
 - Rate-limited anonymous operations: `X-Client-ID`, `X-Device-ID`.
-- Session-creating or token-rotating operations: `X-Client-ID`, `X-Platform`,
+- Session-creating operations: `X-Client-ID`, `X-Platform`,
   `X-Device-ID`, `X-Device-Type`.
-- Bearer-protected operations: `X-Device-ID`, `X-User-ID`, `X-Session-ID`.
+- Refresh: `X-Client-ID`, `X-Device-ID`.
+- Bearer-protected operations declare no custom identity headers.
 - `Authorization` is supplied through Swagger's **Authorize** dialog using
   `Bearer <signed-access-token>`; it is not duplicated as a normal parameter.
 - `X-Request-ID`, `X-Correlation-ID`, and `User-Agent` are processed by shared
   request infrastructure rather than repeated on every operation.
 
-`X-Client-Version`, `X-Device-Name`, and `Idempotency-Key` are intentionally
-not advertised until a workflow actually consumes them. Sending unused values
-would imply guarantees the service does not currently implement.
-
 Security rules:
 
-- `X-User-ID` must match the JWT `sub` claim when supplied.
-- `X-Session-ID` must match the JWT `sid` claim when supplied.
-- `X-Device-ID` must match persisted session metadata when both are present.
-- Refresh preserves an omitted device assertion for compatibility, rejects a
+- `X-User-ID` and `X-Session-ID` are not supported.
+- Refresh preserves an omitted device assertion, rejects a
   mismatching assertion with the generic authentication response, and never
-  rebinds a legacy session that has no stored device ID.
+  rebinds a session that has no stored device ID.
 - Stored session `device_id` and `device_type` values are immutable after
   session creation; clients must create a new session to establish new device
   metadata.
@@ -337,6 +313,55 @@ Security rules:
 - The signed JWT and persisted session are authoritative.
 - `X-Forwarded-For` is ignored unless the direct peer is an allowlisted proxy.
 - Tokens, passwords, OTPs, cookies, authorization headers, secrets, and hashes are redacted from logs.
+
+## Contract examples
+
+Login, verification completion, password completion, and refresh all return the
+same data shape:
+
+```json
+{
+  "access_token": "<access-token>",
+  "refresh_token": "<refresh-token>",
+  "token_type": "Bearer",
+  "access_expires_at": "2026-07-31T07:30:00Z",
+  "refresh_expires_at": "2026-08-30T07:15:00Z",
+  "user": {
+    "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
+    "email": "user@example.com",
+    "email_verified": true,
+    "phone_country_code": "+91",
+    "phone_number_masked": "+91******0001",
+    "phone_verified": true,
+    "status": "active",
+    "preferred_locale": "en-IN",
+    "timezone": "Asia/Kolkata",
+    "display_name": "Example User",
+    "profile": null
+  }
+}
+```
+
+Decoded access-token claims:
+
+```json
+{
+  "sub": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
+  "token_type": "access",
+  "jti": "40da960e-e701-4976-b93b-c9f516c9d974",
+  "sid": "17157083-e4f2-48b4-9571-19e030d0ee7d",
+  "iat": 1785482100,
+  "nbf": 1785482100,
+  "exp": 1785483000,
+  "iss": "pharmacy-platform-identity",
+  "aud": "pharmacy-platform",
+  "amr": ["password"]
+}
+```
+
+Decoded refresh-token claims use the same registered claims, omit `amr`, and
+add only `"fam": "<refresh-family-uuid>"` with
+`"token_type": "refresh"`.
 
 ## Local setup
 

@@ -33,9 +33,9 @@ from app.modules.admin_users.openapi import RESPONSES, TAG
 from app.modules.admin_users.schemas import (
     AdminLogoutAllRequest,
     AdminUserListResponse,
+    AdminUserResponse,
     MessageResponse,
     UpdateUserStatusRequest,
-    UserResponse,
 )
 
 router = APIRouter(
@@ -75,7 +75,7 @@ async def list_users(
 
 @router.get(
     "/{user_id}",
-    response_model=APIResponseModel[UserResponse],
+    response_model=APIResponseModel[AdminUserResponse],
     summary="Get user",
 )
 async def get_user(
@@ -95,7 +95,7 @@ async def get_user(
 
 @router.patch(
     "/{user_id}/status",
-    response_model=APIResponseModel[UserResponse],
+    response_model=APIResponseModel[AdminUserResponse],
     summary="Update user status",
 )
 async def update_user_status(

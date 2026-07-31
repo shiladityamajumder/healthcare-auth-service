@@ -94,9 +94,7 @@ class RedisClient:
         normalized_url = url.strip()
 
         if not normalized_url:
-            raise ValueError(
-                "Redis connection URL must not be blank."
-            )
+            raise ValueError("Redis connection URL must not be blank.")
 
         pool = BlockingConnectionPool.from_url(
             normalized_url,
@@ -104,15 +102,9 @@ class RedisClient:
             decode_responses=True,
             max_connections=settings.REDIS_MAX_CONNECTIONS,
             timeout=settings.REDIS_POOL_TIMEOUT_SECONDS,
-            socket_timeout=(
-                settings.REDIS_SOCKET_TIMEOUT_SECONDS
-            ),
-            socket_connect_timeout=(
-                settings.REDIS_CONNECT_TIMEOUT_SECONDS
-            ),
-            health_check_interval=(
-                settings.REDIS_HEALTH_CHECK_INTERVAL_SECONDS
-            ),
+            socket_timeout=(settings.REDIS_SOCKET_TIMEOUT_SECONDS),
+            socket_connect_timeout=(settings.REDIS_CONNECT_TIMEOUT_SECONDS),
+            health_check_interval=(settings.REDIS_HEALTH_CHECK_INTERVAL_SECONDS),
             client_name=settings.PROJECT_NAME,
         )
 
@@ -141,15 +133,9 @@ class RedisClient:
             "Redis client initialized",
             extra={
                 "max_connections": settings.REDIS_MAX_CONNECTIONS,
-                "pool_timeout_seconds": (
-                    settings.REDIS_POOL_TIMEOUT_SECONDS
-                ),
-                "socket_timeout_seconds": (
-                    settings.REDIS_SOCKET_TIMEOUT_SECONDS
-                ),
-                "connect_timeout_seconds": (
-                    settings.REDIS_CONNECT_TIMEOUT_SECONDS
-                ),
+                "pool_timeout_seconds": (settings.REDIS_POOL_TIMEOUT_SECONDS),
+                "socket_timeout_seconds": (settings.REDIS_SOCKET_TIMEOUT_SECONDS),
+                "connect_timeout_seconds": (settings.REDIS_CONNECT_TIMEOUT_SECONDS),
             },
         )
 
@@ -174,9 +160,7 @@ class RedisClient:
             ValueError: If Redis is enabled but its URL is unavailable.
         """
         if not settings.redis_enabled:
-            raise RuntimeError(
-                "Redis is not enabled."
-            )
+            raise RuntimeError("Redis is not enabled.")
 
         return cls(
             url=settings.redis_url_value,
@@ -219,9 +203,7 @@ class RedisClient:
         result = await self._async_client.ping()
 
         if result is not True:
-            raise RuntimeError(
-                "Redis returned an unexpected PING response."
-            )
+            raise RuntimeError("Redis returned an unexpected PING response.")
 
         logger.debug(
             "Redis connectivity verified",
@@ -263,9 +245,7 @@ class RedisClient:
             RuntimeError: If shutdown has already closed the Redis client.
         """
         if self._closed:
-            raise RuntimeError(
-                "Redis client is closed."
-            )
+            raise RuntimeError("Redis client is closed.")
 
 
 __all__ = [

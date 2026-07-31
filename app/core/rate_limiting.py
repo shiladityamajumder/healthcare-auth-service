@@ -192,24 +192,17 @@ class InMemoryRateLimiter:
         )
 
         if self._closed:
-            raise RuntimeError(
-                "The in-memory rate limiter is closed."
-            )
+            raise RuntimeError("The in-memory rate limiter is closed.")
 
         now = time.monotonic()
 
         async with self._lock:
             if self._closed:
-                raise RuntimeError(
-                    "The in-memory rate limiter is closed."
-                )
+                raise RuntimeError("The in-memory rate limiter is closed.")
 
             self._operations_since_cleanup += 1
 
-            if (
-                self._operations_since_cleanup
-                >= self._CLEANUP_INTERVAL
-            ):
+            if self._operations_since_cleanup >= self._CLEANUP_INTERVAL:
                 self._remove_expired_entries(now)
                 self._operations_since_cleanup = 0
 
@@ -253,11 +246,7 @@ class InMemoryRateLimiter:
         Args:
             now: Current monotonic timestamp.
         """
-        expired_keys = [
-            key
-            for key, (_, expires_at) in self._entries.items()
-            if expires_at <= now
-        ]
+        expired_keys = [key for key, (_, expires_at) in self._entries.items() if expires_at <= now]
 
         for key in expired_keys:
             self._entries.pop(key, None)
@@ -315,16 +304,12 @@ class RedisRateLimiter:
             ValueError: If the client is missing or the prefix is blank.
         """
         if client is None:
-            raise ValueError(
-                "A shared Redis client is required."
-            )
+            raise ValueError("A shared Redis client is required.")
 
         normalized_prefix = key_prefix.strip().strip(":")
 
         if not normalized_prefix:
-            raise ValueError(
-                "Redis rate-limit key prefix must not be blank."
-            )
+            raise ValueError("Redis rate-limit key prefix must not be blank.")
 
         # The process-wide client originates from redis.asyncio.Redis. The
         # narrow protocol prevents incorrect synchronous type inference for
@@ -374,15 +359,11 @@ class RedisRateLimiter:
                 window_milliseconds,
             )
 
-            count, ttl_milliseconds = self._parse_script_result(
-                raw_result
-            )
+            count, ttl_milliseconds = self._parse_script_result(raw_result)
         except RateLimitBackendError:
             raise
         except Exception as exc:
-            raise RateLimitBackendError(
-                "The rate-limit service is unavailable."
-            ) from exc
+            raise RateLimitBackendError("The rate-limit service is unavailable.") from exc
 
         retry_after_seconds = max(
             math.ceil(ttl_milliseconds / 1_000),
@@ -412,14 +393,10 @@ class RedisRateLimiter:
             RateLimitBackendError: If Redis returns an unexpected value.
         """
         if not isinstance(raw_result, (list, tuple)):
-            raise RateLimitBackendError(
-                "The rate-limit service returned an invalid response."
-            )
+            raise RateLimitBackendError("The rate-limit service returned an invalid response.")
 
         if len(raw_result) != 2:
-            raise RateLimitBackendError(
-                "The rate-limit service returned an invalid response."
-            )
+            raise RateLimitBackendError("The rate-limit service returned an invalid response.")
 
         try:
             count = int(raw_result[0])
@@ -430,14 +407,10 @@ class RedisRateLimiter:
             ) from exc
 
         if count < 1:
-            raise RateLimitBackendError(
-                "The rate-limit service returned an invalid counter."
-            )
+            raise RateLimitBackendError("The rate-limit service returned an invalid counter.")
 
         if ttl_milliseconds < 0:
-            raise RateLimitBackendError(
-                "The rate-limit service returned an invalid expiration."
-            )
+            raise RateLimitBackendError("The rate-limit service returned an invalid expiration.")
 
         return count, ttl_milliseconds
 
@@ -470,19 +443,13 @@ def _validate_hit_arguments(
     normalized_key = key.strip()
 
     if not normalized_key:
-        raise ValueError(
-            "Rate-limit key must not be blank."
-        )
+        raise ValueError("Rate-limit key must not be blank.")
 
     if limit < 1:
-        raise ValueError(
-            "Rate-limit limit must be at least 1."
-        )
+        raise ValueError("Rate-limit limit must be at least 1.")
 
     if window_seconds < 1:
-        raise ValueError(
-            "Rate-limit window_seconds must be at least 1."
-        )
+        raise ValueError("Rate-limit window_seconds must be at least 1.")
 
 
 def build_rate_limiter(
@@ -514,8 +481,7 @@ def build_rate_limiter(
     if settings.RATE_LIMIT_BACKEND is RateLimitBackend.REDIS:
         if redis_client is None:
             raise RateLimitBackendError(
-                "A shared Redis client is required when "
-                "RATE_LIMIT_BACKEND=redis."
+                "A shared Redis client is required when RATE_LIMIT_BACKEND=redis."
             )
 
         return RedisRateLimiter(
@@ -525,10 +491,7 @@ def build_rate_limiter(
 
     # This protects the factory if a new enum value is added without a matching
     # implementation.
-    raise ValueError(
-        "Unsupported rate-limit backend: "
-        f"{settings.RATE_LIMIT_BACKEND}"
-    )
+    raise ValueError(f"Unsupported rate-limit backend: {settings.RATE_LIMIT_BACKEND}")
 
 
 async def enforce_rate_limit(
@@ -554,28 +517,16 @@ async def enforce_rate_limit(
         RateLimitError: If any key exceeds the configured limit.
         RateLimitBackendError: If the selected backend fails.
     """
-    unique_keys = list(
-        dict.fromkeys(
-            key.strip()
-            for key in keys
-            if key and key.strip()
-        )
-    )
+    unique_keys = list(dict.fromkeys(key.strip() for key in keys if key and key.strip()))
 
     if not unique_keys:
-        raise ValueError(
-            "At least one nonblank rate-limit key is required."
-        )
+        raise ValueError("At least one nonblank rate-limit key is required.")
 
     if limit < 1:
-        raise ValueError(
-            "Rate-limit limit must be at least 1."
-        )
+        raise ValueError("Rate-limit limit must be at least 1.")
 
     if window_seconds < 1:
-        raise ValueError(
-            "Rate-limit window_seconds must be at least 1."
-        )
+        raise ValueError("Rate-limit window_seconds must be at least 1.")
 
     for key in unique_keys:
         decision = await limiter.hit(
@@ -585,9 +536,7 @@ async def enforce_rate_limit(
         )
 
         if not decision.allowed:
-            raise RateLimitError(
-                retry_after_seconds=decision.retry_after_seconds
-            )
+            raise RateLimitError(retry_after_seconds=decision.retry_after_seconds)
 
 
 __all__ = [

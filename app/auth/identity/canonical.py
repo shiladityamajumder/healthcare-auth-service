@@ -133,14 +133,10 @@ def generic_identity(
         ValueError: If the channel is unsupported or required identity fields
             are missing or invalid.
     """
-    channel = _normalize_channel(
-        payload.channel
-    )
+    channel = _normalize_channel(payload.channel)
 
     if channel is OTPChannel.EMAIL:
-        return email_identity(
-            payload.email
-        )
+        return email_identity(payload.email)
 
     if channel is OTPChannel.SMS:
         return phone_identity(
@@ -150,9 +146,7 @@ def generic_identity(
 
     # All current OTPChannel values are handled above. This branch protects
     # against future enum additions that have not yet been implemented.
-    raise ValueError(
-        f"Unsupported identity channel: {channel.value}"
-    )
+    raise ValueError(f"Unsupported identity channel: {channel.value}")
 
 
 def _normalize_channel(
@@ -180,9 +174,7 @@ def _normalize_channel(
     try:
         return OTPChannel(normalized)
     except ValueError as exc:
-        raise ValueError(
-            f"Unsupported identity channel: {value}"
-        ) from exc
+        raise ValueError(f"Unsupported identity channel: {value}") from exc
 
 
 def _required_text(
@@ -203,16 +195,12 @@ def _required_text(
         ValueError: If the value is absent or blank.
     """
     if value is None:
-        raise ValueError(
-            f"{field_name} is required."
-        )
+        raise ValueError(f"{field_name} is required.")
 
     normalized = str(value).strip()
 
     if not normalized:
-        raise ValueError(
-            f"{field_name} is required."
-        )
+        raise ValueError(f"{field_name} is required.")
 
     return normalized
 

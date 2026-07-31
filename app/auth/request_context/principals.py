@@ -10,9 +10,9 @@ Verified access-token/session/account state
 -> route-security or authorization dependency
 -> protected route/service identifiers
 
-A principal represents identity and authorization information that has already
-been validated from a signed access token and, when configured, the persisted
-session and current database authorization state.
+A principal represents identity and authorization information validated from a
+signed access token, persisted session, and current database authorization
+state.
 """
 
 from __future__ import annotations
@@ -36,37 +36,9 @@ class UserPrincipal:
     user_id: uuid.UUID
     session_id: uuid.UUID
 
-    roles: frozenset[str] = field(
-        default_factory=frozenset
-    )
-    permissions: frozenset[str] = field(
-        default_factory=frozenset
-    )
+    roles: frozenset[str] = field(default_factory=frozenset)
+    permissions: frozenset[str] = field(default_factory=frozenset)
     auth_methods: tuple[str, ...] = ()
-
-    def has_role(
-        self,
-        role_code: str,
-    ) -> bool:
-        """Return whether the principal has one role."""
-        normalized = role_code.strip()
-
-        return bool(
-            normalized
-            and normalized in self.roles
-        )
-
-    def has_permission(
-        self,
-        permission_code: str,
-    ) -> bool:
-        """Return whether the principal has one permission."""
-        normalized = permission_code.strip()
-
-        return bool(
-            normalized
-            and normalized in self.permissions
-        )
 
 
 __all__ = [

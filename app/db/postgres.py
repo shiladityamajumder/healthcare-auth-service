@@ -67,13 +67,11 @@ class PostgreSQLDatabase:
             echo=settings.SQL_ECHO,
             hide_parameters=True,
         )
-        self._session_factory: async_sessionmaker[AsyncSession] = (
-            async_sessionmaker(
-                bind=self._engine,
-                class_=AsyncSession,
-                autoflush=False,
-                expire_on_commit=False,
-            )
+        self._session_factory: async_sessionmaker[AsyncSession] = async_sessionmaker(
+            bind=self._engine,
+            class_=AsyncSession,
+            autoflush=False,
+            expire_on_commit=False,
         )
 
     @property

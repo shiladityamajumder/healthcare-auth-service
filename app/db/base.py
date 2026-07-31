@@ -34,10 +34,7 @@ NAMING_CONVENTION: dict[str, Any] = {
     "ix": "ix_%(schema_token)s_%(table_name)s_%(column_0_N_name)s",
     "uq": "uq_%(schema_token)s_%(table_name)s_%(column_0_N_name)s",
     "ck": "ck_%(schema_token)s_%(table_name)s_%(constraint_name)s",
-    "fk": (
-        "fk_%(schema_token)s_%(table_name)s_%(column_0_N_name)s_"
-        "%(referred_table_name)s"
-    ),
+    "fk": ("fk_%(schema_token)s_%(table_name)s_%(column_0_N_name)s_%(referred_table_name)s"),
     "pk": "pk_%(schema_token)s_%(table_name)s",
 }
 

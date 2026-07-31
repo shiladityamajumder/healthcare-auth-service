@@ -42,9 +42,9 @@ from app.auth.infrastructure.runtime import AuthRuntime
 from app.auth.request_context.context import AuthRequestContext
 from app.auth.request_context.headers import (
     AuthHeaders,
-    get_auth_headers,
-    get_principal_assertion_headers,
+    get_principal_headers,
     get_rate_limit_headers,
+    get_refresh_headers,
     get_session_creation_headers,
 )
 from app.auth.request_context.principals import UserPrincipal
@@ -104,13 +104,6 @@ AuthRuntimeDep = Annotated[
 ]
 
 
-# Full metadata is retained for compatibility; routes should prefer one of the
-# narrower header profiles below.
-AuthHeadersDep = Annotated[
-    AuthHeaders,
-    Depends(get_auth_headers),
-]
-
 # Exposes only anonymous limiter dimensions in endpoint validation and OpenAPI.
 RateLimitHeadersDep = Annotated[
     AuthHeaders,
@@ -121,39 +114,14 @@ SessionCreationHeadersDep = Annotated[
     AuthHeaders,
     Depends(get_session_creation_headers),
 ]
-# Exposes only optional assertions checked against authoritative token/session data.
-PrincipalAssertionHeadersDep = Annotated[
+# Accepts only refresh device/client metadata.
+RefreshHeadersDep = Annotated[
     AuthHeaders,
-    Depends(get_principal_assertion_headers),
+    Depends(get_refresh_headers),
 ]
-
-
-def get_auth_request_context(
-    request: Request,
-    runtime: AuthRuntimeDep,
-    headers: AuthHeadersDep,
-) -> AuthRequestContext:
-    """Build validated request-scoped authentication metadata.
-
-    Args:
-        request: Active FastAPI request.
-        runtime: Process-wide authentication runtime.
-        headers: Validated authentication metadata headers.
-
-    Returns:
-        Immutable authentication request context.
-    """
-    return AuthRequestContext.from_request(
-        request,
-        settings=runtime.settings,
-        headers=headers,
-    )
-
-
-# Builds the compatibility context from the complete metadata header profile.
-AuthRequestContextDep = Annotated[
-    AuthRequestContext,
-    Depends(get_auth_request_context),
+PrincipalHeadersDep = Annotated[
+    AuthHeaders,
+    Depends(get_principal_headers),
 ]
 
 
@@ -182,7 +150,7 @@ def get_session_creation_request_context(
     runtime: AuthRuntimeDep,
     headers: SessionCreationHeadersDep,
 ) -> AuthRequestContext:
-    """Build context for workflows that create or rotate device sessions."""
+    """Build context for workflows that create device sessions."""
     return AuthRequestContext.from_request(
         request,
         settings=runtime.settings,
@@ -190,19 +158,19 @@ def get_session_creation_request_context(
     )
 
 
-# Builds validated header-derived metadata consumed during session issuance or rotation.
+# Builds validated metadata consumed during session issuance.
 SessionCreationRequestContextDep = Annotated[
     AuthRequestContext,
     Depends(get_session_creation_request_context),
 ]
 
 
-def get_principal_request_context(
+def get_refresh_request_context(
     request: Request,
     runtime: AuthRuntimeDep,
-    headers: PrincipalAssertionHeadersDep,
+    headers: RefreshHeadersDep,
 ) -> AuthRequestContext:
-    """Build context containing only bearer-principal consistency assertions."""
+    """Build context for refresh rate limiting and device verification."""
     return AuthRequestContext.from_request(
         request,
         settings=runtime.settings,
@@ -210,7 +178,25 @@ def get_principal_request_context(
     )
 
 
-# Builds assertion metadata used while validating a bearer principal.
+RefreshRequestContextDep = Annotated[
+    AuthRequestContext,
+    Depends(get_refresh_request_context),
+]
+
+
+def get_principal_request_context(
+    request: Request,
+    runtime: AuthRuntimeDep,
+    headers: PrincipalHeadersDep,
+) -> AuthRequestContext:
+    """Build a protected-request context without identity assertion headers."""
+    return AuthRequestContext.from_request(
+        request,
+        settings=runtime.settings,
+        headers=headers,
+    )
+
+
 PrincipalRequestContextDep = Annotated[
     AuthRequestContext,
     Depends(get_principal_request_context),
@@ -277,12 +263,8 @@ async def get_current_user_principal(
 ) -> UserPrincipal:
     """Validate an access token and resolve its authenticated principal.
 
-    ``X-User-ID`` and ``X-Session-ID`` are optional consistency assertions.
-    ``X-Device-ID`` is compared with persisted session metadata when both are
-    present.
-
-    None of these headers can authenticate a request without a valid signed
-    access token.
+    User and session identity come only from signed claims. Persisted session,
+    account, role, and permission state are checked on every request.
 
     Args:
         credentials: Optional HTTP bearer credentials.
@@ -295,7 +277,7 @@ async def get_current_user_principal(
 
     Raises:
         AuthenticationError: If the token, claims, persisted session, account,
-            or consistency assertions are invalid.
+            or current authorization is invalid.
     """
     if credentials is None or credentials.scheme.casefold() != "bearer":
         raise AuthenticationError()
@@ -304,8 +286,6 @@ async def get_current_user_principal(
         credentials.credentials,
         expected_type=TokenType.ACCESS,
     )
-    access_token_version = runtime.tokens.access_token_version(payload)
-
     user_id = _uuid_claim(
         payload,
         claim_name="sub",
@@ -315,83 +295,49 @@ async def get_current_user_principal(
         claim_name="sid",
     )
 
-    _validate_identity_assertions(
-        context=context,
-        user_id=user_id,
-        session_id=session_id,
-    )
-
-    roles = _string_set_claim(
-        payload,
-        claim_name="roles",
-    )
-    permissions = (
-        _string_set_claim(
-            payload,
-            claim_name="permissions",
-        )
-        if access_token_version == 1
-        else frozenset()
-    )
     auth_methods = _string_tuple_claim(
         payload,
         claim_name="amr",
     )
 
-    # A valid JWT is insufficient when per-request session checks are enabled;
-    # persisted revocation, expiry, ownership, device, and account state win.
-    must_resolve_persisted_session = (
-        runtime.settings.AUTH_CHECK_SESSION_ON_EACH_REQUEST
-        or access_token_version == 2
-    )
-    if must_resolve_persisted_session:
-        async with database.session() as session:
-            statement = (
-                select(
-                    Sessions,
-                    Users,
-                )
-                .join(
-                    Users,
-                    Users.id == Sessions.user_id,
-                )
-                .where(
-                    Sessions.id == session_id,
-                    Sessions.user_id == user_id,
-                )
+    async with database.session() as session:
+        statement = (
+            select(
+                Sessions,
+                Users,
             )
-
-            result = await session.execute(statement)
-            row = result.one_or_none()
-
-            if row is None:
-                raise AuthenticationError("The access session is expired or revoked.")
-
-            session_record = row[0]
-            user = row[1]
-            now = utc_now()
-
-            _validate_persisted_session(
-                session_record=session_record,
-                user=user,
-                context=context,
-                now=now,
+            .join(
+                Users,
+                Users.id == Sessions.user_id,
             )
+            .where(
+                Sessions.id == session_id,
+                Sessions.user_id == user_id,
+            )
+        )
+        result = await session.execute(statement)
+        row = result.one_or_none()
 
-            # Replace token snapshots with current database claims so role or
-            # permission revocation takes effect without waiting for JWT expiry.
-            if (
-                runtime.settings.AUTH_REFRESH_AUTHZ_ON_EACH_REQUEST
-                or access_token_version == 2
-            ):
-                claims = await load_authorization_claims(
-                    session,
-                    user_id=user_id,
-                    now=now,
-                )
+        if row is None:
+            raise AuthenticationError("The access session is expired or revoked.")
 
-                roles = frozenset(claims.roles)
-                permissions = frozenset(claims.permissions)
+        session_record = row[0]
+        user = row[1]
+        now = utc_now()
+
+        _validate_persisted_session(
+            session_record=session_record,
+            user=user,
+            context=context,
+            now=now,
+        )
+        claims = await load_authorization_claims(
+            session,
+            user_id=user_id,
+            now=now,
+        )
+        roles = frozenset(claims.roles)
+        permissions = frozenset(claims.permissions)
 
     return UserPrincipal(
         user_id=user_id,
@@ -471,28 +417,6 @@ def _uuid_claim(
         raise AuthenticationError("The access token is invalid.") from exc
 
 
-def _string_set_claim(
-    payload: Mapping[str, object],
-    *,
-    claim_name: str,
-) -> frozenset[str]:
-    """Load an optional token claim as an immutable string set.
-
-    Args:
-        payload: Decoded access-token claims.
-        claim_name: Optional collection claim name.
-
-    Returns:
-        Deduplicated immutable string values.
-    """
-    values = _string_sequence_claim(
-        payload,
-        claim_name=claim_name,
-    )
-
-    return frozenset(values)
-
-
 def _string_tuple_claim(
     payload: Mapping[str, object],
     *,
@@ -560,29 +484,6 @@ def _string_sequence_claim(
     return tuple(normalized_values)
 
 
-def _validate_identity_assertions(
-    *,
-    context: AuthRequestContext,
-    user_id: uuid.UUID,
-    session_id: uuid.UUID,
-) -> None:
-    """Validate optional client-supplied token consistency assertions.
-
-    Args:
-        context: Validated authentication request metadata.
-        user_id: Authenticated user identifier from the signed token.
-        session_id: Authenticated session identifier from the signed token.
-
-    Raises:
-        AuthenticationError: If an assertion does not match the token.
-    """
-    if context.asserted_user_id is not None and context.asserted_user_id != user_id:
-        raise AuthenticationError("X-User-ID does not match the access token subject.")
-
-    if context.asserted_session_id is not None and context.asserted_session_id != session_id:
-        raise AuthenticationError("X-Session-ID does not match the access token session.")
-
-
 def _validate_persisted_session(
     *,
     session_record: Sessions,
@@ -625,26 +526,26 @@ def _validate_persisted_session(
 
 
 __all__ = [
-    "AuthHeadersDep",
     "AuthRateLimitsDep",
-    "AuthRequestContextDep",
     "AuthRuntimeDep",
     "CurrentUserDep",
     "OptionalUserDep",
-    "PrincipalAssertionHeadersDep",
+    "PrincipalHeadersDep",
     "PrincipalRequestContextDep",
     "RateLimitHeadersDep",
     "RateLimitRequestContextDep",
+    "RefreshHeadersDep",
+    "RefreshRequestContextDep",
     "SessionCreationHeadersDep",
     "SessionCreationRequestContextDep",
     "TokenManagerDep",
     "get_auth_rate_limits",
-    "get_auth_request_context",
     "get_auth_runtime",
     "get_current_user_principal",
     "get_optional_user_principal",
     "get_principal_request_context",
     "get_rate_limit_request_context",
+    "get_refresh_request_context",
     "get_session_creation_request_context",
     "get_token_manager",
 ]

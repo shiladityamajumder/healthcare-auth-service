@@ -18,9 +18,9 @@ import uuid
 from pydantic import EmailStr, Field
 
 from app.common.auth_contracts import (
+    AuthenticatedUserResponse,
     OtpChallengeResponse,
     TokenPairResponse,
-    UserResponse,
 )
 from app.common.schemas import StrictModel
 
@@ -40,9 +40,9 @@ class EmailVerificationConfirmRequest(StrictModel):
 
 
 __all__ = [
+    "AuthenticatedUserResponse",
     "EmailVerificationConfirmRequest",
     "EmailVerificationRequest",
     "OtpChallengeResponse",
     "TokenPairResponse",
-    "UserResponse",
 ]

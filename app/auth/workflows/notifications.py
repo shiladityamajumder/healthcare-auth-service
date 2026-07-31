@@ -114,9 +114,7 @@ class AuthNotificationGateway:
         )
 
         if expires_in_seconds <= 0:
-            raise ValueError(
-                "expires_in_seconds must be greater than zero."
-            )
+            raise ValueError("expires_in_seconds must be greater than zero.")
 
         # Keep the settings reference because the future adapter will use
         # notification-service configuration, credentials, and timeouts.
@@ -222,17 +220,10 @@ def _required_text(
     normalized = value.strip()
 
     if not normalized:
-        raise ValueError(
-            f"{field_name} must not be blank."
-        )
+        raise ValueError(f"{field_name} must not be blank.")
 
-    if any(
-        ord(character) < 32 or ord(character) == 127
-        for character in normalized
-    ):
-        raise ValueError(
-            f"{field_name} contains invalid control characters."
-        )
+    if any(ord(character) < 32 or ord(character) == 127 for character in normalized):
+        raise ValueError(f"{field_name} contains invalid control characters.")
 
     if casefold:
         normalized = normalized.casefold()

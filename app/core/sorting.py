@@ -63,10 +63,7 @@ def normalize_sort_order(
             "Unsupported sort direction.",
             details={
                 "value": value,
-                "allowed": [
-                    item.value
-                    for item in SortOrder
-                ],
+                "allowed": [item.value for item in SortOrder],
             },
         ) from exc
 

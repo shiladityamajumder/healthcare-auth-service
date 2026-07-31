@@ -60,9 +60,7 @@ async def test_configured_customer_role_is_assigned_successfully() -> None:
     customer = _role()
     repository = _RoleRepository({"customer": customer})
 
-    roles = await _writer()._self_registration_roles(
-        repository=cast(Any, repository)
-    )
+    roles = await _writer()._self_registration_roles(repository=cast(Any, repository))
 
     assert roles == [customer]
     assert repository.requested_codes == ["customer"]
@@ -76,9 +74,7 @@ async def test_missing_or_inactive_default_registration_role_fails_closed() -> N
         InfrastructureUnavailableError,
         match="Required default role 'customer' is missing",
     ):
-        await _writer()._self_registration_roles(
-            repository=cast(Any, repository)
-        )
+        await _writer()._self_registration_roles(repository=cast(Any, repository))
 
 
 @pytest.mark.asyncio
@@ -89,6 +85,4 @@ async def test_deleted_default_registration_role_fails_closed() -> None:
         InfrastructureUnavailableError,
         match="Required default role 'customer' is missing",
     ):
-        await _writer()._self_registration_roles(
-            repository=cast(Any, repository)
-        )
+        await _writer()._self_registration_roles(repository=cast(Any, repository))

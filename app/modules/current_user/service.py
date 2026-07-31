@@ -17,19 +17,15 @@ from __future__ import annotations
 
 import uuid
 
-from app.auth.identity.presentation import public_user_data
-from app.common.exceptions import AuthenticationError, NotFoundError
+from app.auth.identity.presentation import authenticated_user_data
+from app.common.exceptions import NotFoundError
 from app.db.uow import SQLAlchemyUnitOfWork
 from app.models.identity import UserProfiles
 from app.modules.current_user.repositories import CurrentUserRepository
 from app.modules.current_user.schemas import (
-    CurrentAuthorizationResponse,
+    AuthenticatedUserResponse,
     UpdateCurrentUserRequest,
-    UserPermissionsResponse,
-    UserResponse,
-    UserRolesResponse,
 )
-from app.utils.datetime_utils import utc_now
 
 _PROFILE_FIELDS = {
     "first_name",
@@ -45,22 +41,16 @@ class CurrentUserService:
     def __init__(self, *, uow: SQLAlchemyUnitOfWork) -> None:
         self._uow = uow
 
-    async def get(self, *, user_id: uuid.UUID) -> UserResponse:
-        """Return the current identity and effective authorization claims."""
+    async def get(self, *, user_id: uuid.UUID) -> AuthenticatedUserResponse:
+        """Return the current authenticated identity profile."""
         async with self._uow:
             users = CurrentUserRepository(self._uow.session)
             user = await users.get_by_id(user_id)
             if user is None:
                 raise NotFoundError("The user was not found.")
             profile = await users.get_active_profile(user.id)
-            claims = await users.authorization_claims(user_id=user.id, now=utc_now())
-            return UserResponse.model_validate(
-                public_user_data(
-                    user,
-                    profile=profile,
-                    roles=claims.roles,
-                    permissions=claims.permissions,
-                )
+            return AuthenticatedUserResponse.model_validate(
+                authenticated_user_data(user, profile=profile)
             )
 
     async def update(
@@ -68,7 +58,7 @@ class CurrentUserService:
         *,
         user_id: uuid.UUID,
         payload: UpdateCurrentUserRequest,
-    ) -> UserResponse:
+    ) -> AuthenticatedUserResponse:
         """Update identity preferences and the owner's universal profile."""
         async with self._uow:
             users = CurrentUserRepository(self._uow.session)
@@ -107,66 +97,8 @@ class CurrentUserService:
                     setattr(profile, field_name, value)
                 profile.updated_by = user.id
 
-            claims = await users.authorization_claims(user_id=user.id, now=utc_now())
-            return UserResponse.model_validate(
-                public_user_data(
-                    user,
-                    profile=profile,
-                    roles=claims.roles,
-                    permissions=claims.permissions,
-                )
-            )
-
-    async def roles(
-        self,
-        *,
-        user_id: uuid.UUID,
-        session_id: uuid.UUID,
-    ) -> UserRolesResponse:
-        """Compatibility projection of the consolidated authorization result."""
-        authorization = await self.authorization(
-            user_id=user_id,
-            session_id=session_id,
-        )
-        return UserRolesResponse(roles=authorization.roles)
-
-    async def permissions(
-        self,
-        *,
-        user_id: uuid.UUID,
-        session_id: uuid.UUID,
-    ) -> UserPermissionsResponse:
-        """Compatibility projection of the consolidated authorization result."""
-        authorization = await self.authorization(
-            user_id=user_id,
-            session_id=session_id,
-        )
-        return UserPermissionsResponse(permissions=authorization.permissions)
-
-    async def authorization(
-        self,
-        *,
-        user_id: uuid.UUID,
-        session_id: uuid.UUID,
-    ) -> CurrentAuthorizationResponse:
-        """Resolve current effective global authorization from the database."""
-        async with self._uow:
-            users = CurrentUserRepository(self._uow.session)
-            if await users.get_by_id(user_id) is None:
-                raise NotFoundError("The user was not found.")
-            now = utc_now()
-            if not await users.active_session_exists(
-                user_id=user_id,
-                session_id=session_id,
-                now=now,
-            ):
-                raise AuthenticationError(
-                    "The access session is expired or revoked."
-                )
-            claims = await users.authorization_claims(user_id=user_id, now=now)
-            return CurrentAuthorizationResponse(
-                roles=sorted(set(claims.roles)),
-                permissions=sorted(set(claims.permissions)),
+            return AuthenticatedUserResponse.model_validate(
+                authenticated_user_data(user, profile=profile)
             )
 
 

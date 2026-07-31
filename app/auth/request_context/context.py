@@ -13,8 +13,8 @@ FastAPI Request and typed header dependency
 This module converts trusted connection information and validated authentication
 headers into a request-scoped context consumed by authentication workflows.
 
-Client-provided user and session identifiers remain consistency assertions.
-They never authenticate a request independently of a signed token.
+User and session identifiers are intentionally absent; protected identity comes
+only from signed JWT claims and persisted session state.
 """
 
 from __future__ import annotations
@@ -59,17 +59,10 @@ class AuthRequestContext:
     correlation_id: str | None = None
 
     client_id: str | None = None
-    client_version: str | None = None
     platform: str | None = None
 
     device_id: str | None = None
     device_type: str | None = None
-    device_name: str | None = None
-
-    asserted_user_id: uuid.UUID | None = None
-    asserted_session_id: uuid.UUID | None = None
-
-    idempotency_key: str | None = None
 
     @classmethod
     def from_request(
@@ -103,21 +96,12 @@ class AuthRequestContext:
                 name="user-agent",
                 max_length=512,
             ),
-            request_id=get_request_id(
-                request.headers.get("x-request-id")
-            ),
-            correlation_id=get_correlation_id(
-                request.headers.get("x-correlation-id")
-            ),
+            request_id=get_request_id(request.headers.get("x-request-id")),
+            correlation_id=get_correlation_id(request.headers.get("x-correlation-id")),
             client_id=headers.client_id,
-            client_version=headers.client_version,
             platform=headers.platform,
             device_id=headers.device_id,
             device_type=headers.device_type,
-            device_name=headers.device_name,
-            asserted_user_id=headers.user_id,
-            asserted_session_id=headers.session_id,
-            idempotency_key=headers.idempotency_key,
         )
 
     @staticmethod
@@ -139,17 +123,10 @@ class AuthRequestContext:
             return None
 
         if len(normalized) > max_length:
-            raise ValidationError(
-                f"{name} exceeds the maximum allowed length."
-            )
+            raise ValidationError(f"{name} exceeds the maximum allowed length.")
 
-        if any(
-            ord(character) < 32 or ord(character) == 127
-            for character in normalized
-        ):
-            raise ValidationError(
-                f"{name} contains invalid control characters."
-            )
+        if any(ord(character) < 32 or ord(character) == 127 for character in normalized):
+            raise ValidationError(f"{name} contains invalid control characters.")
 
         return normalized
 
@@ -168,11 +145,7 @@ class AuthRequestContext:
         The forwarded chain is evaluated from right to left. The first address
         that is not a trusted proxy is treated as the effective client.
         """
-        direct_host = (
-            request.client.host
-            if request.client is not None
-            else None
-        )
+        direct_host = request.client.host if request.client is not None else None
 
         if direct_host is None:
             return None
@@ -199,16 +172,12 @@ class AuthRequestContext:
         ):
             return normalized_direct_ip
 
-        forwarded_header = request.headers.get(
-            "x-forwarded-for"
-        )
+        forwarded_header = request.headers.get("x-forwarded-for")
 
         if not forwarded_header:
             return normalized_direct_ip
 
-        forwarded_addresses = cls._parse_forwarded_chain(
-            forwarded_header
-        )
+        forwarded_addresses = cls._parse_forwarded_chain(forwarded_header)
 
         if forwarded_addresses is None:
             return normalized_direct_ip
@@ -232,23 +201,15 @@ class AuthRequestContext:
 
         A malformed chain is rejected as a whole rather than partially trusted.
         """
-        raw_values = [
-            item.strip()
-            for item in value.split(",")
-        ]
+        raw_values = [item.strip() for item in value.split(",")]
 
-        if not raw_values or any(
-            not item
-            for item in raw_values
-        ):
+        if not raw_values or any(not item for item in raw_values):
             return None
 
         parsed_addresses: list[IPAddress] = []
 
         for raw_value in raw_values:
-            address = AuthRequestContext._parse_ip(
-                raw_value
-            )
+            address = AuthRequestContext._parse_ip(raw_value)
 
             if address is None:
                 return None

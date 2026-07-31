@@ -30,7 +30,7 @@ import re
 from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal, Self
+from typing import Self
 from urllib.parse import urlparse
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -347,9 +347,7 @@ class AppSettings(BaseSettings):
     JWT_KEY_ID: str = "primary"
 
     # Previous public keys retained temporarily for safe signing-key rotation.
-    JWT_PREVIOUS_PUBLIC_KEYS_B64: dict[str, str] = Field(
-        default_factory=dict
-    )
+    JWT_PREVIOUS_PUBLIC_KEYS_B64: dict[str, str] = Field(default_factory=dict)
 
     JWT_ISSUER: str = "pharmacy-platform-identity"
     JWT_AUDIENCE: str = "pharmacy-platform"
@@ -359,9 +357,6 @@ class AppSettings(BaseSettings):
         ge=1,
         le=60,
     )
-    ACCESS_TOKEN_VERSION: Literal[1, 2] = 1
-    ACCESS_TOKEN_V2_INCLUDE_ROLES: bool = False
-    AUTH_LOGIN_REFRESH_RESPONSE_VERSION: Literal[1, 2] = 1
     REFRESH_TOKEN_TTL_DAYS: int = Field(
         default=30,
         ge=1,
@@ -414,17 +409,10 @@ class AppSettings(BaseSettings):
     PHONE_VERIFICATION_REQUIRED: bool = True
 
     DEFAULT_ROLE_CODE: str = "customer"
-    DEFAULT_ROLE_REQUIRED: bool = True
     SELF_REGISTRATION_ROLE_CODES: list[str] = Field(
         default_factory=lambda: ["customer"],
         min_length=1,
     )
-
-    # Validate the persisted session before authorizing protected requests.
-    AUTH_CHECK_SESSION_ON_EACH_REQUEST: bool = True
-
-    # Refresh role and permission information for protected requests.
-    AUTH_REFRESH_AUTHZ_ON_EACH_REQUEST: bool = True
 
     # -------------------------------------------------------------------------
     # Authentication rate limiting
@@ -540,14 +528,10 @@ class AppSettings(BaseSettings):
         normalized = value.strip()
 
         if not normalized.startswith("/") or normalized == "/":
-            raise ValueError(
-                "API_V1_STR must be a non-root path beginning with '/'"
-            )
+            raise ValueError("API_V1_STR must be a non-root path beginning with '/'")
 
         if "?" in normalized or "#" in normalized:
-            raise ValueError(
-                "API_V1_STR must not contain a query or fragment"
-            )
+            raise ValueError("API_V1_STR must not contain a query or fragment")
 
         return normalized.rstrip("/")
 
@@ -596,9 +580,7 @@ class AppSettings(BaseSettings):
         try:
             ZoneInfo(normalized)
         except ZoneInfoNotFoundError as exc:
-            raise ValueError(
-                f"Invalid TIMEZONE: {normalized}"
-            ) from exc
+            raise ValueError(f"Invalid TIMEZONE: {normalized}") from exc
 
         return normalized
 
@@ -611,11 +593,7 @@ class AppSettings(BaseSettings):
     @classmethod
     def normalize_string_lists(cls, values: list[str]) -> list[str]:
         """Strip blank items and remove duplicate values."""
-        normalized = [
-            item.strip()
-            for item in values
-            if item and item.strip()
-        ]
+        normalized = [item.strip() for item in values if item and item.strip()]
 
         return list(dict.fromkeys(normalized))
 
@@ -630,9 +608,7 @@ class AppSettings(BaseSettings):
                     strict=False,
                 )
             except ValueError as exc:
-                raise ValueError(
-                    f"Invalid trusted proxy CIDR: {value}"
-                ) from exc
+                raise ValueError(f"Invalid trusted proxy CIDR: {value}") from exc
 
         return values
 
@@ -643,9 +619,7 @@ class AppSettings(BaseSettings):
         normalized = value.strip().strip(":")
 
         if not normalized or len(normalized) > 128:
-            raise ValueError(
-                "RATE_LIMIT_KEY_PREFIX must contain 1 to 128 characters"
-            )
+            raise ValueError("RATE_LIMIT_KEY_PREFIX must contain 1 to 128 characters")
 
         return normalized
 
@@ -692,10 +666,7 @@ class AppSettings(BaseSettings):
         total_connections = self.SQL_POOL_SIZE + self.SQL_MAX_OVERFLOW
 
         if total_connections > 200:
-            raise ValueError(
-                "SQL_POOL_SIZE plus SQL_MAX_OVERFLOW must not exceed "
-                "200 per process"
-            )
+            raise ValueError("SQL_POOL_SIZE plus SQL_MAX_OVERFLOW must not exceed 200 per process")
 
         postgres_url = self._required_secret(
             self.POSTGRES_URL,
@@ -704,13 +675,8 @@ class AppSettings(BaseSettings):
 
         parsed_url = urlparse(postgres_url)
 
-        if (
-            parsed_url.scheme != "postgresql+asyncpg"
-            or not parsed_url.netloc
-        ):
-            raise ValueError(
-                "POSTGRES_URL must be a valid postgresql+asyncpg URL"
-            )
+        if parsed_url.scheme != "postgresql+asyncpg" or not parsed_url.netloc:
+            raise ValueError("POSTGRES_URL must be a valid postgresql+asyncpg URL")
 
     def _validate_redis_settings(self) -> None:
         """Validate Redis settings when Redis is required."""
@@ -723,20 +689,13 @@ class AppSettings(BaseSettings):
         )
         parsed_url = urlparse(redis_url)
 
-        if (
-            parsed_url.scheme not in {"redis", "rediss"}
-            or not parsed_url.netloc
-        ):
-            raise ValueError(
-                "REDIS_URL must be a valid redis:// or rediss:// URL"
-            )
+        if parsed_url.scheme not in {"redis", "rediss"} or not parsed_url.netloc:
+            raise ValueError("REDIS_URL must be a valid redis:// or rediss:// URL")
 
     def _validate_mongo_settings(self) -> None:
         """Validate optional MongoDB settings and pool sizing."""
         if self.MONGO_MIN_POOL_SIZE > self.MONGO_MAX_POOL_SIZE:
-            raise ValueError(
-                "MONGO_MIN_POOL_SIZE must not exceed MONGO_MAX_POOL_SIZE"
-            )
+            raise ValueError("MONGO_MIN_POOL_SIZE must not exceed MONGO_MAX_POOL_SIZE")
 
         if not self.ENABLE_MONGO:
             return
@@ -747,28 +706,17 @@ class AppSettings(BaseSettings):
         )
         parsed_uri = urlparse(mongo_uri)
 
-        if (
-            parsed_uri.scheme not in {"mongodb", "mongodb+srv"}
-            or not parsed_uri.netloc
-        ):
-            raise ValueError(
-                "MONGO_URI must be a valid mongodb:// or mongodb+srv:// URI"
-            )
+        if parsed_uri.scheme not in {"mongodb", "mongodb+srv"} or not parsed_uri.netloc:
+            raise ValueError("MONGO_URI must be a valid mongodb:// or mongodb+srv:// URI")
 
         if not self.MONGO_DB_NAME:
-            raise ValueError(
-                "MONGO_DB_NAME is required when ENABLE_MONGO=true"
-            )
+            raise ValueError("MONGO_DB_NAME is required when ENABLE_MONGO=true")
 
         if len(self.MONGO_DB_NAME) > 64:
-            raise ValueError(
-                "MONGO_DB_NAME must not exceed 64 characters"
-            )
+            raise ValueError("MONGO_DB_NAME must not exceed 64 characters")
 
         if "\x00" in self.MONGO_DB_NAME:
-            raise ValueError(
-                "MONGO_DB_NAME must not contain null characters"
-            )
+            raise ValueError("MONGO_DB_NAME must not contain null characters")
 
     def _validate_password_security(self) -> None:
         """Validate the application-wide password pepper."""
@@ -778,9 +726,7 @@ class AppSettings(BaseSettings):
         )
 
         if len(pepper) < 32:
-            raise ValueError(
-                "AUTH_PEPPER must contain at least 32 characters"
-            )
+            raise ValueError("AUTH_PEPPER must contain at least 32 characters")
 
     def _validate_jwt_settings(self) -> None:
         """Validate settings for the selected JWT algorithm."""
@@ -791,14 +737,10 @@ class AppSettings(BaseSettings):
             )
 
             if len(secret) < 64:
-                raise ValueError(
-                    "JWT_SECRET must contain at least 64 characters"
-                )
+                raise ValueError("JWT_SECRET must contain at least 64 characters")
 
             if self.ENVIRONMENT is Environment.PRODUCTION:
-                raise ValueError(
-                    "Production must use JWT_ALGORITHM=RS256"
-                )
+                raise ValueError("Production must use JWT_ALGORITHM=RS256")
 
             return
 
@@ -813,56 +755,21 @@ class AppSettings(BaseSettings):
             if role_code_pattern.fullmatch(code) is None
         ]
         if invalid_role_codes:
-            raise ValueError(
-                "SELF_REGISTRATION_ROLE_CODES contains invalid role codes"
-            )
+            raise ValueError("SELF_REGISTRATION_ROLE_CODES contains invalid role codes")
         if self.DEFAULT_ROLE_CODE not in self.SELF_REGISTRATION_ROLE_CODES:
             raise ValueError(
-                "DEFAULT_ROLE_CODE must be explicitly permitted by "
-                "SELF_REGISTRATION_ROLE_CODES"
-            )
-        if not self.DEFAULT_ROLE_REQUIRED:
-            raise ValueError(
-                "DEFAULT_ROLE_REQUIRED must remain true because public "
-                "self-registration requires a server-controlled role"
-            )
-        if (
-            self.ACCESS_TOKEN_VERSION == 2
-            and not self.AUTH_CHECK_SESSION_ON_EACH_REQUEST
-        ):
-            raise ValueError(
-                "ACCESS_TOKEN_VERSION=2 requires "
-                "AUTH_CHECK_SESSION_ON_EACH_REQUEST=true"
-            )
-        if (
-            self.AUTH_REFRESH_AUTHZ_ON_EACH_REQUEST
-            and not self.AUTH_CHECK_SESSION_ON_EACH_REQUEST
-        ):
-            raise ValueError(
-                "AUTH_REFRESH_AUTHZ_ON_EACH_REQUEST requires "
-                "AUTH_CHECK_SESSION_ON_EACH_REQUEST=true"
+                "DEFAULT_ROLE_CODE must be explicitly permitted by SELF_REGISTRATION_ROLE_CODES"
             )
 
     def _validate_http_settings(self) -> None:
         """Validate CORS-related HTTP security rules."""
-        if (
-            self.CORS_ALLOW_CREDENTIALS
-            and "*" in self.CORS_ALLOWED_ORIGINS
-        ):
-            raise ValueError(
-                "Wildcard CORS origins cannot be used with credentials"
-            )
+        if self.CORS_ALLOW_CREDENTIALS and "*" in self.CORS_ALLOWED_ORIGINS:
+            raise ValueError("Wildcard CORS origins cannot be used with credentials")
 
     def _validate_proxy_settings(self) -> None:
         """Require trusted networks when proxy handling is enabled."""
-        if (
-            self.TRUSTED_PROXY_ENABLED
-            and not self.TRUSTED_PROXY_CIDRS
-        ):
-            raise ValueError(
-                "TRUSTED_PROXY_CIDRS is required when "
-                "TRUSTED_PROXY_ENABLED=true"
-            )
+        if self.TRUSTED_PROXY_ENABLED and not self.TRUSTED_PROXY_CIDRS:
+            raise ValueError("TRUSTED_PROXY_CIDRS is required when TRUSTED_PROXY_ENABLED=true")
 
     def _validate_notification_settings(self) -> None:
         """Validate the optional notification-service URL."""
@@ -871,13 +778,8 @@ class AppSettings(BaseSettings):
 
         parsed_url = urlparse(self.NOTIFICATION_API_URL)
 
-        if (
-            parsed_url.scheme not in {"http", "https"}
-            or not parsed_url.netloc
-        ):
-            raise ValueError(
-                "NOTIFICATION_API_URL must be a valid HTTP or HTTPS URL"
-            )
+        if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
+            raise ValueError("NOTIFICATION_API_URL must be a valid HTTP or HTTPS URL")
 
     # -------------------------------------------------------------------------
     # RSA key validation
@@ -889,9 +791,7 @@ class AppSettings(BaseSettings):
         public_key_pem = self.jwt_public_key
 
         if not private_key_pem or not public_key_pem:
-            raise ValueError(
-                "RS256 requires JWT_PRIVATE_KEY_B64 and JWT_PUBLIC_KEY_B64"
-            )
+            raise ValueError("RS256 requires JWT_PRIVATE_KEY_B64 and JWT_PUBLIC_KEY_B64")
 
         private_object = self._load_rsa_private_key(private_key_pem)
         public_object = self._load_rsa_public_key(
@@ -899,21 +799,14 @@ class AppSettings(BaseSettings):
             setting_name="JWT_PUBLIC_KEY_B64",
         )
 
-        derived_public_numbers = (
-            private_object.public_key().public_numbers()
-        )
+        derived_public_numbers = private_object.public_key().public_numbers()
         configured_public_numbers = public_object.public_numbers()
 
         if derived_public_numbers != configured_public_numbers:
-            raise ValueError(
-                "JWT private and public keys do not form a pair"
-            )
+            raise ValueError("JWT private and public keys do not form a pair")
 
         if self.JWT_KEY_ID in self.JWT_PREVIOUS_PUBLIC_KEYS_B64:
-            raise ValueError(
-                "JWT_KEY_ID must not also exist in "
-                "JWT_PREVIOUS_PUBLIC_KEYS_B64"
-            )
+            raise ValueError("JWT_KEY_ID must not also exist in JWT_PREVIOUS_PUBLIC_KEYS_B64")
 
         self._validate_previous_rsa_public_keys()
 
@@ -929,14 +822,12 @@ class AppSettings(BaseSettings):
             )
         except (TypeError, ValueError) as exc:
             raise ValueError(
-                "JWT_PRIVATE_KEY_B64 must contain a valid, unencrypted "
-                "PEM private key"
+                "JWT_PRIVATE_KEY_B64 must contain a valid, unencrypted PEM private key"
             ) from exc
 
         if not isinstance(private_object, rsa.RSAPrivateKey):
             raise ValueError(
-                "JWT_PRIVATE_KEY_B64 must contain an RSA private key "
-                "when JWT_ALGORITHM=RS256"
+                "JWT_PRIVATE_KEY_B64 must contain an RSA private key when JWT_ALGORITHM=RS256"
             )
 
         return private_object
@@ -949,18 +840,13 @@ class AppSettings(BaseSettings):
     ) -> rsa.RSAPublicKey:
         """Load and validate an RSA public key."""
         try:
-            public_object = load_pem_public_key(
-                public_key_pem.encode("utf-8")
-            )
+            public_object = load_pem_public_key(public_key_pem.encode("utf-8"))
         except (TypeError, ValueError) as exc:
-            raise ValueError(
-                f"{setting_name} must contain a valid PEM public key"
-            ) from exc
+            raise ValueError(f"{setting_name} must contain a valid PEM public key") from exc
 
         if not isinstance(public_object, rsa.RSAPublicKey):
             raise ValueError(
-                f"{setting_name} must contain an RSA public key "
-                "when JWT_ALGORITHM=RS256"
+                f"{setting_name} must contain an RSA public key when JWT_ALGORITHM=RS256"
             )
 
         return public_object
@@ -972,10 +858,7 @@ class AppSettings(BaseSettings):
             normalized_encoded_key = encoded_key.strip()
 
             if not normalized_key_id or not normalized_encoded_key:
-                raise ValueError(
-                    "Previous JWT key identifiers and values "
-                    "must not be blank"
-                )
+                raise ValueError("Previous JWT key identifiers and values must not be blank")
 
             public_key_pem = self._decode_pem(
                 normalized_encoded_key,
@@ -984,10 +867,7 @@ class AppSettings(BaseSettings):
 
             self._load_rsa_public_key(
                 public_key_pem,
-                setting_name=(
-                    "JWT_PREVIOUS_PUBLIC_KEYS_B64"
-                    f"[{normalized_key_id}]"
-                ),
+                setting_name=(f"JWT_PREVIOUS_PUBLIC_KEYS_B64[{normalized_key_id}]"),
             )
 
     # -------------------------------------------------------------------------
@@ -999,90 +879,53 @@ class AppSettings(BaseSettings):
         pepper = self.auth_pepper_value
         if self._looks_like_placeholder_secret(pepper) or len(set(pepper)) < 8:
             raise ValueError(
-                "AUTH_PEPPER must be a non-placeholder high-entropy secret "
-                "in production"
+                "AUTH_PEPPER must be a non-placeholder high-entropy secret in production"
             )
 
         postgres_password = urlparse(self.postgres_url_value).password
-        if (
-            postgres_password is None
-            or self._looks_like_placeholder_secret(postgres_password)
-        ):
-            raise ValueError(
-                "POSTGRES_URL must contain a non-placeholder password "
-                "in production"
-            )
+        if postgres_password is None or self._looks_like_placeholder_secret(postgres_password):
+            raise ValueError("POSTGRES_URL must contain a non-placeholder password in production")
 
         if self.RATE_LIMIT_BACKEND is RateLimitBackend.REDIS:
             redis_password = urlparse(self.redis_url_value).password
-            if (
-                redis_password is None
-                or self._looks_like_placeholder_secret(redis_password)
-            ):
-                raise ValueError(
-                    "REDIS_URL must contain a non-placeholder password "
-                    "in production"
-                )
+            if redis_password is None or self._looks_like_placeholder_secret(redis_password):
+                raise ValueError("REDIS_URL must contain a non-placeholder password in production")
 
         if self.DEBUG:
-            raise ValueError(
-                "DEBUG must be false in production"
-            )
+            raise ValueError("DEBUG must be false in production")
 
         if self.SQL_ECHO:
-            raise ValueError(
-                "SQL_ECHO must be false in production"
-            )
+            raise ValueError("SQL_ECHO must be false in production")
 
         if not self.LOG_JSON:
-            raise ValueError(
-                "LOG_JSON must be true in production"
-            )
+            raise ValueError("LOG_JSON must be true in production")
 
         if self.LOG_TO_FILE:
-            raise ValueError(
-                "LOG_TO_FILE must be false in production containers"
-            )
+            raise ValueError("LOG_TO_FILE must be false in production containers")
 
         if not self.SECURE_HEADERS_ENABLED:
-            raise ValueError(
-                "SECURE_HEADERS_ENABLED must be true in production"
-            )
+            raise ValueError("SECURE_HEADERS_ENABLED must be true in production")
 
         if not self.HSTS_ENABLED:
-            raise ValueError(
-                "HSTS_ENABLED must be true in production"
-            )
+            raise ValueError("HSTS_ENABLED must be true in production")
 
         if not self.HOST_VALIDATION_ENABLED:
-            raise ValueError(
-                "HOST_VALIDATION_ENABLED must be true in production"
-            )
+            raise ValueError("HOST_VALIDATION_ENABLED must be true in production")
 
         if not self.ALLOWED_HOSTS or "*" in self.ALLOWED_HOSTS:
-            raise ValueError(
-                "Production ALLOWED_HOSTS must contain explicit hosts"
-            )
+            raise ValueError("Production ALLOWED_HOSTS must contain explicit hosts")
 
         if "*" in self.CORS_ALLOWED_ORIGINS:
-            raise ValueError(
-                "Production CORS origins must not contain a wildcard"
-            )
+            raise ValueError("Production CORS origins must not contain a wildcard")
 
         if self.OTP_DEV_EXPOSE_CODE:
-            raise ValueError(
-                "OTP_DEV_EXPOSE_CODE must be false in production"
-            )
+            raise ValueError("OTP_DEV_EXPOSE_CODE must be false in production")
 
         if self.DOCS_ENABLED:
-            raise ValueError(
-                "DOCS_ENABLED must be false in production"
-            )
+            raise ValueError("DOCS_ENABLED must be false in production")
 
         if self.RATE_LIMIT_BACKEND is not RateLimitBackend.REDIS:
-            raise ValueError(
-                "Production requires RATE_LIMIT_BACKEND=redis"
-            )
+            raise ValueError("Production requires RATE_LIMIT_BACKEND=redis")
 
     @staticmethod
     def _looks_like_placeholder_secret(value: str) -> bool:
@@ -1155,10 +998,7 @@ class AppSettings(BaseSettings):
         Redis is required when explicitly enabled or when selected as the
         authentication rate-limit backend.
         """
-        return (
-            self.ENABLE_REDIS
-            or self.RATE_LIMIT_BACKEND is RateLimitBackend.REDIS
-        )
+        return self.ENABLE_REDIS or self.RATE_LIMIT_BACKEND is RateLimitBackend.REDIS
 
     @property
     def redis_url_value(self) -> str:
@@ -1211,9 +1051,7 @@ class AppSettings(BaseSettings):
         if self.JWT_ALGORITHM is JWTAlgorithm.HS256:
             secret = self.jwt_secret_value
 
-            return {
-                self.JWT_KEY_ID: secret
-            } if secret else {}
+            return {self.JWT_KEY_ID: secret} if secret else {}
 
         keys: dict[str, str] = {}
 
@@ -1284,9 +1122,7 @@ class AppSettings(BaseSettings):
             UnicodeDecodeError,
             ValueError,
         ) as exc:
-            raise ValueError(
-                f"{name} must be valid base64-encoded UTF-8 PEM"
-            ) from exc
+            raise ValueError(f"{name} must be valid base64-encoded UTF-8 PEM") from exc
 
 
 @lru_cache(maxsize=1)

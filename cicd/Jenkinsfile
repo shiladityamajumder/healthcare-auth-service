@@ -68,6 +68,15 @@ pipeline {
                         always { junit allowEmptyResults: true, testResults: 'test-results/pytest.xml' }
                     }
                 }
+                stage('Security') {
+                    steps {
+                        sh '''
+                            . .ci-venv/bin/activate
+                            python scripts/check_release_artifacts.py
+                            python -m pip_audit -r requirements.txt -r requirements-dev.txt
+                        '''
+                    }
+                }
             }
         }
 

@@ -255,11 +255,7 @@ def start_of_application_day(
     Raises:
         ValueError: If ``value`` is timezone-naive.
     """
-    local_value = (
-        current_datetime()
-        if value is None
-        else to_application_timezone(value)
-    )
+    local_value = current_datetime() if value is None else to_application_timezone(value)
 
     return local_value.replace(
         hour=0,
