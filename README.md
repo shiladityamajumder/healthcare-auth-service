@@ -1,155 +1,312 @@
 <!-- File: README.md -->
 
-# Pharmacy Identity Service
+<h1 align="center">🔐 Pharmacy Identity Service</h1>
 
-Production-oriented FastAPI authentication and authorization service using Python 3.12+, Pydantic v2, SQLAlchemy 2.x async ORM, PostgreSQL, Argon2id, JWT rotation, OTP, scoped RBAC, and Redis-backed rate limiting.
+<p align="center">
+  Production-focused authentication and authorization service built with FastAPI, PostgreSQL, Redis, JWT, Argon2id, and database-backed RBAC.
+</p>
 
-The application is a modular monolith. Every public API family is implemented as an independent vertical slice under `app/modules`. The `app/auth` package contains reusable authentication infrastructure only.
+<p align="center">
+  <img height="22" alt="Python 3.12+" src="https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white">
+  <img height="22" alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white">
+  <img height="22" alt="PostgreSQL Async" src="https://img.shields.io/badge/PostgreSQL-Async-4169E1?logo=postgresql&logoColor=white">
+  <img height="22" alt="Redis Rate Limiting" src="https://img.shields.io/badge/Redis-Rate%20Limiting-DC382D?logo=redis&logoColor=white">
+  <img height="22" alt="Docker API Service" src="https://img.shields.io/badge/Docker-API%20Service-2496ED?logo=docker&logoColor=white">
+  <img height="22" alt="JWT Rotating Tokens" src="https://img.shields.io/badge/JWT-Rotating%20Tokens-000000?logo=jsonwebtokens&logoColor=white">
+</p>
 
-## Current capabilities
+---
+
+## Overview
+
+Pharmacy Identity Service provides authentication, session management, OTP verification, password recovery, user profile management, and role-based authorization for the pharmacy platform.
+
+The service follows a modular FastAPI structure:
+
+- Business features are located under `app/modules`.
+- Shared authentication infrastructure is located under `app/auth`.
+- PostgreSQL is the source of truth for users, sessions, roles, and permissions.
+- Redis is used for production rate limiting.
+- Access tokens contain authentication and session claims only.
+- Roles and permissions are resolved from PostgreSQL.
+
+Detailed architecture decisions are documented in [`Architecture.md`](Architecture.md).
+
+## Features
 
 - Email and password registration
-- Phone and OTP registration
+- Phone registration using OTP
 - Email verification
-- Email or phone password login
+- Password login using email or phone
 - Phone OTP login
 - Short-lived access tokens
-- Rotating refresh tokens with replay detection
-- Multiple concurrent device sessions
-- Current-session logout, logout from other devices, and logout from all devices
-- Active-session listing and targeted session revocation
-- Password recovery with OTP and a one-time signed reset proof
-- Password change and initial password setup
-- Current-user profile preferences
-- Effective roles and permissions
-- Administrative user, role, permission, role-permission, and user-role management
+- Rotating refresh tokens
+- Refresh-token replay detection
+- Multiple device sessions
+- Session listing and revocation
+- Current-session logout
+- Logout from other devices
+- Logout from all devices
+- Forgot-password and reset-password flows
+- Initial password setup
+- Password change
+- Current-user profile management
+- Database-backed roles and permissions
 - Scoped and time-bound role assignments
-- Purpose-specific OTP challenges with hashing, expiry, cooldown, attempt limits, and replay prevention
-- Typed request and device headers in OpenAPI
+- Administrative user and RBAC management
+- Redis-backed authentication rate limiting
 - Structured logging with credential redaction
-- Redis-backed, risk-tiered authentication and API rate limiting for production
-- Declarative FastAPI security policies for authenticated module routes
+- Swagger UI and OpenAPI documentation
 
-No MFA or API-client authentication routes, services, schemas, repositories, token types, settings, or runtime dependencies are active in this release. The supplied ORM mappings for future database compatibility remain unchanged.
+## Technology stack
 
-Outbound OTP delivery is intentionally disabled at the notification gateway. OTP generation, hashing, persistence, verification, rate limiting, and expiry are implemented. A production email/SMS provider must be connected before deployment.
-
-## Final ownership rules
-
-- `app/modules/<feature>/routes.py` owns HTTP transport behavior.
-- `app/modules/<feature>/dependencies.py` composes FastAPI service, security,
-  request-context, and transaction dependencies for that feature.
-- `app/modules/<feature>/schemas.py` owns request contracts and feature-specific responses.
-- `app/modules/<feature>/service.py` owns use-case orchestration and transaction boundaries.
-- `app/modules/<feature>/repositories.py` owns SQLAlchemy persistence operations.
-- `app/modules/<feature>/openapi.py` owns tags and response metadata.
-- `app/auth` owns shared JWT, password, OTP, request-context, header, session-token, authorization, notification, and rate-limit infrastructure.
-- `app/common/auth_contracts.py` owns only identical response contracts reused by several modules.
-- Repositories never commit. `SQLAlchemyUnitOfWork` owns commit and rollback.
-- ORM models are not public API schemas.
-- Business modules may import `app/auth`; `app/auth` must never import a business module.
-- Client-provided identity headers are assertions, never authentication credentials.
-- Logs use the central logger or `app.utils.debug.debug`. Application code does not use arbitrary `print()` calls.
+| Component | Technology |
+| --- | --- |
+| Language | Python 3.12+ |
+| API framework | FastAPI |
+| Validation | Pydantic v2 |
+| ORM | SQLAlchemy 2.x Async |
+| Database | PostgreSQL |
+| Rate limiting | Redis |
+| Password hashing | Argon2id |
+| Tokens | JWT |
+| Testing | Pytest |
+| Linting and formatting | Ruff |
+| Type checking | MyPy |
+| Containerization | Docker |
 
 ## Project structure
 
 ```text
 app/
-  api/                          API composition and exception handlers
-  auth/                         shared authentication kernel only
-    security/
-      hashing.py                HMAC and OTP hashing
-      passwords.py              Argon2 password policy and verification
-      tokens.py                 access, refresh, and reset JWTs
-    api_rate_limits.py          generic authenticated API rate-limit policies
-    authorization/              effective role/permission loading
-    request_context/            typed headers, contexts, and principals
-    route_security.py           composable FastAPI security dependency factory
-    security_policy.py          immutable route-security metadata and risk tiers
-    identities.py               canonical identity keys
-    normalization.py            email and phone normalization/masking
-    notifications.py            outbound notification boundary
-    openapi.py                  shared authentication error metadata
-    otp.py                      persistence-agnostic OTP engine
-    policies.py                 account, OTP, and password-history policies
-    presentation.py             safe user projection helper
-    workflows/rate_limits.py    payload-aware authentication rate-limit facade
-    runtime.py                  immutable process-wide security container
-    session_tokens.py           session and token-pair issuer
-  common/
-    auth_contracts.py           truly shared response DTOs
-    schemas.py                  strict schema bases and device context
-  core/                         configuration, logging, middleware, rate limiting
-  db/                           PostgreSQL adapter and Unit of Work
-  models/                       externally migrated ORM mappings
-  modules/
-    registration/
-    email_verification/
-    login/
-    token_management/
-    session_management/
-    password_management/
-    current_user/
-    admin_users/
-    admin_roles/
-    admin_permissions/
-    admin_user_roles/
-
-    # Every module contains:
-    # routes.py, dependencies.py, schemas.py, service.py,
-    # repositories.py, openapi.py
-
-  utils/
-    debug.py                    development-only redacted debug helper
+├── api/                    API router composition and exception handlers
+├── auth/                   Shared authentication infrastructure
+│   ├── authorization/      Effective role and permission resolution
+│   ├── request_context/    Authentication and request context
+│   ├── security/           Password, hashing, and token utilities
+│   └── workflows/          Shared authentication workflows
+├── common/                 Shared schemas and response contracts
+├── core/                   Configuration, logging, and middleware
+├── db/                     Database adapter and Unit of Work
+├── models/                 SQLAlchemy ORM models
+├── modules/                Business feature modules
+│   ├── registration/
+│   ├── email_verification/
+│   ├── login/
+│   ├── token_management/
+│   ├── session_management/
+│   ├── password_management/
+│   ├── current_user/
+│   ├── admin_users/
+│   ├── admin_roles/
+│   ├── admin_permissions/
+│   └── admin_user_roles/
+└── utils/                  Shared utilities
 
 tests/
-  unit/
-  contract/
-  integration/
+├── unit/
+├── contract/
+└── integration/
 ```
 
-The following directories intentionally do not exist:
+## Prerequisites
+
+Install the following before starting:
+
+* Python 3.12 or newer
+* PostgreSQL
+* Redis
+* Git
+* Docker and Docker Compose, optional
+
+PostgreSQL and Redis are external dependencies.
+
+The included Docker configuration starts only the Python API service. It does not start PostgreSQL or Redis.
+
+## Local development setup
+
+### 1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd auth_service
+```
+
+### 2. Create a virtual environment
+
+#### Linux or macOS
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+#### Windows PowerShell
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+#### Windows Command Prompt
+
+```cmd
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+### 3. Install dependencies
+
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt -r requirements-dev.txt
+```
+
+### 4. Create the environment file
+
+#### Linux or macOS
+
+```bash
+cp .env.example .env
+```
+
+#### Windows
+
+```cmd
+copy .env.example .env
+```
+
+Generate authentication secrets:
+
+```bash
+python scripts/generate_auth_secrets.py
+```
+
+Copy the generated values into `.env`.
+
+Never commit:
+
+* `.env`
+* JWT signing keys
+* Database credentials
+* Redis credentials
+* OTP values
+* Access tokens
+* Refresh tokens
+
+### 5. Configure PostgreSQL and Redis
+
+Set externally reachable service URLs in `.env`:
+
+```env
+POSTGRES_URL=postgresql+asyncpg://identity_app:secure_password@127.0.0.1:5432/pharmacy_platform
+
+RATE_LIMIT_BACKEND=redis
+REDIS_URL=redis://127.0.0.1:6379/0
+```
+
+When the API runs inside Docker, `127.0.0.1` refers to the API container itself.
+
+Use hostnames or addresses reachable from the container:
+
+```env
+POSTGRES_URL=postgresql+asyncpg://identity_app:secure_password@host.docker.internal:5432/pharmacy_platform
+
+RATE_LIMIT_BACKEND=redis
+REDIS_URL=redis://host.docker.internal:6379/0
+```
+
+For Linux Docker environments, configure the appropriate Docker network hostname or host gateway.
+
+### 6. Prepare the database
+
+The required PostgreSQL schema and tables must exist before application readiness succeeds.
+
+Run the database migrations using the migration process configured for your environment.
+
+Seed identity master data when required:
+
+```bash
+python scripts/seed_identity_master_data.py
+```
+
+### 7. Start the API locally
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 5555 --reload
+```
+
+The API will be available at:
 
 ```text
-app/auth/services/
-app/auth/repositories/
-app/auth/schemas/
-app/modules/auth/
+http://localhost:5555
 ```
 
-## Declarative route security
+## Run with Docker
 
-Protected module routes declare one local typed access alias, such as
-`AdminUserReadAccess` or `CurrentUserWriteAccess`. That alias composes bearer
-authentication, persisted-session and account validation, optional header
-consistency checks, fresh role/permission enforcement, and a risk-appropriate
-API rate limit. Route bodies therefore contain use-case transport logic rather
-than repeated security calls.
+The Docker configuration runs only the FastAPI service.
 
-The generic policies are intentionally risk based:
+PostgreSQL and Redis must already be available through the URLs configured in `.env`.
 
-| Policy | Intended use |
-| --- | --- |
-| `STANDARD` | Authenticated profile and ordinary reads |
-| `SENSITIVE` | Profile/password changes and session revocation |
-| `ADMIN_READ` | Administrative list and detail operations |
-| `ADMIN_WRITE` | Administrative mutations and assignments |
-| `NONE` | Explicit exceptions such as gateway-managed endpoints |
+### Build and start
 
-Login, registration, OTP, password-reset, refresh, and refresh-token logout
-retain their specialized rate-limit methods because their strongest keys come
-from validated payload values, not only route metadata. Ordinary Python route
-decorators are not used; FastAPI dependencies preserve dependency overrides,
-request validation, signatures, and OpenAPI behavior.
+```bash
+docker compose up --build
+```
 
-`RATE_LIMIT_BACKEND=disabled` is a development/test facility only. Production
-configuration rejects it and requires the Redis backend. There is deliberately
-no global authorization-bypass setting.
+### Run in the background
 
-## Public API groups
+```bash
+docker compose up -d --build
+```
 
-The reviewed method, authentication, permission, purpose, consumer, and
-keep/remove decisions are recorded in `ENDPOINT_INVENTORY.md`.
+### View container status
+
+```bash
+docker compose ps
+```
+
+### View API logs
+
+```bash
+docker compose logs -f api
+```
+
+### Restart the API
+
+```bash
+docker compose restart api
+```
+
+### Stop the API
+
+```bash
+docker compose down
+```
+
+The application will be available at:
+
+```text
+http://localhost:5555
+```
+
+## API documentation
+
+FastAPI provides interactive API documentation.
+
+| Documentation  | URL                                  |
+| -------------- | ------------------------------------ |
+| Swagger UI     | `http://localhost:5555/docs`         |
+| ReDoc          | `http://localhost:5555/redoc`        |
+| OpenAPI schema | `http://localhost:5555/openapi.json` |
+
+For protected APIs, use Swagger's **Authorize** button and provide:
+
+```text
+Bearer <access-token>
+```
+
+## Core API groups
 
 ### Registration
 
@@ -177,8 +334,6 @@ POST /api/v1/auth/login/phone/verify-otp
 ### Token and logout lifecycle
 
 ```text
-GET  /api/v1/auth/capabilities
-GET  /api/v1/auth/.well-known/jwks.json
 POST /api/v1/auth/token/refresh
 POST /api/v1/auth/logout
 POST /api/v1/auth/logout/others
@@ -192,7 +347,7 @@ GET    /api/v1/auth/sessions
 DELETE /api/v1/auth/sessions/{session_id}
 ```
 
-### Password lifecycle
+### Password management
 
 ```text
 POST /api/v1/auth/password/forgot
@@ -210,114 +365,71 @@ PATCH /api/v1/users/me
 GET   /api/v1/auth/users/me/authorization
 ```
 
-## Authentication and authorization contract
-
-Every login, verification, registration-completion, password-completion, and
-refresh flow returns one `TokenPairResponse` containing a minimal
-`AuthenticatedUserResponse`. The user object never contains roles or
-permissions.
-
-The access token contains only registered JWT claims plus `token_type`, `sid`,
-and `amr`. `sub` is the authenticated user UUID; there is no `user_id` claim.
-Access and refresh tokens contain no roles, permissions, profile data, device
-data, or contract-version claim.
-
-Every protected request validates the access token and then loads the active
-session, account, and current effective authorization from PostgreSQL. Clients
-fetch their current roles and permissions from:
+### Public capabilities
 
 ```text
-GET /api/v1/auth/users/me/authorization
-Authorization: Bearer <access-token>
+GET /api/v1/auth/capabilities
 ```
 
-Frontend permissions are presentation hints, not a security boundary. A user
-can alter browser state and request payloads; every protected operation must
-still enforce authorization on the server. For the same reason, this service
-does not expose an anonymous permission-catalog endpoint.
+This endpoint does not require authentication.
 
-This deployment is a hard authentication-contract cutover. Rotate the JWT
-signing key and remove the prior public key from the decoding-key registry when
-the release is deployed; existing access and refresh tokens then become
-invalid and every user must authenticate again. Removed
-`/api/v1/users/me/roles` and `/api/v1/users/me/permissions` routes return 404.
+It exposes client-safe authentication configuration and does not expose roles, permissions, or internal security settings.
 
-`GET /api/v1/auth/capabilities` is anonymous and cacheable. It exposes only
-client-safe registration, login, verification, password, and platform
-capabilities; it is not an authorization catalog.
+### Administrative APIs
 
-### Administrative users
+Administrative APIs are available for:
 
-```text
-GET   /api/v1/admin/users
-GET   /api/v1/admin/users/{user_id}
-PATCH /api/v1/admin/users/{user_id}/status
-POST  /api/v1/admin/users/{user_id}/logout-all
+* Users
+* Roles
+* Permissions
+* Role-permission assignments
+* User-role assignments
+* Administrative session revocation
+
+Administrative APIs require a valid access token and the appropriate database-backed permission.
+
+See [`ENDPOINT_INVENTORY.md`](ENDPOINT_INVENTORY.md) for the complete route inventory.
+
+## Authentication contract
+
+The service uses one access-token contract and one refresh-token contract.
+
+### Access token
+
+The access token contains authentication and session claims only:
+
+```json
+{
+  "sub": "authenticated-user-uuid",
+  "token_type": "access",
+  "jti": "access-token-uuid",
+  "sid": "session-uuid",
+  "iat": 1785482100,
+  "nbf": 1785482100,
+  "exp": 1785483000,
+  "iss": "pharmacy-platform-identity",
+  "aud": "pharmacy-platform",
+  "amr": [
+    "password"
+  ]
+}
 ```
 
-### Administrative roles
+The access token does not contain:
 
-```text
-GET    /api/v1/admin/roles
-POST   /api/v1/admin/roles
-GET    /api/v1/admin/roles/{role_id}
-PATCH  /api/v1/admin/roles/{role_id}
-DELETE /api/v1/admin/roles/{role_id}
-```
+* A separate `user_id` claim
+* Roles
+* Permissions
+* Email address
+* Phone number
+* Profile information
+* Device information
 
-### Permissions and role permissions
+The standard JWT `sub` claim contains the authenticated user ID.
 
-```text
-GET    /api/v1/admin/permissions
-POST   /api/v1/admin/permissions
-GET    /api/v1/admin/permissions/{permission_id}
-PATCH  /api/v1/admin/permissions/{permission_id}
-DELETE /api/v1/admin/permissions/{permission_id}
-GET    /api/v1/admin/roles/{role_id}/permissions
-PUT    /api/v1/admin/roles/{role_id}/permissions
-```
+### Login and refresh response
 
-### User-role assignments
-
-```text
-GET    /api/v1/admin/users/{user_id}/roles
-POST   /api/v1/admin/users/{user_id}/roles
-PATCH  /api/v1/admin/users/{user_id}/roles/{user_role_id}
-DELETE /api/v1/admin/users/{user_id}/roles/{user_role_id}
-```
-
-## Header contract and trust model
-
-OpenAPI exposes only headers used by each endpoint:
-
-- Rate-limited anonymous operations: `X-Client-ID`, `X-Device-ID`.
-- Session-creating operations: `X-Client-ID`, `X-Platform`,
-  `X-Device-ID`, `X-Device-Type`.
-- Refresh: `X-Client-ID`, `X-Device-ID`.
-- Bearer-protected operations declare no custom identity headers.
-- `Authorization` is supplied through Swagger's **Authorize** dialog using
-  `Bearer <signed-access-token>`; it is not duplicated as a normal parameter.
-- `X-Request-ID`, `X-Correlation-ID`, and `User-Agent` are processed by shared
-  request infrastructure rather than repeated on every operation.
-
-Security rules:
-
-- `X-User-ID` and `X-Session-ID` are not supported.
-- Refresh preserves an omitted device assertion, rejects a
-  mismatching assertion with the generic authentication response, and never
-  rebinds a session that has no stored device ID.
-- Stored session `device_id` and `device_type` values are immutable after
-  session creation; clients must create a new session to establish new device
-  metadata.
-- No metadata header creates an authenticated principal.
-- The signed JWT and persisted session are authoritative.
-- `X-Forwarded-For` is ignored unless the direct peer is an allowlisted proxy.
-- Tokens, passwords, OTPs, cookies, authorization headers, secrets, and hashes are redacted from logs.
-
-## Contract examples
-
-Login, verification completion, password completion, and refresh all return the
-same data shape:
+Login, verification completion, password completion, and token refresh return the same token-pair structure:
 
 ```json
 {
@@ -342,48 +454,143 @@ same data shape:
 }
 ```
 
-Decoded access-token claims:
+The login response does not contain roles or permissions.
 
-```json
-{
-  "sub": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
-  "token_type": "access",
-  "jti": "40da960e-e701-4976-b93b-c9f516c9d974",
-  "sid": "17157083-e4f2-48b4-9571-19e030d0ee7d",
-  "iat": 1785482100,
-  "nbf": 1785482100,
-  "exp": 1785483000,
-  "iss": "pharmacy-platform-identity",
-  "aud": "pharmacy-platform",
-  "amr": ["password"]
-}
+### Authorization
+
+Current roles and permissions are loaded from PostgreSQL.
+
+Clients can fetch their effective authorization using:
+
+```http
+GET /api/v1/auth/users/me/authorization
+Authorization: Bearer <access-token>
 ```
 
-Decoded refresh-token claims use the same registered claims, omit `amr`, and
-add only `"fam": "<refresh-family-uuid>"` with
-`"token_type": "refresh"`.
+Frontend authorization data is intended for interface behavior only.
 
-## Local setup
+Every protected backend operation must independently validate the user's current database-backed permissions.
+
+## Request headers
+
+The service accepts only headers with a defined purpose.
+
+### Request tracing
+
+```text
+X-Request-ID
+X-Correlation-ID
+```
+
+These headers are optional. The application generates identifiers when they are omitted.
+
+### Anonymous rate-limited operations
+
+```text
+X-Client-ID
+X-Device-ID
+```
+
+### Session-creating operations
+
+```text
+X-Client-ID
+X-Platform
+X-Device-ID
+X-Device-Type
+```
+
+### Protected operations
+
+```text
+Authorization: Bearer <access-token>
+```
+
+`X-User-ID` and `X-Session-ID` are not supported.
+
+The signed JWT and persisted session are the authoritative identity sources.
+
+## OTP delivery status
+
+OTP generation, hashing, storage, validation, expiry, cooldown, attempt limiting, and replay prevention are implemented.
+
+Outbound email and SMS delivery is currently disabled at the notification gateway.
+
+A production email or SMS provider must be connected before OTP-dependent flows are enabled in production.
+
+## Testing
+
+Run all tests:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate                # Windows: .venv\Scripts\activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt -r requirements-dev.txt
-cp .env.example .env                    # Windows: copy .env.example .env
-python scripts/generate_auth_secrets.py
+pytest -q
 ```
 
-Copy generated values into `.env`. Never commit `.env`.
+Run unit tests:
 
 ```bash
-docker compose up -d postgres redis
-uvicorn app.main:app --host 0.0.0.0 --port 5555 --reload
+pytest tests/unit -q
 ```
 
-The external migration service must create and migrate the `identity` schema before readiness succeeds.
+Run contract tests:
 
-## Verification
+```bash
+pytest tests/contract -q
+```
+
+Run integration tests:
+
+```bash
+pytest tests/integration -q
+```
+
+### PostgreSQL integration tests
+
+PostgreSQL integration tests are opt-in.
+
+#### Linux or macOS
+
+```bash
+RUN_POSTGRES_INTEGRATION=true \
+POSTGRES_URL='postgresql+asyncpg://identity_app:password@127.0.0.1:5432/pharmacy_platform' \
+pytest -m integration -q
+```
+
+#### Windows PowerShell
+
+```powershell
+$env:RUN_POSTGRES_INTEGRATION="true"
+$env:POSTGRES_URL="postgresql+asyncpg://identity_app:password@127.0.0.1:5432/pharmacy_platform"
+pytest -m integration -q
+```
+
+## Code quality
+
+Compile the application and tests:
+
+```bash
+python -m compileall -q app tests
+```
+
+Run Ruff linting:
+
+```bash
+ruff check app tests
+```
+
+Check formatting:
+
+```bash
+ruff format --check app tests
+```
+
+Run MyPy:
+
+```bash
+mypy app
+```
+
+Run the primary verification suite:
 
 ```bash
 python -m compileall -q app tests
@@ -393,12 +600,42 @@ ruff format --check app tests
 mypy app
 ```
 
-The PostgreSQL integration test is opt-in:
+## Production checklist
 
-```bash
-RUN_POSTGRES_INTEGRATION=true \
-POSTGRES_URL='postgresql+asyncpg://identity_app:password@127.0.0.1:5432/pharmacy_platform' \
-pytest -m integration -q
-```
+Before production deployment:
 
-See `Architecture.md` for the detailed design and `deployment_guide.md` for production deployment guidance.
+* Configure production PostgreSQL.
+* Configure production Redis.
+* Connect production email and SMS providers.
+* Configure secure JWT signing keys.
+* Remove development placeholder secrets.
+* Enable Redis-backed rate limiting.
+* Run PostgreSQL integration tests.
+* Run dependency vulnerability scanning.
+* Run secret scanning.
+* Confirm logs redact credentials and tokens.
+* Exclude `.env`, private keys, caches, and test artifacts from release packages.
+* Verify refresh-token rotation and replay detection.
+* Verify session revocation behavior.
+* Verify current database-backed authorization.
+
+See [`deployment_guide.md`](deployment_guide.md) for detailed deployment instructions.
+
+## Documentation
+
+| Document                                         | Purpose                             |
+| ------------------------------------------------ | ----------------------------------- |
+| [`Architecture.md`](Architecture.md)             | Architecture and design decisions   |
+| [`ENDPOINT_INVENTORY.md`](ENDPOINT_INVENTORY.md) | Complete API route inventory        |
+| [`deployment_guide.md`](deployment_guide.md)     | Production deployment guide         |
+| [`.env.example`](.env.example)                   | Environment configuration reference |
+
+## License
+
+Add the applicable project license here.
+
+---
+
+<p align="center">
+  Built with FastAPI, PostgreSQL, Redis, SQLAlchemy, and Python.
+</p>

@@ -1,35 +1,256 @@
 # File: .gitignore
 
+
+# =============================================================================
+# PYTHON BYTECODE AND CACHE
+# =============================================================================
+
 __pycache__/
 *.py[cod]
+*$py.class
 *.so
-build/
-dist/
-*.egg-info/
-.venv/
-venv/
-.env
-.env.*
-!.env.example
-*.key
-*.pem
-*.p12
-*.pfx
-*.backup
-*.dump
-logs/
-*.log
+
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.pytype/
+.pyre/
+.hypothesis/
+.cache/
+
+
+# =============================================================================
+# PYTHON ENVIRONMENTS
+# =============================================================================
+
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+
+# =============================================================================
+# BUILD AND PACKAGE ARTIFACTS
+# =============================================================================
+
+build/
+dist/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+
+*.egg
+*.egg-info/
+.installed.cfg
+MANIFEST
+
+
+# =============================================================================
+# ENVIRONMENT VARIABLES AND SECRETS
+# =============================================================================
+
+.env
+.env.*
+!.env.example
+
+*.secret
+*.secrets
+
+secrets/
+.secret/
+.private/
+
+*.key
+*.pem
+*.crt
+*.cer
+*.der
+*.p7b
+*.p7c
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+private_key*
+public_key*
+jwt_private*
+jwt_public*
+
+
+# =============================================================================
+# DATABASE FILES AND BACKUPS
+# =============================================================================
+
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+*.backup
+*.bak
+*.dump
+*.sql.gz
+
+database-backups/
+db-backups/
+
+
+# =============================================================================
+# LOGS AND RUNTIME FILES
+# =============================================================================
+
+logs/
+*.log
+*.log.*
+*.pid
+*.pid.lock
+*.seed
+*.out
+*.err
+
+run/
+runtime/
+
+
+# =============================================================================
+# TESTING AND CODE COVERAGE
+# =============================================================================
+
 .coverage
+.coverage.*
 coverage.xml
+coverage.json
 htmlcov/
+test-results/
+pytest-report.xml
+junit.xml
+
+.tox/
+.nox/
+
+
+# =============================================================================
+# STATIC ANALYSIS AND DOCUMENTATION BUILDS
+# =============================================================================
+
+.pydoctor/
+docs/_build/
+site/
+
+
+# =============================================================================
+# IDE AND EDITOR FILES
+# =============================================================================
+
 .vscode/
 .idea/
-.DS_Store
-Thumbs.db
-*.tmp
+*.code-workspace
+
+*.sublime-project
+*.sublime-workspace
+
 *.swp
 *.swo
+*.swn
+*~
+.project
+.pydevproject
+.settings/
+
+
+# =============================================================================
+# OPERATING SYSTEM FILES
+# =============================================================================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+Thumbs.db
+Thumbs.db:encryptable
+Desktop.ini
+$RECYCLE.BIN/
+
+
+# =============================================================================
+# TEMPORARY FILES
+# =============================================================================
+
+tmp/
+temp/
+*.tmp
+*.temp
+*.cache
+*.orig
+*.rej
+
+
+# =============================================================================
+# DOCKER AND LOCAL INFRASTRUCTURE DATA
+# =============================================================================
+
 docker-data/
+docker-volumes/
+postgres-data/
+redis-data/
+mongo-data/
+
+.docker/
+
+
+# =============================================================================
+# LOCAL DEVELOPMENT OVERRIDES
+# =============================================================================
+
+docker-compose.override.yml
+compose.override.yml
+
+local/
+.local/
+
+
+# =============================================================================
+# GENERATED RELEASE ARTIFACTS
+# =============================================================================
+
+artifacts/
+release/
+releases/
+packages/
+
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+
+
+# =============================================================================
+# SECURITY AND SCANNING OUTPUT
+# =============================================================================
+
+.bandit/
+.safety/
+pip-audit-report.*
+secret-scan-report.*
+security-report.*
+
+
+# =============================================================================
+# OPTIONAL APPLICATION OUTPUT
+# =============================================================================
+
+uploads/
+exports/
+generated/
