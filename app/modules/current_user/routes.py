@@ -24,6 +24,7 @@ from app.modules.current_user.dependencies import (
 )
 from app.modules.current_user.openapi import RESPONSES, TAG
 from app.modules.current_user.schemas import (
+    CurrentAuthorizationResponse,
     UpdateCurrentUserRequest,
     UserPermissionsResponse,
     UserResponse,
@@ -35,6 +36,30 @@ router = APIRouter(
     tags=[TAG],
     responses=RESPONSES,
 )
+
+authorization_router = APIRouter(
+    prefix="/auth/users/me",
+    tags=[TAG],
+    responses=RESPONSES,
+)
+
+
+@authorization_router.get(
+    "/authorization",
+    response_model=APIResponseModel[CurrentAuthorizationResponse],
+    summary="Get current authorization",
+)
+async def get_current_authorization(
+    principal: CurrentUserReadAccess,
+    service: CurrentUserServiceDep,
+) -> JSONResponse:
+    """Return database-resolved effective roles and permissions."""
+    return APIResponse.success(
+        data=await service.authorization(
+            user_id=principal.user_id,
+            session_id=principal.session_id,
+        )
+    )
 
 
 @router.get(
@@ -78,6 +103,7 @@ async def update_current_user(
     "/roles",
     response_model=APIResponseModel[UserRolesResponse],
     summary="Get current user's roles",
+    deprecated=True,
 )
 async def get_current_user_roles(
     principal: CurrentUserReadAccess,
@@ -88,13 +114,19 @@ async def get_current_user_roles(
     Current-user read access validates the principal before claims are loaded
     from current database state.
     """
-    return APIResponse.success(data=await service.roles(user_id=principal.user_id))
+    return APIResponse.success(
+        data=await service.roles(
+            user_id=principal.user_id,
+            session_id=principal.session_id,
+        )
+    )
 
 
 @router.get(
     "/permissions",
     response_model=APIResponseModel[UserPermissionsResponse],
     summary="Get current user's permissions",
+    deprecated=True,
 )
 async def get_current_user_permissions(
     principal: CurrentUserReadAccess,
@@ -104,7 +136,12 @@ async def get_current_user_permissions(
 
     ``CurrentUserReadAccess`` protects and rate-limits this self-service read.
     """
-    return APIResponse.success(data=await service.permissions(user_id=principal.user_id))
+    return APIResponse.success(
+        data=await service.permissions(
+            user_id=principal.user_id,
+            session_id=principal.session_id,
+        )
+    )
 
 
-__all__ = ["router"]
+__all__ = ["authorization_router", "router"]

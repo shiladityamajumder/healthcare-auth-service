@@ -20,7 +20,10 @@ from datetime import timedelta
 from app.auth.authorization.model_adapters import account_access_state
 from app.auth.authorization.policies import AccountAccessPolicy
 from app.auth.identity.normalization import normalize_email, normalize_phone, phone_destination
-from app.auth.identity.presentation import public_user_data
+from app.auth.identity.presentation import (
+    authenticated_user_profile_data,
+    public_user_data,
+)
 from app.auth.request_context.context import AuthRequestContext, request_uuid
 from app.auth.security.hashing import SecureHashing
 from app.auth.security.passwords import PasswordManager
@@ -35,11 +38,14 @@ from app.models.enums import OTPChannel, OTPPurpose
 from app.models.identity import Users
 from app.modules.login.repositories import LoginRepository
 from app.modules.login.schemas import (
+    AuthenticatedUserProfileResponse,
     OtpChallengeResponse,
     PasswordLoginRequest,
     PhoneOtpLoginRequest,
     PhoneOtpLoginVerifyRequest,
     TokenPairResponse,
+    TokenPairResponseContract,
+    TokenPairResponseV2,
     UserResponse,
 )
 from app.utils.datetime_utils import utc_now
@@ -66,18 +72,10 @@ class _LoginBase:
         repository: LoginRepository,
         context: AuthRequestContext,
         auth_method: str,
-    ) -> TokenPairResponse:
+    ) -> TokenPairResponseContract:
         """Load current claims and stage a session/token pair in the active transaction."""
         claims = await repository.authorization_claims(user_id=user.id, now=utc_now())
         profile = await repository.get_active_profile(user.id)
-        user_dto = UserResponse.model_validate(
-            public_user_data(
-                user,
-                profile=profile,
-                roles=claims.roles,
-                permissions=claims.permissions,
-            )
-        )
         issued = self._issuer.issue(
             user_id=user.id,
             roles=claims.roles,
@@ -86,12 +84,29 @@ class _LoginBase:
             request_context=context,
             auth_methods=[auth_method],
         )
+        token_data = {
+            "access_token": issued.access_token,
+            "refresh_token": issued.refresh_token,
+            "access_expires_at": issued.access_expires_at,
+            "refresh_expires_at": issued.refresh_expires_at,
+        }
+        if self._settings.AUTH_LOGIN_REFRESH_RESPONSE_VERSION == 2:
+            return TokenPairResponseV2(
+                **token_data,
+                user=AuthenticatedUserProfileResponse.model_validate(
+                    authenticated_user_profile_data(user, profile=profile)
+                ),
+            )
         return TokenPairResponse(
-            access_token=issued.access_token,
-            refresh_token=issued.refresh_token,
-            access_expires_at=issued.access_expires_at,
-            refresh_expires_at=issued.refresh_expires_at,
-            user=user_dto,
+            **token_data,
+            user=UserResponse.model_validate(
+                public_user_data(
+                    user,
+                    profile=profile,
+                    roles=claims.roles,
+                    permissions=claims.permissions,
+                )
+            ),
         )
 
     @staticmethod
@@ -140,7 +155,7 @@ class PasswordLoginService(_LoginBase):
         self,
         payload: PasswordLoginRequest,
         context: AuthRequestContext,
-    ) -> TokenPairResponse:
+    ) -> TokenPairResponseContract:
         """Authenticate credentials and create a persisted user session."""
         if payload.channel == "email":
             assert payload.email is not None
@@ -160,7 +175,7 @@ class PasswordLoginService(_LoginBase):
             verified_channel = OTPChannel.SMS.value
 
         pending_error: InvalidCredentialsError | None = None
-        result: TokenPairResponse | None = None
+        result: TokenPairResponseContract | None = None
         async with self._uow:
             repository = LoginRepository(self._uow.session)
             if email is not None:
@@ -206,7 +221,7 @@ class PasswordLoginService(_LoginBase):
         payload: PasswordLoginRequest,
         context: AuthRequestContext,
         verified_channel: str,
-    ) -> tuple[TokenPairResponse | None, InvalidCredentialsError | None]:
+    ) -> tuple[TokenPairResponseContract | None, InvalidCredentialsError | None]:
         """Validate credentials/account state and stage audit/session mutations."""
         now = utc_now()
         if user.password_hash:
@@ -353,7 +368,7 @@ class PhoneOtpLoginService(_LoginBase):
         self,
         payload: PhoneOtpLoginVerifyRequest,
         context: AuthRequestContext,
-    ) -> TokenPairResponse:
+    ) -> TokenPairResponseContract:
         """Verify the submitted proof and complete the workflow."""
         country, phone = normalize_phone(
             payload.phone_country_code,
@@ -361,7 +376,7 @@ class PhoneOtpLoginService(_LoginBase):
         )
         destination = phone_destination(country, phone)
         pending_error: InvalidCredentialsError | None = None
-        result: TokenPairResponse | None = None
+        result: TokenPairResponseContract | None = None
         async with self._uow:
             repository = LoginRepository(self._uow.session)
             # OTP verification locks and consumes the challenge before session

@@ -13,7 +13,6 @@ Test notification call
 from __future__ import annotations
 
 import pytest
-
 from app.auth.workflows.notifications import NotificationDispatcher
 
 

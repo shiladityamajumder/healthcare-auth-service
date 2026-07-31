@@ -13,7 +13,6 @@ Fake AsyncSession transaction
 from __future__ import annotations
 
 import pytest
-
 from app.db.uow import SQLAlchemyUnitOfWork
 
 

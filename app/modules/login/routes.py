@@ -32,6 +32,7 @@ from app.modules.login.schemas import (
     PhoneOtpLoginRequest,
     PhoneOtpLoginVerifyRequest,
     TokenPairResponse,
+    TokenPairResponseV2,
 )
 from app.utils.debug import debug
 
@@ -40,7 +41,7 @@ router = APIRouter(prefix="/auth/login", tags=[TAG], responses=RESPONSES)
 
 @router.post(
     "/password",
-    response_model=APIResponseModel[TokenPairResponse],
+    response_model=APIResponseModel[TokenPairResponse | TokenPairResponseV2],
     summary="Login using email or phone and password",
 )
 async def login_password(
@@ -99,7 +100,7 @@ async def request_phone_login_otp(
 
 @router.post(
     "/phone/verify-otp",
-    response_model=APIResponseModel[TokenPairResponse],
+    response_model=APIResponseModel[TokenPairResponse | TokenPairResponseV2],
     summary="Verify phone login OTP",
 )
 async def verify_phone_login_otp(

@@ -20,9 +20,7 @@ import argparse
 import asyncio
 import getpass
 import uuid
-from datetime import datetime, timezone
-
-from sqlalchemy import select
+from datetime import UTC, datetime
 
 from app.auth.identity.normalization import normalize_email, normalize_phone
 from app.auth.security.passwords import PasswordManager
@@ -37,6 +35,7 @@ from app.models.identity import (
     UserRoles,
     Users,
 )
+from sqlalchemy import select
 
 
 async def create_user(args: argparse.Namespace, password: str) -> uuid.UUID:
@@ -87,7 +86,7 @@ async def create_user(args: argparse.Namespace, password: str) -> uuid.UUID:
                     "Unknown or inactive roles: " f"{sorted(missing)}"
                 )
 
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             user_id = uuid.uuid4()
             account = Users(
                 id=user_id,

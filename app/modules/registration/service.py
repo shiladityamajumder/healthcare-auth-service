@@ -1,7 +1,7 @@
 """File: app/modules/registration/service.py
 
 Purpose:
-Owns duplicate-safe account/profile creation, initial active-role assignment,
+Owns duplicate-safe account/profile creation, server-controlled role assignment,
 email/password setup, phone OTP consumption, and first-session issuance.
 
 Dependency flow:
@@ -31,11 +31,7 @@ from app.auth.security.tokens import TokenManager
 from app.auth.workflows.notifications import AuthNotificationGateway, NotificationDispatcher
 from app.auth.workflows.otp import IssuedOTP, OTPService
 from app.auth.workflows.session_tokens import IssuedSessionTokens, SessionTokenIssuer
-from app.common.exceptions import (
-    IdentityAlreadyExistsError,
-    InfrastructureUnavailableError,
-    ValidationError,
-)
+from app.common.exceptions import IdentityAlreadyExistsError, InfrastructureUnavailableError
 from app.core.config import AppSettings
 from app.core.logging import get_logger
 from app.db.uow import SQLAlchemyUnitOfWork
@@ -150,13 +146,9 @@ class _RegistrationWriter:
         last_name: str | None,
         preferred_name: str | None,
         avatar_object_key: str | None,
-        requested_role_codes: list[str],
     ) -> tuple[Users, UserProfiles | None]:
-        """Validate roles and stage the account with its optional profile."""
-        roles = await self._registration_roles(
-            repository=repository,
-            requested_role_codes=requested_role_codes,
-        )
+        """Resolve the self-registration role and stage the account/profile."""
+        roles = await self._self_registration_roles(repository=repository)
         password_hash = await self._passwords.hash(password) if password else None
         user = Users(
             id=uuid.uuid4(),
@@ -194,43 +186,27 @@ class _RegistrationWriter:
         await self._uow.flush()
         return user, profile
 
-    async def _registration_roles(
+    async def _self_registration_roles(
         self,
         *,
         repository: RegistrationRepository,
-        requested_role_codes: list[str],
     ) -> list[Roles]:
-        """Resolve and authorize all initial roles with one database query.
-
-        Public registration may select multiple active custom roles. System
-        roles are security-managed and cannot be self-assigned, except for the
-        configured default role that every new account receives.
-        """
+        """Resolve the single explicitly allowlisted self-registration role."""
         default_code = self._settings.DEFAULT_ROLE_CODE
-        role_codes = list(dict.fromkeys([default_code, *requested_role_codes]))
-        available = await repository.active_roles_by_code(role_codes)
+        if default_code not in self._settings.SELF_REGISTRATION_ROLE_CODES:
+            raise InfrastructureUnavailableError(
+                "The self-registration role policy is unavailable."
+            )
+
+        available = await repository.active_roles_by_code([default_code])
 
         default_role = available.get(default_code)
-        if default_role is None and self._settings.DEFAULT_ROLE_REQUIRED:
+        if default_role is None or default_role.is_deleted:
             raise InfrastructureUnavailableError(
                 f"Required default role '{default_code}' is missing."
             )
 
-        missing = [code for code in requested_role_codes if code not in available]
-        restricted = [
-            code
-            for code in requested_role_codes
-            if code != default_code and code in available and available[code].is_system
-        ]
-        unavailable = list(dict.fromkeys([*missing, *restricted]))
-        if unavailable:
-            raise ValidationError(
-                "One or more requested roles are unavailable for registration.",
-                details={"roles": unavailable},
-                code="REGISTRATION_ROLE_UNAVAILABLE",
-            )
-
-        return [available[code] for code in role_codes if code in available]
+        return [default_role]
 
 
 class _RegistrationBase:
@@ -315,7 +291,7 @@ class EmailPasswordRegistrationService(_RegistrationBase):
                     email=email,
                     password=payload.password,
                     status=(
-                        UserStatus.PENDING_VERIFICATION
+                        UserStatus.PENDING
                         if self._settings.EMAIL_VERIFICATION_REQUIRED
                         else UserStatus.ACTIVE
                     ),
@@ -330,7 +306,6 @@ class EmailPasswordRegistrationService(_RegistrationBase):
                     last_name=payload.last_name,
                     preferred_name=payload.preferred_name,
                     avatar_object_key=payload.avatar_object_key,
-                    requested_role_codes=payload.roles,
                 )
                 if self._settings.EMAIL_VERIFICATION_REQUIRED:
                     issued_otp = await self._otp.issue(
@@ -479,7 +454,6 @@ class PhoneOtpRegistrationService(_RegistrationBase):
                     last_name=payload.last_name,
                     preferred_name=payload.preferred_name,
                     avatar_object_key=payload.avatar_object_key,
-                    requested_role_codes=payload.roles,
                 )
                 return await self._issue_tokens(
                     user=user,

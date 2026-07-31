@@ -36,12 +36,31 @@ def public_user_data(
     roles: Iterable[str] = (),
     permissions: Iterable[str] = (),
 ) -> dict[str, object]:
-    """Build the non-sensitive user representation used by API contracts.
+    """Build the version 1 user representation used by compatibility APIs.
 
     Password hashes, lockout counters, and other internal account state are
     intentionally excluded. Authorization codes are sorted so responses are
     deterministic when callers supply sets or database-derived collections.
     """
+    data = authenticated_user_profile_data(
+        user,
+        profile=profile,
+    )
+    data.update(
+        {
+            "roles": sorted(set(roles)),
+            "permissions": sorted(set(permissions)),
+        }
+    )
+    return data
+
+
+def authenticated_user_profile_data(
+    user: Any,
+    *,
+    profile: Any | None = None,
+) -> dict[str, object]:
+    """Build a minimal authenticated profile without authorization lists."""
     phone_number_masked = None
     if user.phone_country_code is not None and user.phone_number is not None:
         phone_number_masked = mask_phone(
@@ -81,8 +100,6 @@ def public_user_data(
         "timezone": user.timezone,
         "display_name": display_name,
         "profile": profile_data,
-        "roles": sorted(set(roles)),
-        "permissions": sorted(set(permissions)),
     }
 
 
@@ -182,6 +199,7 @@ def mask_phone(
 
 
 __all__ = [
+    "authenticated_user_profile_data",
     "mask_email",
     "mask_phone",
     "public_user_data",

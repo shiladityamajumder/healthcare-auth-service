@@ -23,7 +23,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.authorization.claims import AuthorizationClaims, load_authorization_claims
-from app.models.identity import UserProfiles, Users
+from app.models.identity import Sessions, UserProfiles, Users
 
 
 class CurrentUserRepository:
@@ -75,6 +75,22 @@ class CurrentUserRepository:
             user_id=user_id,
             now=now,
         )
+
+    async def active_session_exists(
+        self,
+        *,
+        user_id: uuid.UUID,
+        session_id: uuid.UUID,
+        now: datetime,
+    ) -> bool:
+        """Return whether the principal still owns an active session."""
+        statement = select(Sessions.id).where(
+            Sessions.id == session_id,
+            Sessions.user_id == user_id,
+            Sessions.revoked_at.is_(None),
+            Sessions.expires_at > now,
+        )
+        return (await self._session.scalar(statement)) is not None
 
 
 __all__ = ["CurrentUserRepository"]

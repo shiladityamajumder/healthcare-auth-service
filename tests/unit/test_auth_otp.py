@@ -17,10 +17,9 @@ import uuid
 from datetime import timedelta
 
 import pytest
-
-from app.models.identity import OtpChallenges
 from app.auth.security.hashing import SecureHashing
 from app.auth.workflows.otp import OTPFailure, OTPService
+from app.models.identity import OtpChallenges
 from app.utils.datetime_utils import utc_now
 from tests.conftest import build_test_settings
 

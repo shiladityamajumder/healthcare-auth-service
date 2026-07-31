@@ -132,10 +132,11 @@ async def http_exception_handler(request: Request, exc: Exception) -> JSONRespon
         415: "UNSUPPORTED_MEDIA_TYPE",
     }
     error_code = code_by_status.get(http_error.status_code, "HTTP_ERROR")
+    detail: object = http_error.detail
     if http_error.status_code >= 500:
         message = "An unexpected server error occurred."
-    elif isinstance(http_error.detail, str):
-        message = http_error.detail
+    elif isinstance(detail, str):
+        message = detail
     else:
         message = "The request could not be processed."
     return APIResponse.error(

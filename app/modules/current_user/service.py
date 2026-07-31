@@ -18,11 +18,12 @@ from __future__ import annotations
 import uuid
 
 from app.auth.identity.presentation import public_user_data
-from app.common.exceptions import NotFoundError
+from app.common.exceptions import AuthenticationError, NotFoundError
 from app.db.uow import SQLAlchemyUnitOfWork
 from app.models.identity import UserProfiles
 from app.modules.current_user.repositories import CurrentUserRepository
 from app.modules.current_user.schemas import (
+    CurrentAuthorizationResponse,
     UpdateCurrentUserRequest,
     UserPermissionsResponse,
     UserResponse,
@@ -116,25 +117,57 @@ class CurrentUserService:
                 )
             )
 
-    async def roles(self, *, user_id: uuid.UUID) -> UserRolesResponse:
-        """Return effective global role codes."""
-        async with self._uow:
-            users = CurrentUserRepository(self._uow.session)
-            if await users.get_by_id(user_id) is None:
-                raise NotFoundError("The user was not found.")
-            claims = await users.authorization_claims(user_id=user_id, now=utc_now())
-            # Authorization claims are immutable tuples internally. Convert at
-            # the API boundary because the response contract exposes JSON arrays.
-            return UserRolesResponse(roles=list(claims.roles))
+    async def roles(
+        self,
+        *,
+        user_id: uuid.UUID,
+        session_id: uuid.UUID,
+    ) -> UserRolesResponse:
+        """Compatibility projection of the consolidated authorization result."""
+        authorization = await self.authorization(
+            user_id=user_id,
+            session_id=session_id,
+        )
+        return UserRolesResponse(roles=authorization.roles)
 
-    async def permissions(self, *, user_id: uuid.UUID) -> UserPermissionsResponse:
-        """Return effective global permission codes."""
+    async def permissions(
+        self,
+        *,
+        user_id: uuid.UUID,
+        session_id: uuid.UUID,
+    ) -> UserPermissionsResponse:
+        """Compatibility projection of the consolidated authorization result."""
+        authorization = await self.authorization(
+            user_id=user_id,
+            session_id=session_id,
+        )
+        return UserPermissionsResponse(permissions=authorization.permissions)
+
+    async def authorization(
+        self,
+        *,
+        user_id: uuid.UUID,
+        session_id: uuid.UUID,
+    ) -> CurrentAuthorizationResponse:
+        """Resolve current effective global authorization from the database."""
         async with self._uow:
             users = CurrentUserRepository(self._uow.session)
             if await users.get_by_id(user_id) is None:
                 raise NotFoundError("The user was not found.")
-            claims = await users.authorization_claims(user_id=user_id, now=utc_now())
-            return UserPermissionsResponse(permissions=list(claims.permissions))
+            now = utc_now()
+            if not await users.active_session_exists(
+                user_id=user_id,
+                session_id=session_id,
+                now=now,
+            ):
+                raise AuthenticationError(
+                    "The access session is expired or revoked."
+                )
+            claims = await users.authorization_claims(user_id=user_id, now=now)
+            return CurrentAuthorizationResponse(
+                roles=sorted(set(claims.roles)),
+                permissions=sorted(set(claims.permissions)),
+            )
 
 
 __all__ = ["CurrentUserService"]

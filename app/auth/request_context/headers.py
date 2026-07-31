@@ -264,7 +264,9 @@ def get_session_creation_headers(
             max_length=255,
             description=(
                 "Optional stable device identifier used as a rate-limit "
-                "dimension and persisted on newly issued sessions."
+                "dimension and persisted on newly issued sessions. During "
+                "refresh it is a consistency assertion for an existing "
+                "binding; legacy unbound sessions are not rebound."
             ),
         ),
     ] = None,
@@ -275,7 +277,7 @@ def get_session_creation_headers(
             min_length=1,
             max_length=32,
             description=(
-                "Optional device type persisted on newly issued or rotated sessions."
+                "Optional device type persisted only when a new session is issued."
             ),
         ),
     ] = None,

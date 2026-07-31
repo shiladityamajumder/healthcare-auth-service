@@ -203,9 +203,67 @@ POST /api/v1/auth/password
 ```text
 GET   /api/v1/users/me
 PATCH /api/v1/users/me
-GET   /api/v1/users/me/roles
-GET   /api/v1/users/me/permissions
+GET   /api/v1/auth/users/me/authorization
+GET   /api/v1/users/me/roles        (deprecated compatibility projection)
+GET   /api/v1/users/me/permissions  (deprecated compatibility projection)
 ```
+
+## Authorization-contract migration
+
+The repository-wide consumer inventory, manual-review gates, version-removal
+criteria, cache contract, and rollback procedure are recorded in
+`AUTHORIZATION_CONTRACT_IMPACT_AUDIT.md`.
+
+Login and refresh support two explicit response contracts:
+
+- `AUTH_LOGIN_REFRESH_RESPONSE_VERSION=1` is the default and preserves the
+  existing `user.roles` and `user.permissions` properties.
+- `AUTH_LOGIN_REFRESH_RESPONSE_VERSION=2` returns the minimal authenticated
+  user profile. Clients then obtain current authorization from
+  `GET /api/v1/auth/users/me/authorization`.
+
+Access-token issuance is controlled independently:
+
+- `ACCESS_TOKEN_VERSION=1` is the default and retains the existing role and
+  permission claims. Already-issued legacy tokens without `ver` are treated as
+  version 1.
+- `ACCESS_TOKEN_VERSION=2` adds `ver: 2`, always omits permissions, and includes
+  coarse roles only when `ACCESS_TOKEN_V2_INCLUDE_ROLES=true`. The default for
+  that setting is false.
+
+Version 2 principals always require a current active persisted session and
+load effective roles and permissions from PostgreSQL before route authorization,
+even if the general authorization-refresh setting is disabled. The same
+effective-authorization query applies global scope, assignment activity,
+validity windows, and role/permission soft-delete rules.
+
+Frontend permissions are presentation hints, not a security boundary. A user
+can alter browser state and request payloads; every protected operation must
+still enforce authorization on the server. For the same reason, this service
+does not expose an anonymous permission-catalog endpoint.
+
+### Downstream rollout
+
+1. Keep both version settings at `1` while inventorying JWT and login-response
+   consumers.
+2. Migrate UI clients to the protected current-authorization endpoint and
+   invalidate their cached authorization after login, refresh, and account or
+   role changes.
+3. Migrate APIs that currently inspect global `permissions` claims. Prefer
+   audience-specific entitlements minted for that API, or an authenticated
+   authorization service with a fail-closed cache and bounded TTL.
+4. Test each consumer with version 2 tokens; it must not treat missing
+   permissions as authorization and must preserve strict issuer, audience,
+   signature, expiry, key ID, and token-type checks.
+5. Set `AUTH_LOGIN_REFRESH_RESPONSE_VERSION=2` for audited clients, then set
+   `ACCESS_TOKEN_VERSION=2` for issuance. Do not change production defaults
+   before that audit.
+
+Version 1 access tokens remain accepted throughout the migration. Acceptance
+must continue for at least one configured access-token TTL after the last
+version 1 token is issued. Removing version 1 validation is a future breaking
+release and requires a completed downstream audit; this release does not
+provide a switch that can accidentally disable it.
 
 ### Administrative users
 
@@ -269,6 +327,12 @@ Security rules:
 - `X-User-ID` must match the JWT `sub` claim when supplied.
 - `X-Session-ID` must match the JWT `sid` claim when supplied.
 - `X-Device-ID` must match persisted session metadata when both are present.
+- Refresh preserves an omitted device assertion for compatibility, rejects a
+  mismatching assertion with the generic authentication response, and never
+  rebinds a legacy session that has no stored device ID.
+- Stored session `device_id` and `device_type` values are immutable after
+  session creation; clients must create a new session to establish new device
+  metadata.
 - No metadata header creates an authenticated principal.
 - The signed JWT and persisted session are authoritative.
 - `X-Forwarded-For` is ignored unless the direct peer is an allowlisted proxy.

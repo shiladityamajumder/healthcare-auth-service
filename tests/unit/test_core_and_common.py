@@ -17,10 +17,6 @@ import asyncio
 import json
 
 import pytest
-from pydantic import ValidationError as PydanticValidationError
-from sqlalchemy import select
-from sqlalchemy.dialects import postgresql
-
 from app.common.exceptions import (
     ConflictError,
     OperationTimeoutError,
@@ -32,7 +28,9 @@ from app.core.filters import apply_text_search
 from app.core.pagination import PaginationParams, build_pagination_meta
 from app.core.sorting import SortOrder, apply_sorting
 from app.models.identity import Users
-
+from pydantic import ValidationError as PydanticValidationError
+from sqlalchemy import select
+from sqlalchemy.dialects import postgresql
 
 pytestmark = pytest.mark.unit
 

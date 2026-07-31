@@ -56,10 +56,11 @@ async def register_email(
     rate_limits: AuthRateLimitsDep,
     service: EmailPasswordRegistrationDep,
 ) -> JSONResponse:
-    """Create an email identity with one or more validated initial roles.
+    """Create an email identity with the configured self-registration role.
 
     This public endpoint applies canonical-email registration limits before the
-    service checks duplicates, roles, password policy, and verification state.
+    service checks duplicates, the server role policy, password policy, and
+    verification state.
     """
     await rate_limits.registration(
         context=context,

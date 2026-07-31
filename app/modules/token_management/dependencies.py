@@ -37,6 +37,7 @@ def get_token_management_service(
     """Construct token workflows from explicit request dependencies."""
     return TokenManagementService(
         uow=uow,
+        settings=runtime.settings,
         hashing=runtime.hashing,
         tokens=runtime.tokens,
     )

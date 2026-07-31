@@ -1,8 +1,8 @@
 """File: app/modules/registration/schemas.py
 
 Purpose:
-Defines email/password and phone/OTP registration inputs, initial role lists,
-profile fields, and registration responses.
+Defines email/password and phone/OTP registration inputs, optional profile
+fields, and registration responses.
 
 Dependency flow:
 HTTP body or service result
@@ -15,9 +15,8 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Annotated
 
-from pydantic import EmailStr, Field, field_validator
+from pydantic import EmailStr, Field
 
 from app.common.auth_contracts import (
     OtpChallengeResponse,
@@ -25,27 +24,6 @@ from app.common.auth_contracts import (
     UserResponse,
 )
 from app.common.schemas import StrictModel
-
-RoleCode = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_.-]{1,63}$")]
-
-
-class _RegistrationRoles(StrictModel):
-    """Shared initial-role input for workflows that create a user.
-
-    Role codes are used instead of database UUIDs because they form the stable
-    public RBAC contract. The service still resolves every code against active
-    database records before creating the user.
-    """
-
-    roles: list[RoleCode] = Field(default_factory=list, max_length=10)
-
-    @field_validator("roles")
-    @classmethod
-    def reject_duplicate_roles(cls, values: list[str]) -> list[str]:
-        """Reject duplicate codes instead of creating duplicate assignments."""
-        if len(values) != len(set(values)):
-            raise ValueError("roles must contain unique role codes")
-        return values
 
 
 class _RegistrationProfile(StrictModel):
@@ -58,10 +36,13 @@ class _RegistrationProfile(StrictModel):
 
 
 class EmailPasswordRegistrationRequest(
-    _RegistrationRoles,
     _RegistrationProfile,
 ):
-    """Email/password registration body with optional initial role codes."""
+    """Public email/password registration body.
+
+    Role assignment is deliberately absent. ``StrictModel`` rejects a supplied
+    ``roles`` property instead of silently accepting privilege-related input.
+    """
 
     email: EmailStr
     password: str = Field(min_length=1, max_length=128)
@@ -79,10 +60,9 @@ class PhoneOtpRegistrationRequest(StrictModel):
 
 
 class PhoneOtpRegistrationVerifyRequest(
-    _RegistrationRoles,
     _RegistrationProfile,
 ):
-    """Phone OTP proof, optional password, and optional initial role codes."""
+    """Public phone OTP proof and optional initial password/profile."""
 
     challenge_id: uuid.UUID
     phone_country_code: str = Field(min_length=1, max_length=8)

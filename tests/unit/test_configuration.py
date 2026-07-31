@@ -13,8 +13,12 @@ Settings override mapping
 
 from __future__ import annotations
 
+import base64
+
 import pytest
 from app.core.config import AppSettings, Environment
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from pydantic import ValidationError
 
 BASE = {
@@ -23,6 +27,25 @@ BASE = {
     "AUTH_PEPPER": "p" * 64,
     "JWT_SECRET": "s" * 80,
 }
+
+
+def _rsa_settings() -> dict[str, object]:
+    private_key = rsa.generate_private_key(public_exponent=65_537, key_size=2_048)
+    private_pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    public_pem = private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    return {
+        "JWT_ALGORITHM": "RS256",
+        "JWT_SECRET": None,
+        "JWT_PRIVATE_KEY_B64": base64.b64encode(private_pem).decode("ascii"),
+        "JWT_PUBLIC_KEY_B64": base64.b64encode(public_pem).decode("ascii"),
+    }
 
 
 def test_single_configuration_accepts_postgresql_development() -> None:
@@ -102,5 +125,106 @@ def test_invalid_trusted_proxy_cidr_is_rejected() -> None:
                 **BASE,
                 "TRUSTED_PROXY_ENABLED": True,
                 "TRUSTED_PROXY_CIDRS": ["not-a-network"],
+            }
+        )
+
+
+def test_default_registration_role_must_be_explicitly_allowlisted() -> None:
+    """Prevent configuration from making a privileged role self-registerable."""
+    with pytest.raises(
+        ValidationError,
+        match="DEFAULT_ROLE_CODE must be explicitly permitted",
+    ):
+        AppSettings(
+            **{
+                **BASE,
+                "DEFAULT_ROLE_CODE": "platform_admin",
+            }
+        )
+
+
+def test_self_registration_role_allowlist_accepts_configured_customer() -> None:
+    settings = AppSettings(
+        **{
+            **BASE,
+            "DEFAULT_ROLE_CODE": "customer",
+            "SELF_REGISTRATION_ROLE_CODES": ["customer"],
+        }
+    )
+
+    assert settings.SELF_REGISTRATION_ROLE_CODES == ["customer"]
+
+
+def test_self_registration_role_allowlist_rejects_invalid_codes() -> None:
+    with pytest.raises(
+        ValidationError,
+        match="contains invalid role codes",
+    ):
+        AppSettings(
+            **{
+                **BASE,
+                "SELF_REGISTRATION_ROLE_CODES": ["Not Valid"],
+            }
+        )
+
+
+def test_default_registration_role_cannot_be_optional() -> None:
+    with pytest.raises(
+        ValidationError,
+        match="DEFAULT_ROLE_REQUIRED must remain true",
+    ):
+        AppSettings(
+            **{
+                **BASE,
+                "DEFAULT_ROLE_REQUIRED": False,
+            }
+        )
+
+
+def test_access_token_version_2_requires_persisted_session_checks() -> None:
+    """Prevent v2 issuance where database-backed authorization cannot run."""
+    with pytest.raises(
+        ValidationError,
+        match="ACCESS_TOKEN_VERSION=2 requires",
+    ):
+        AppSettings(
+            **{
+                **BASE,
+                "ACCESS_TOKEN_VERSION": 2,
+                "AUTH_CHECK_SESSION_ON_EACH_REQUEST": False,
+                "AUTH_REFRESH_AUTHZ_ON_EACH_REQUEST": False,
+            }
+        )
+
+
+def test_production_rejects_example_placeholder_secrets() -> None:
+    """Prevent copied example credentials from satisfying production policy."""
+    with pytest.raises(
+        ValidationError,
+        match="AUTH_PEPPER must be a non-placeholder",
+    ):
+        AppSettings(
+            **{
+                **BASE,
+                **_rsa_settings(),
+                "ENVIRONMENT": Environment.PRODUCTION,
+                "POSTGRES_URL": (
+                    "postgresql+asyncpg://identity:"
+                    "database-credential-7f2b@database/identity"
+                ),
+                "AUTH_PEPPER": (
+                    "replace-this-with-at-least-32-random-characters-0000000000000000"
+                ),
+                "RATE_LIMIT_BACKEND": "redis",
+                "REDIS_URL": (
+                    "rediss://identity:"
+                    "redis-credential-8c3d@redis.example.com:6379/0"
+                ),
+                "DOCS_ENABLED": False,
+                "LOG_JSON": True,
+                "SECURE_HEADERS_ENABLED": True,
+                "HSTS_ENABLED": True,
+                "HOST_VALIDATION_ENABLED": True,
+                "ALLOWED_HOSTS": ["identity.example.com"],
             }
         )

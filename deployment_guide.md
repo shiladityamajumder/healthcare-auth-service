@@ -44,6 +44,10 @@ JWT_KEY_ID=identity-2026-07
 
 Do not place production secrets in `.env`, image layers, Jenkinsfiles, properties files, or source control.
 
+Terminate HTTPS only at a controlled deployment boundary and forward traffic to
+the service over a protected network. HSTS is defense in depth and does not
+replace TLS termination.
+
 ## Reverse proxy policy
 
 Keep `TRUSTED_PROXY_ENABLED=false` unless the service is behind a controlled proxy. When enabled, set explicit proxy networks:
@@ -60,6 +64,11 @@ Only the direct peer is used to decide whether forwarded IP data is trustworthy.
 `DATABASE_SCHEMA_CHECK=true` verifies required identity tables at startup and readiness. Keep it enabled in staging and production. Apply `SCHEMA_REQUIRED_PATCH.sql` and `RBAC_SEED_EXAMPLE.sql` through the external migration and seed service before deploying the API.
 
 This vertical-slice refactor does not require a database migration. No MFA or API-client authentication runtime is deployed; existing ORM mappings remain unchanged for compatibility.
+
+The external migration release must identify the exact forward and rollback
+migration IDs. Apply them in staging and run the PostgreSQL integration suite
+before promotion; the application repository cannot prove migration
+reversibility on its own.
 
 ## Redis
 
@@ -100,9 +109,33 @@ Multiply by Uvicorn workers and replicas. Reserve capacity for migrations, admin
 
 Client-supplied non-UUID request or correlation IDs now return `400`. Coordinate this validation change with clients that previously sent arbitrary strings.
 
+Public registration no longer accepts a `roles` property. Clients that send it
+receive `422`; administrative role assignment remains available only through
+the authenticated `/api/v1/admin/users/{user_id}/roles` workflow.
+
+Canonical permission-code migrations for external policy consumers:
+
+- `prescriptions.prescriptions.issue` → `clinical.prescriptions.issue`
+- `prescriptions.prescriptions.verify` → `clinical.prescriptions.verify`
+- `labs.results.record` → `diagnostics.results.record`
+- `labs.results.verify` → `diagnostics.results.verify`
+
+Update API gateway policies, downstream authorization checks, and cached token
+expectations before deploying the corresponding seed manifest.
+
+Refresh-token rotation treats persisted session device identity as immutable.
+`X-Device-ID` may be omitted for compatibility, but a supplied value must match
+an existing binding. Legacy sessions without a device binding are not upgraded
+during refresh; users must authenticate again to establish device metadata.
+
 ## Notification delivery
 
 Outbound email and SMS invocation remains intentionally commented at the application-service boundary. Enable it only after provider authentication, idempotency, retry, timeout, dead-letter, and privacy policies are approved. Tests use a disabled or test adapter and never require a real provider.
+
+This disabled delivery path is a production release blocker for registration,
+verification, OTP login, and password reset. A release candidate must exercise
+each flow end to end with the approved provider without logging the OTP or
+delivery credentials.
 
 ## Verification before promotion
 
@@ -112,5 +145,6 @@ ruff check app tests
 ruff format --check app tests
 mypy app
 pytest -q
+python -m pip_audit -r requirements.txt -r requirements-dev.txt
 RUN_POSTGRES_INTEGRATION=true pytest -m integration -q
 ```

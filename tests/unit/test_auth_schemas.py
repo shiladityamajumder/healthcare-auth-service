@@ -24,7 +24,10 @@ from app.modules.login.schemas import (
     PhoneOtpLoginRequest,
     PhoneOtpLoginVerifyRequest,
 )
-from app.modules.registration.schemas import EmailPasswordRegistrationRequest
+from app.modules.registration.schemas import (
+    EmailPasswordRegistrationRequest,
+    PhoneOtpRegistrationVerifyRequest,
+)
 from pydantic import ValidationError
 
 
@@ -106,6 +109,46 @@ def test_registration_accepts_optional_universal_profile() -> None:
 
     assert payload.first_name == "Ada"
     assert payload.preferred_name == "Ada"
+
+
+@pytest.mark.parametrize(
+    "role_code",
+    [
+        "platform_admin",
+        "super_admin",
+        "custom_privileged_role",
+    ],
+)
+@pytest.mark.parametrize(
+    ("schema", "payload"),
+    [
+        (
+            EmailPasswordRegistrationRequest,
+            {
+                "email": "attacker@example.com",
+                "password": "StrongPassword!123",
+            },
+        ),
+        (
+            PhoneOtpRegistrationVerifyRequest,
+            {
+                "challenge_id": "11111111-1111-1111-1111-111111111111",
+                "phone_country_code": "+91",
+                "phone_number": "9876543210",
+                "code": "123456",
+            },
+        ),
+    ],
+)
+def test_public_registration_rejects_client_controlled_roles(
+    role_code: str,
+    schema: type[EmailPasswordRegistrationRequest]
+    | type[PhoneOtpRegistrationVerifyRequest],
+    payload: dict[str, object],
+) -> None:
+    """Reject privilege-related role input on both public registration flows."""
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        schema.model_validate({**payload, "roles": [role_code]})
 
 
 def test_profile_fields_reject_blank_strings() -> None:

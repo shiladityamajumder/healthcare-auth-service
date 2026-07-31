@@ -213,7 +213,7 @@ class AccountAccessPolicy:
 
         if allow_pending:
             allowed_statuses.add(
-                UserStatus.PENDING_VERIFICATION
+                UserStatus.PENDING
             )
 
         if user.status not in allowed_statuses:

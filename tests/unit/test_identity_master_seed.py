@@ -56,13 +56,27 @@ def test_clinical_duties_are_separated() -> None:
     lab_technician = _role_permissions("lab_technician")
     lab_manager = _role_permissions("lab_manager")
 
-    assert "prescriptions.prescriptions.issue" in doctor
-    assert "prescriptions.prescriptions.verify" not in doctor
-    assert "prescriptions.prescriptions.verify" in pharmacist
-    assert "prescriptions.prescriptions.issue" not in pharmacist
-    assert "labs.results.record" in lab_technician
-    assert "labs.results.verify" not in lab_technician
-    assert "labs.results.verify" in lab_manager
+    assert "clinical.prescriptions.issue" in doctor
+    assert "clinical.prescriptions.verify" not in doctor
+    assert "clinical.prescriptions.verify" in pharmacist
+    assert "clinical.prescriptions.issue" not in pharmacist
+    assert "diagnostics.results.record" in lab_technician
+    assert "diagnostics.results.verify" not in lab_technician
+    assert "diagnostics.results.verify" in lab_manager
+
+
+def test_diagnostics_mutations_are_separated_from_prescription_issuance() -> None:
+    doctor = _role_permissions("doctor")
+    pharmacist = _role_permissions("pharmacist")
+    lab_technician = _role_permissions("lab_technician")
+    lab_manager = _role_permissions("lab_manager")
+
+    assert "diagnostics.results.record" not in doctor
+    assert "diagnostics.results.verify" not in doctor
+    assert "diagnostics.results.record" not in pharmacist
+    assert "diagnostics.results.verify" not in pharmacist
+    assert "clinical.prescriptions.issue" not in lab_technician
+    assert "clinical.prescriptions.issue" not in lab_manager
 
 
 def test_customer_and_delivery_roles_have_no_administrative_permissions() -> None:
@@ -77,9 +91,9 @@ def test_permission_definition_management_is_security_admin_only() -> None:
     assert "identity.permissions.manage" in _role_permissions("identity_admin")
     platform_admin = _role_permissions("platform_admin")
     assert "identity.permissions.manage" not in platform_admin
-    assert "prescriptions.prescriptions.verify" not in platform_admin
+    assert "clinical.prescriptions.verify" not in platform_admin
     assert "pharmacy.dispensing.approve" not in platform_admin
-    assert "labs.results.verify" not in platform_admin
+    assert "diagnostics.results.verify" not in platform_admin
 
 
 def test_super_admin_contains_every_managed_permission() -> None:

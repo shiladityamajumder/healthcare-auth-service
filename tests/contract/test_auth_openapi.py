@@ -36,6 +36,7 @@ EXPECTED_IDENTITY_PATHS = {
     "/api/v1/auth/logout",
     "/api/v1/auth/logout/others",
     "/api/v1/auth/logout/all",
+    "/api/v1/auth/users/me/authorization",
     "/api/v1/auth/sessions",
     "/api/v1/auth/sessions/{session_id}",
     "/api/v1/auth/password/forgot",
@@ -115,6 +116,29 @@ def test_auth_metadata_headers_are_narrow_and_non_authoritative() -> None:
     assert "security" not in login
 
 
+def test_role_and_permission_headers_are_never_authorization_inputs() -> None:
+    """Prevent Swagger or routes from accepting client-supplied RBAC headers."""
+    schema = create_app().openapi()
+    forbidden = {
+        "x-role",
+        "x-roles",
+        "x-permission",
+        "x-permissions",
+    }
+
+    for path_item in schema["paths"].values():
+        for operation in path_item.values():
+            if not isinstance(operation, dict):
+                continue
+            parameters = operation.get("parameters", [])
+            header_names = {
+                str(parameter.get("name", "")).casefold()
+                for parameter in parameters
+                if isinstance(parameter, dict) and parameter.get("in") == "header"
+            }
+            assert forbidden.isdisjoint(header_names)
+
+
 def test_session_device_metadata_is_header_only() -> None:
     """Keep session device metadata out of authentication request bodies."""
     schema = create_app().openapi()
@@ -140,6 +164,80 @@ def test_session_device_metadata_is_header_only() -> None:
     for schema_name in request_schemas:
         properties = components[schema_name].get("properties", {})
         assert device_fields.isdisjoint(properties), schema_name
+
+
+def test_public_registration_contract_does_not_expose_role_assignment() -> None:
+    """Keep arbitrary role assignment out of both anonymous request schemas."""
+    schema = create_app().openapi()
+    components = schema["components"]["schemas"]
+
+    for schema_name in (
+        "EmailPasswordRegistrationRequest",
+        "PhoneOtpRegistrationVerifyRequest",
+    ):
+        properties = components[schema_name].get("properties", {})
+        assert "roles" not in properties, schema_name
+
+
+def test_authorization_contract_is_consolidated_and_legacy_routes_are_deprecated() -> None:
+    """Publish one protected DTO while retaining documented v1 projections."""
+    schema = create_app().openapi()
+    paths = schema["paths"]
+    authorization = paths["/api/v1/auth/users/me/authorization"]["get"]
+
+    assert authorization["security"] == [{"BearerAuth": []}]
+    assert authorization.get("deprecated") is not True
+    assert paths["/api/v1/users/me/roles"]["get"]["deprecated"] is True
+    assert paths["/api/v1/users/me/permissions"]["get"]["deprecated"] is True
+
+    properties = schema["components"]["schemas"]["CurrentAuthorizationResponse"][
+        "properties"
+    ]
+    assert set(properties) == {"roles", "permissions"}
+
+
+def test_login_and_refresh_publish_separate_v1_and_v2_response_contracts() -> None:
+    """Keep the v1 schema visible and make the minimal v2 profile explicit."""
+    schemas = create_app().openapi()["components"]["schemas"]
+    legacy_user = schemas["UserResponse"]["properties"]
+    minimal_user = schemas["AuthenticatedUserProfileResponse"]["properties"]
+
+    assert {"roles", "permissions"}.issubset(legacy_user)
+    assert "roles" not in minimal_user
+    assert "permissions" not in minimal_user
+    assert "TokenPairResponse" in schemas
+    assert "TokenPairResponseV2" in schemas
+
+
+def test_non_migrated_identity_surfaces_retain_version_1_response_contracts() -> None:
+    """Prevent the login/refresh migration from silently changing other APIs."""
+    schema = create_app().openapi()
+    paths = schema["paths"]
+
+    assert (
+        paths["/api/v1/auth/email-verification/verify"]["post"]["responses"]["200"][
+            "content"
+        ]["application/json"]["schema"]["$ref"]
+        == "#/components/schemas/APIResponseModel_TokenPairResponse_"
+    )
+    assert (
+        paths["/api/v1/auth/register/phone/verify-otp"]["post"]["responses"]["201"][
+            "content"
+        ]["application/json"]["schema"]["$ref"]
+        == "#/components/schemas/APIResponseModel_TokenPairResponse_"
+    )
+    assert (
+        paths["/api/v1/auth/password/reset"]["post"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"]
+        == "#/components/schemas/APIResponseModel_TokenPairResponse_"
+    )
+    assert (
+        paths["/api/v1/users/me"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"]
+        == "#/components/schemas/APIResponseModel_UserResponse_"
+    )
 
 
 def test_auth_operations_publish_unified_error_responses() -> None:
@@ -172,6 +270,19 @@ def test_password_and_role_paths_publish_expected_methods() -> None:
     assert {"get", "put"}.issubset(paths["/api/v1/admin/roles/{role_id}/permissions"])
     assert {"get", "post"}.issubset(paths["/api/v1/admin/permissions"])
     assert {"get", "patch", "delete"}.issubset(paths["/api/v1/admin/permissions/{permission_id}"])
+
+
+def test_no_anonymous_role_or_permission_catalog_is_exposed() -> None:
+    """Require authentication for every role/permission catalog operation."""
+    schema = create_app().openapi()
+
+    for path, path_item in schema["paths"].items():
+        if "/roles" not in path and "/permissions" not in path:
+            continue
+        for method, operation in path_item.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            assert operation["security"] == [{"BearerAuth": []}], (path, method)
 
 
 def test_every_bearer_protected_module_route_has_declarative_security() -> None:

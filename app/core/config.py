@@ -26,10 +26,11 @@ import base64
 import binascii
 import ipaddress
 import logging
+import re
 from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 from urllib.parse import urlparse
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -358,6 +359,9 @@ class AppSettings(BaseSettings):
         ge=1,
         le=60,
     )
+    ACCESS_TOKEN_VERSION: Literal[1, 2] = 1
+    ACCESS_TOKEN_V2_INCLUDE_ROLES: bool = False
+    AUTH_LOGIN_REFRESH_RESPONSE_VERSION: Literal[1, 2] = 1
     REFRESH_TOKEN_TTL_DAYS: int = Field(
         default=30,
         ge=1,
@@ -411,6 +415,10 @@ class AppSettings(BaseSettings):
 
     DEFAULT_ROLE_CODE: str = "customer"
     DEFAULT_ROLE_REQUIRED: bool = True
+    SELF_REGISTRATION_ROLE_CODES: list[str] = Field(
+        default_factory=lambda: ["customer"],
+        min_length=1,
+    )
 
     # Validate the persisted session before authorizing protected requests.
     AUTH_CHECK_SESSION_ON_EACH_REQUEST: bool = True
@@ -597,6 +605,7 @@ class AppSettings(BaseSettings):
     @field_validator(
         "ALLOWED_HOSTS",
         "CORS_ALLOWED_ORIGINS",
+        "SELF_REGISTRATION_ROLE_CODES",
         "TRUSTED_PROXY_CIDRS",
     )
     @classmethod
@@ -797,6 +806,34 @@ class AppSettings(BaseSettings):
 
     def _validate_authorization_settings(self) -> None:
         """Validate session and authorization dependencies."""
+        role_code_pattern = re.compile(r"^[a-z][a-z0-9_.-]{1,63}$")
+        invalid_role_codes = [
+            code
+            for code in self.SELF_REGISTRATION_ROLE_CODES
+            if role_code_pattern.fullmatch(code) is None
+        ]
+        if invalid_role_codes:
+            raise ValueError(
+                "SELF_REGISTRATION_ROLE_CODES contains invalid role codes"
+            )
+        if self.DEFAULT_ROLE_CODE not in self.SELF_REGISTRATION_ROLE_CODES:
+            raise ValueError(
+                "DEFAULT_ROLE_CODE must be explicitly permitted by "
+                "SELF_REGISTRATION_ROLE_CODES"
+            )
+        if not self.DEFAULT_ROLE_REQUIRED:
+            raise ValueError(
+                "DEFAULT_ROLE_REQUIRED must remain true because public "
+                "self-registration requires a server-controlled role"
+            )
+        if (
+            self.ACCESS_TOKEN_VERSION == 2
+            and not self.AUTH_CHECK_SESSION_ON_EACH_REQUEST
+        ):
+            raise ValueError(
+                "ACCESS_TOKEN_VERSION=2 requires "
+                "AUTH_CHECK_SESSION_ON_EACH_REQUEST=true"
+            )
         if (
             self.AUTH_REFRESH_AUTHZ_ON_EACH_REQUEST
             and not self.AUTH_CHECK_SESSION_ON_EACH_REQUEST
@@ -959,6 +996,34 @@ class AppSettings(BaseSettings):
 
     def _validate_production_rules(self) -> None:
         """Enforce mandatory production security requirements."""
+        pepper = self.auth_pepper_value
+        if self._looks_like_placeholder_secret(pepper) or len(set(pepper)) < 8:
+            raise ValueError(
+                "AUTH_PEPPER must be a non-placeholder high-entropy secret "
+                "in production"
+            )
+
+        postgres_password = urlparse(self.postgres_url_value).password
+        if (
+            postgres_password is None
+            or self._looks_like_placeholder_secret(postgres_password)
+        ):
+            raise ValueError(
+                "POSTGRES_URL must contain a non-placeholder password "
+                "in production"
+            )
+
+        if self.RATE_LIMIT_BACKEND is RateLimitBackend.REDIS:
+            redis_password = urlparse(self.redis_url_value).password
+            if (
+                redis_password is None
+                or self._looks_like_placeholder_secret(redis_password)
+            ):
+                raise ValueError(
+                    "REDIS_URL must contain a non-placeholder password "
+                    "in production"
+                )
+
         if self.DEBUG:
             raise ValueError(
                 "DEBUG must be false in production"
@@ -1018,6 +1083,30 @@ class AppSettings(BaseSettings):
             raise ValueError(
                 "Production requires RATE_LIMIT_BACKEND=redis"
             )
+
+    @staticmethod
+    def _looks_like_placeholder_secret(value: str) -> bool:
+        """Identify common deployment placeholders without exposing the value."""
+        normalized = value.strip().casefold()
+        if normalized in {
+            "admin",
+            "changeme",
+            "change-me",
+            "password",
+            "postgres",
+            "secret",
+            "test",
+        }:
+            return True
+        return any(
+            marker in normalized
+            for marker in (
+                "example-secret",
+                "placeholder",
+                "replace-this",
+                "your-secret",
+            )
+        )
 
     # -------------------------------------------------------------------------
     # Secret accessors

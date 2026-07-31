@@ -16,7 +16,6 @@ from __future__ import annotations
 import uuid
 
 import pytest
-
 from app.auth.identity.normalization import normalize_email, normalize_phone
 from app.auth.security.hashing import SecureHashing
 from app.auth.security.passwords import PasswordManager

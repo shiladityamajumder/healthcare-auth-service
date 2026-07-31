@@ -17,6 +17,7 @@ from __future__ import annotations
 import uuid
 
 from app.common.exceptions import NotFoundError
+from app.core.logging import get_logger
 from app.db.uow import SQLAlchemyUnitOfWork
 from app.modules.session_management.repositories import SessionManagementRepository
 from app.modules.session_management.schemas import (
@@ -25,6 +26,8 @@ from app.modules.session_management.schemas import (
     SessionResponse,
 )
 from app.utils.datetime_utils import utc_now
+
+logger = get_logger(__name__)
 
 
 class SessionManagementService:
@@ -68,6 +71,7 @@ class SessionManagementService:
         session_id: uuid.UUID,
     ) -> MessageResponse:
         """Revoke one non-current session owned by the authenticated user."""
+        session_revoked = False
         async with self._uow:
             session = await SessionManagementRepository(self._uow.session).get_for_update(
                 session_id
@@ -77,6 +81,16 @@ class SessionManagementService:
             if session.revoked_at is None:
                 session.revoked_at = utc_now()
                 session.revoke_reason = "user_revoked_session"
+                session_revoked = True
+        logger.info(
+            "Security audit event",
+            extra={
+                "event": "session_revoked",
+                "user_id": str(user_id),
+                "session_id": str(session_id),
+                "session_revoked": session_revoked,
+            },
+        )
         return MessageResponse(message="The session has been revoked.")
 
 

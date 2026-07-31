@@ -137,7 +137,7 @@ class EmailVerificationService:
                     pending_error = exc
                 else:
                     repository.mark_email_verified(user, verified_at=utc_now())
-                    if user.status == UserStatus.PENDING_VERIFICATION:
+                    if user.status == UserStatus.PENDING:
                         user.status = UserStatus.ACTIVE
                     result = await self._issue_tokens(
                         user=user,

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from app.common.auth_contracts import UserResponse
+from app.common.auth_contracts import CurrentAuthorizationResponse, UserResponse
 from app.common.schemas import StrictModel
 
 
@@ -43,6 +43,7 @@ class UserPermissionsResponse(StrictModel):
 
 
 __all__ = [
+    "CurrentAuthorizationResponse",
     "UpdateCurrentUserRequest",
     "UserPermissionsResponse",
     "UserResponse",

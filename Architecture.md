@@ -115,6 +115,11 @@ Authorization bearer token
 
 This prevents spoofed identity headers from escalating privileges.
 
+For access-token version 2, persisted-session validation and current database
+authorization resolution are mandatory regardless of the general refresh
+configuration. A version 2 JWT permission field is invalid; it cannot become an
+authorization source merely because it is correctly signed.
+
 Routes inject one of three narrow request-context profiles instead of exposing
 every possible metadata header on every operation:
 
@@ -200,6 +205,13 @@ Phone OTP login issues a purpose-specific challenge and creates a session only a
 - Reuse of an already rotated refresh token revokes the complete family.
 - Users can revoke the current session, all other sessions, all sessions, or one selected session.
 - Multiple device sessions are allowed.
+- A non-empty device ID and device type are immutable for the lifetime of a
+  session. Refresh may observe but may not replace either value.
+- IP address and User-Agent are observational metadata, not authentication
+  factors. They may be refreshed after successful token validation and do not
+  override device binding.
+- Refresh replay and explicit session revocation emit structured audit events
+  containing identifiers and outcomes, never raw tokens or token hashes.
 
 ## Password reset
 
@@ -237,6 +249,45 @@ AND existing role-permission mapping
 ```
 
 Administrative routes require permission codes through reusable dependencies. Role names alone do not authorize administrative actions.
+
+The canonical self-service authorization contract is:
+
+```text
+GET /api/v1/auth/users/me/authorization
+  -> valid access token
+  -> active persisted session
+  -> effective database authorization query
+  -> sorted, deduplicated roles and permissions
+```
+
+The older `/api/v1/users/me/roles` and
+`/api/v1/users/me/permissions` routes remain temporarily and are deprecated in
+OpenAPI. They delegate to the same application service and therefore cannot
+drift from the consolidated result.
+
+### Versioned profile and token contracts
+
+Version 1 login/refresh responses retain the historical `UserResponse`,
+including roles and permissions. Version 2 responses use a separate minimal
+profile DTO; authorization fields do not conditionally disappear from one
+schema. Administrative and registration responses remain their existing
+version 1 contracts during this migration.
+
+Version 1 access tokens retain `roles` and `permissions`. Newly issued tokens
+carry `ver: 1`, while tokens issued before versioning and lacking `ver` remain
+valid as legacy version 1. Version 2 contains registered JWT claims, `sid`,
+`amr`, and `ver: 2`; it never contains global permissions. Coarse role hints
+are optional configuration and are replaced by current database roles before
+this service evaluates authorization.
+
+Full global permission arrays are removed from future tokens because they
+inflate headers, become stale after an RBAC change, and encourage downstream
+services to treat a broad identity token as an audience-specific authorization
+decision. Browser/UI permission state is likewise only a display aid.
+Downstream services should use narrowly scoped, audience-specific entitlements
+or an authenticated authorization service. An anonymous permission catalog
+would disclose internal capability names and, more importantly, would provide
+no trustworthy user-specific authorization decision, so it must not be used.
 
 ## Transactions and concurrency
 

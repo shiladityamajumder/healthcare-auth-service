@@ -89,8 +89,6 @@ _TOKEN_REQUIRED_CLAIMS: Final[
     TokenType.ACCESS: frozenset(
         {
             "sid",
-            "roles",
-            "permissions",
             "amr",
         }
     ),
@@ -169,7 +167,7 @@ class TokenManager:
         permissions: Sequence[str],
         auth_methods: Sequence[str],
     ) -> EncodedToken:
-        """Create a short-lived access token for one session.
+        """Create a configured-version access token for one session.
 
         Args:
             user_id: Authenticated user identifier.
@@ -181,28 +179,61 @@ class TokenManager:
         Returns:
             Signed access token.
         """
+        version = self._settings.ACCESS_TOKEN_VERSION
+        extra: dict[str, Any] = {
+            "sid": str(session_id),
+            "amr": self._normalize_string_claims(
+                auth_methods,
+                claim_name="amr",
+            ),
+            "ver": version,
+        }
+
+        if version == 1:
+            extra["roles"] = self._normalize_string_claims(
+                roles,
+                claim_name="roles",
+            )
+            extra["permissions"] = self._normalize_string_claims(
+                permissions,
+                claim_name="permissions",
+            )
+        elif self._settings.ACCESS_TOKEN_V2_INCLUDE_ROLES:
+            extra["roles"] = self._normalize_string_claims(
+                roles,
+                claim_name="roles",
+            )
+
         return self._encode(
             token_type=TokenType.ACCESS,
             subject=str(user_id),
             ttl=timedelta(
                 minutes=self._settings.ACCESS_TOKEN_TTL_MINUTES
             ),
-            extra={
-                "sid": str(session_id),
-                "roles": self._normalize_string_claims(
-                    roles,
-                    claim_name="roles",
-                ),
-                "permissions": self._normalize_string_claims(
-                    permissions,
-                    claim_name="permissions",
-                ),
-                "amr": self._normalize_string_claims(
-                    auth_methods,
-                    claim_name="amr",
-                ),
-            },
+            extra=extra,
         )
+
+    @staticmethod
+    def access_token_version(
+        payload: Mapping[str, Any],
+    ) -> int:
+        """Return the validated access-token contract version.
+
+        Tokens issued before versioning are treated as legacy version 1.
+        Unknown, boolean, or non-integer versions fail closed.
+        """
+        raw_version = payload.get("ver")
+        if raw_version is None:
+            return 1
+        if isinstance(raw_version, bool) or not isinstance(raw_version, int):
+            raise AuthenticationError(
+                "The access token version is invalid."
+            )
+        if raw_version not in {1, 2}:
+            raise AuthenticationError(
+                "The access token version is not supported."
+            )
+        return int(raw_version)
 
     def create_refresh_token(
         self,
@@ -562,23 +593,37 @@ class TokenManager:
         self,
         payload: Mapping[str, Any],
     ) -> None:
-        """Validate access-token-specific claims."""
+        """Validate strict version-specific access-token claims."""
+        version = self.access_token_version(payload)
         self._require_uuid_claim(
             payload,
             claim_name="sid",
         )
         self._require_string_collection(
             payload,
-            claim_name="roles",
-        )
-        self._require_string_collection(
-            payload,
-            claim_name="permissions",
-        )
-        self._require_string_collection(
-            payload,
             claim_name="amr",
         )
+
+        if version == 1:
+            self._require_string_collection(
+                payload,
+                claim_name="roles",
+            )
+            self._require_string_collection(
+                payload,
+                claim_name="permissions",
+            )
+            return
+
+        if "permissions" in payload:
+            raise AuthenticationError(
+                "Version 2 access tokens must not contain permissions."
+            )
+        if "roles" in payload:
+            self._require_string_collection(
+                payload,
+                claim_name="roles",
+            )
 
     def _validate_refresh_claims(
         self,

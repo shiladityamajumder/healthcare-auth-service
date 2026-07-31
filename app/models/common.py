@@ -17,14 +17,11 @@ database schema maintained by the healthcare_db repository.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import TypeVar
 
 from sqlalchemy import Enum as SAEnum
 
-EnumT = TypeVar("EnumT", bound=StrEnum)
 
-
-def enum_column(
+def enum_column[EnumT: StrEnum](
     enum_type: type[EnumT],
     *,
     name: str | None = None,

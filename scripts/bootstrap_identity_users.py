@@ -19,12 +19,9 @@ import asyncio
 import json
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-
-from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.identity.normalization import normalize_email, normalize_phone
 from app.auth.security.passwords import PasswordManager
@@ -39,6 +36,8 @@ from app.models.identity import (
     UserRoles,
     Users,
 )
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @dataclass(frozen=True, slots=True)
@@ -294,7 +293,7 @@ async def _sync_user(
     passwords: PasswordManager,
     rotate_passwords: bool,
 ) -> BootstrapSummary:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     account = await _existing_user(session, seed)
     created = account is None
     updated = False

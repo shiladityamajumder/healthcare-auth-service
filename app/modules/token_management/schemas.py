@@ -14,7 +14,14 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from app.common.auth_contracts import MessageResponse, TokenPairResponse, UserResponse
+from app.common.auth_contracts import (
+    AuthenticatedUserProfileResponse,
+    MessageResponse,
+    TokenPairResponse,
+    TokenPairResponseContract,
+    TokenPairResponseV2,
+    UserResponse,
+)
 from app.common.schemas import StrictModel
 
 
@@ -48,11 +55,14 @@ class JWKSResponse(StrictModel):
 
 
 __all__ = [
+    "AuthenticatedUserProfileResponse",
     "JWKResponse",
     "JWKSResponse",
     "LogoutRequest",
     "MessageResponse",
     "RefreshTokenRequest",
     "TokenPairResponse",
+    "TokenPairResponseContract",
+    "TokenPairResponseV2",
     "UserResponse",
 ]

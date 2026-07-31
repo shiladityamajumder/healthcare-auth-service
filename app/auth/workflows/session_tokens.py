@@ -57,7 +57,12 @@ class IssuedSessionTokens:
 
 @dataclass(frozen=True, slots=True)
 class SessionTokenIssuer:
-    """Create an initial refresh-token family and persisted device session."""
+    """Create an initial refresh-token family and persisted device session.
+
+    Device identity and type are established only at session creation. Refresh
+    workflows may validate a supplied device identifier but must not replace
+    these stored values.
+    """
 
     tokens: TokenManager
     hashing: SecureHashing
@@ -108,7 +113,8 @@ class SessionTokenIssuer:
         )
 
         # Device metadata has one transport source: validated headers captured
-        # in the immutable request context. It is never an authentication input.
+        # in the immutable request context. Once persisted, device identity and
+        # type remain immutable for the lifetime of this session.
         device_type = _first_nonblank(
             request_context.device_type,
             request_context.platform,

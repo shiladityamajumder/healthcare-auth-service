@@ -304,6 +304,7 @@ async def get_current_user_principal(
         credentials.credentials,
         expected_type=TokenType.ACCESS,
     )
+    access_token_version = runtime.tokens.access_token_version(payload)
 
     user_id = _uuid_claim(
         payload,
@@ -324,9 +325,13 @@ async def get_current_user_principal(
         payload,
         claim_name="roles",
     )
-    permissions = _string_set_claim(
-        payload,
-        claim_name="permissions",
+    permissions = (
+        _string_set_claim(
+            payload,
+            claim_name="permissions",
+        )
+        if access_token_version == 1
+        else frozenset()
     )
     auth_methods = _string_tuple_claim(
         payload,
@@ -335,7 +340,11 @@ async def get_current_user_principal(
 
     # A valid JWT is insufficient when per-request session checks are enabled;
     # persisted revocation, expiry, ownership, device, and account state win.
-    if runtime.settings.AUTH_CHECK_SESSION_ON_EACH_REQUEST:
+    must_resolve_persisted_session = (
+        runtime.settings.AUTH_CHECK_SESSION_ON_EACH_REQUEST
+        or access_token_version == 2
+    )
+    if must_resolve_persisted_session:
         async with database.session() as session:
             statement = (
                 select(
@@ -371,7 +380,10 @@ async def get_current_user_principal(
 
             # Replace token snapshots with current database claims so role or
             # permission revocation takes effect without waiting for JWT expiry.
-            if runtime.settings.AUTH_REFRESH_AUTHZ_ON_EACH_REQUEST:
+            if (
+                runtime.settings.AUTH_REFRESH_AUTHZ_ON_EACH_REQUEST
+                or access_token_version == 2
+            ):
                 claims = await load_authorization_claims(
                     session,
                     user_id=user_id,

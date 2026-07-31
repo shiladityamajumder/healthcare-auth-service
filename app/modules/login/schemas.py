@@ -18,8 +18,11 @@ import uuid
 from pydantic import EmailStr, Field, model_validator
 
 from app.common.auth_contracts import (
+    AuthenticatedUserProfileResponse,
     OtpChallengeResponse,
     TokenPairResponse,
+    TokenPairResponseContract,
+    TokenPairResponseV2,
     UserResponse,
 )
 from app.common.schemas import StrictModel
@@ -61,10 +64,13 @@ class PhoneOtpLoginVerifyRequest(StrictModel):
 
 
 __all__ = [
+    "AuthenticatedUserProfileResponse",
     "OtpChallengeResponse",
     "PasswordLoginRequest",
     "PhoneOtpLoginRequest",
     "PhoneOtpLoginVerifyRequest",
     "TokenPairResponse",
+    "TokenPairResponseContract",
+    "TokenPairResponseV2",
     "UserResponse",
 ]

@@ -21,6 +21,9 @@ from app.modules.admin_permissions.routes import (
 from app.modules.admin_roles.routes import router as admin_roles_router
 from app.modules.admin_user_roles.routes import router as admin_user_roles_router
 from app.modules.admin_users.routes import router as admin_users_router
+from app.modules.current_user.routes import (
+    authorization_router as current_authorization_router,
+)
 from app.modules.current_user.routes import router as current_user_router
 from app.modules.email_verification.routes import router as email_verification_router
 from app.modules.login.routes import router as login_router
@@ -38,6 +41,7 @@ for child_router in (
     token_router,
     session_router,
     password_router,
+    current_authorization_router,
     current_user_router,
     admin_users_router,
     admin_roles_router,

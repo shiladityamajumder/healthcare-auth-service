@@ -14,9 +14,13 @@ Synthetic request or TestClient call
 from __future__ import annotations
 
 import uuid
+from typing import Any, cast
 
+import pytest
 from app.auth.request_context.context import AuthRequestContext
+from app.auth.request_context.dependencies import get_current_user_principal
 from app.auth.request_context.headers import AuthHeaders
+from app.common.exceptions import AuthenticationError
 from app.main import create_app
 from fastapi.testclient import TestClient
 from starlette.requests import Request
@@ -92,3 +96,21 @@ def test_forwarded_for_is_used_only_for_trusted_proxy() -> None:
     )
     assert untrusted.ip_address == "10.0.0.2"
     assert trusted.ip_address == "203.0.113.9"
+
+
+@pytest.mark.asyncio
+async def test_missing_authentication_cannot_be_replaced_by_identity_headers() -> None:
+    """Reject custom identity/authorization assertions without a bearer token."""
+    context = AuthRequestContext(
+        asserted_user_id=uuid.uuid4(),
+        asserted_session_id=uuid.uuid4(),
+        device_id="attacker-device",
+    )
+
+    with pytest.raises(AuthenticationError):
+        await get_current_user_principal(
+            credentials=None,
+            database=cast(Any, object()),
+            runtime=cast(Any, object()),
+            context=context,
+        )

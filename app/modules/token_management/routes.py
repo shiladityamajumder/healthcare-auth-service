@@ -32,6 +32,7 @@ from app.modules.token_management.schemas import (
     MessageResponse,
     RefreshTokenRequest,
     TokenPairResponse,
+    TokenPairResponseV2,
 )
 from app.utils.debug import debug
 
@@ -57,7 +58,7 @@ async def jwks(tokens: TokenManagerDep) -> JSONResponse:
 
 @router.post(
     "/token/refresh",
-    response_model=APIResponseModel[TokenPairResponse],
+    response_model=APIResponseModel[TokenPairResponse | TokenPairResponseV2],
     summary="Rotate a refresh token",
 )
 async def refresh_token(
