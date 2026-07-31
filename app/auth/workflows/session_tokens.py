@@ -33,13 +33,6 @@ from app.models.identity import Sessions
 from app.utils.datetime_utils import utc_now
 
 
-class DeviceMetadataPort(Protocol):
-    """Device metadata accepted from session-creating request schemas."""
-
-    device_id: str | None
-    device_type: str | None
-
-
 class SessionWriterPort(Protocol):
     """Persistence operation required by the session token issuer."""
 
@@ -77,7 +70,6 @@ class SessionTokenIssuer:
         permissions: Sequence[str],
         session_writer: SessionWriterPort,
         request_context: AuthRequestContext,
-        device: DeviceMetadataPort,
         auth_methods: Sequence[str],
     ) -> IssuedSessionTokens:
         """Issue a token pair and stage its persisted session.
@@ -91,8 +83,7 @@ class SessionTokenIssuer:
             roles: Effective global role codes.
             permissions: Effective global permission codes.
             session_writer: Session persistence implementation.
-            request_context: Validated request metadata.
-            device: Device metadata supplied by the request schema.
+            request_context: Validated request and header metadata.
             auth_methods: Authentication method references.
 
         Returns:
@@ -116,13 +107,9 @@ class SessionTokenIssuer:
             auth_methods=auth_methods,
         )
 
-        device_id = _first_nonblank(
-            device.device_id,
-            request_context.device_id,
-        )
-
+        # Device metadata has one transport source: validated headers captured
+        # in the immutable request context. It is never an authentication input.
         device_type = _first_nonblank(
-            device.device_type,
             request_context.device_type,
             request_context.platform,
         )
@@ -134,7 +121,7 @@ class SessionTokenIssuer:
                 refresh.token
             ),
             token_family_id=family_id,
-            device_id=device_id,
+            device_id=request_context.device_id,
             device_type=device_type,
             ip_address=request_context.ip_address,
             user_agent=request_context.user_agent,
@@ -171,7 +158,6 @@ def _first_nonblank(
 
 
 __all__ = [
-    "DeviceMetadataPort",
     "IssuedSessionTokens",
     "SessionTokenIssuer",
     "SessionWriterPort",

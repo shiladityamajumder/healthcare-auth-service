@@ -142,7 +142,6 @@ class EmailVerificationService:
                     result = await self._issue_tokens(
                         user=user,
                         repository=repository,
-                        payload=payload,
                         context=context,
                     )
         # Raise after the transaction preserves OTP attempt/consumption state.
@@ -156,7 +155,6 @@ class EmailVerificationService:
         *,
         user: Users,
         repository: EmailVerificationRepository,
-        payload: EmailVerificationConfirmRequest,
         context: AuthRequestContext,
     ) -> TokenPairResponse:
         """Load current claims and stage the verified user's first session."""
@@ -176,7 +174,6 @@ class EmailVerificationService:
             permissions=claims.permissions,
             session_writer=repository,
             request_context=context,
-            device=payload,
             auth_methods=["email_verification"],
         )
         return TokenPairResponse(

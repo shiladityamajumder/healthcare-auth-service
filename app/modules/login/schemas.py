@@ -2,11 +2,11 @@
 
 Purpose:
 Defines mutually exclusive password identities and phone-OTP request/
-verification contracts with optional device metadata.
+verification contracts.
 
 Dependency flow:
 HTTP body
--> Pydantic identity/device validation
+-> Pydantic identity validation
 -> login route/service
 -> shared token/user response contracts
 """
@@ -22,10 +22,10 @@ from app.common.auth_contracts import (
     TokenPairResponse,
     UserResponse,
 )
-from app.common.schemas import DeviceContext, StrictModel
+from app.common.schemas import StrictModel
 
 
-class PasswordLoginRequest(DeviceContext):
+class PasswordLoginRequest(StrictModel):
     """Unified password login body supporting email or phone identities."""
 
     channel: str = Field(pattern=r"^(email|phone)$")
@@ -51,7 +51,7 @@ class PhoneOtpLoginRequest(StrictModel):
     phone_number: str = Field(min_length=6, max_length=32)
 
 
-class PhoneOtpLoginVerifyRequest(DeviceContext):
+class PhoneOtpLoginVerifyRequest(StrictModel):
     """Phone OTP proof used to create a session."""
 
     challenge_id: uuid.UUID

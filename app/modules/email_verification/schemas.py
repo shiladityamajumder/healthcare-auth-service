@@ -22,7 +22,7 @@ from app.common.auth_contracts import (
     TokenPairResponse,
     UserResponse,
 )
-from app.common.schemas import DeviceContext, StrictModel
+from app.common.schemas import StrictModel
 
 
 class EmailVerificationRequest(StrictModel):
@@ -31,7 +31,7 @@ class EmailVerificationRequest(StrictModel):
     email: EmailStr
 
 
-class EmailVerificationConfirmRequest(DeviceContext):
+class EmailVerificationConfirmRequest(StrictModel):
     """Email verification OTP proof."""
 
     challenge_id: uuid.UUID

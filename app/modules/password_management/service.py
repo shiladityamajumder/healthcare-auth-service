@@ -30,7 +30,6 @@ from app.auth.workflows.notifications import AuthNotificationGateway, Notificati
 from app.auth.workflows.otp import IssuedOTP, OTPService
 from app.auth.workflows.session_tokens import SessionTokenIssuer
 from app.common.exceptions import AuthenticationError, ConflictError, NotFoundError, ValidationError
-from app.common.schemas import DeviceContext
 from app.core.config import AppSettings
 from app.db.uow import SQLAlchemyUnitOfWork
 from app.models.enums import OTPChannel, OTPPurpose
@@ -144,7 +143,6 @@ class PasswordManagementService:
         *,
         user: Users,
         repository: PasswordRepository,
-        payload: DeviceContext,
         context: AuthRequestContext,
         auth_method: str,
     ) -> TokenPairResponse:
@@ -165,7 +163,6 @@ class PasswordManagementService:
             permissions=authz.permissions,
             session_writer=repository,
             request_context=context,
-            device=payload,
             auth_methods=[auth_method],
         )
         return TokenPairResponse(
@@ -326,7 +323,6 @@ class PasswordManagementService:
             return await self._issue_tokens(
                 user=user,
                 repository=repository,
-                payload=payload,
                 context=context,
                 auth_method="password_reset",
             )
@@ -372,7 +368,6 @@ class PasswordManagementService:
             return await self._issue_tokens(
                 user=user,
                 repository=repository,
-                payload=payload,
                 context=context,
                 auth_method="password",
             )
@@ -410,7 +405,6 @@ class PasswordManagementService:
             return await self._issue_tokens(
                 user=user,
                 repository=repository,
-                payload=payload,
                 context=context,
                 auth_method="password_set",
             )

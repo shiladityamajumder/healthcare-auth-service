@@ -14,6 +14,7 @@ create_app(test settings)
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator
+from typing import Any
 
 from app.auth.request_context.dependencies import get_current_user_principal
 from app.auth.route_security import route_security_policy
@@ -78,7 +79,7 @@ def test_auth_metadata_headers_are_narrow_and_non_authoritative() -> None:
     login = schema["paths"]["/api/v1/auth/login/password"]["post"]
     protected = schema["paths"]["/api/v1/auth/sessions"]["get"]
 
-    def headers(operation: dict[str, object]) -> dict[str, dict[str, object]]:
+    def headers(operation: dict[str, object]) -> dict[str, dict[str, Any]]:
         parameters = operation.get("parameters", [])
         assert isinstance(parameters, list)
         return {
@@ -105,11 +106,40 @@ def test_auth_metadata_headers_are_narrow_and_non_authoritative() -> None:
 
     assert "consistency assertion" in protected_headers["X-User-ID"]["description"].lower()
     assert "consistency assertion" in protected_headers["X-Session-ID"]["description"].lower()
+    assert "body" not in login_headers["X-Device-ID"]["description"].lower()
+    assert "body" not in login_headers["X-Device-Type"]["description"].lower()
 
     # Swagger obtains Authorization through its BearerAuth Authorize dialog,
     # not through a duplicated free-text header parameter.
     assert protected["security"] == [{"BearerAuth": []}]
     assert "security" not in login
+
+
+def test_session_device_metadata_is_header_only() -> None:
+    """Keep session device metadata out of authentication request bodies."""
+    schema = create_app().openapi()
+    components = schema["components"]["schemas"]
+    device_fields = {
+        "device_id",
+        "device_type",
+        "device_name",
+        "device_fingerprint",
+    }
+    request_schemas = (
+        "EmailPasswordRegistrationRequest",
+        "PhoneOtpRegistrationVerifyRequest",
+        "PasswordLoginRequest",
+        "PhoneOtpLoginVerifyRequest",
+        "EmailVerificationConfirmRequest",
+        "ResetPasswordWithTokenRequest",
+        "ChangePasswordRequest",
+        "SetPasswordRequest",
+        "RefreshTokenRequest",
+    )
+
+    for schema_name in request_schemas:
+        properties = components[schema_name].get("properties", {})
+        assert device_fields.isdisjoint(properties), schema_name
 
 
 def test_auth_operations_publish_unified_error_responses() -> None:

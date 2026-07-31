@@ -17,15 +17,27 @@ import base64
 import uuid
 
 import pytest
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-
+from app.auth.request_context.context import AuthRequestContext
 from app.auth.security.hashing import SecureHashing
 from app.auth.security.passwords import PasswordManager
 from app.auth.security.tokens import TokenManager, TokenType
+from app.auth.workflows.session_tokens import SessionTokenIssuer
 from app.common.exceptions import AuthenticationError
 from app.core.config import AppSettings
 from app.core.logging import sanitize_log_value
+from app.models.identity import Sessions
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+
+
+class _SessionWriter:
+    """Capture sessions staged by the issuer without a database transaction."""
+
+    def __init__(self) -> None:
+        self.sessions: list[Sessions] = []
+
+    def add_session(self, session_record: Sessions) -> None:
+        self.sessions.append(session_record)
 
 
 def auth_settings() -> AppSettings:
@@ -64,6 +76,42 @@ def test_access_token_has_expected_type_and_subject() -> None:
     assert payload["sub"] == str(user_id)
     assert payload["sid"] == str(session_id)
     assert payload["permissions"] == ["orders.read"]
+
+
+@pytest.mark.parametrize(
+    ("device_type", "platform", "expected_device_type"),
+    [
+        ("phone", "android", "phone"),
+        (None, "ios", "ios"),
+    ],
+)
+def test_session_issuer_uses_header_context_for_device_metadata(
+    device_type: str | None,
+    platform: str,
+    expected_device_type: str,
+) -> None:
+    """Persist validated header metadata, preferring device type to platform."""
+    writer = _SessionWriter()
+    issuer = SessionTokenIssuer(
+        tokens=TokenManager(auth_settings()),
+        hashing=SecureHashing(auth_settings()),
+    )
+
+    issuer.issue(
+        user_id=uuid.uuid4(),
+        roles=["customer"],
+        permissions=[],
+        session_writer=writer,
+        request_context=AuthRequestContext(
+            platform=platform,
+            device_id="header-device",
+            device_type=device_type,
+        ),
+        auth_methods=["password"],
+    )
+
+    assert writer.sessions[0].device_id == "header-device"
+    assert writer.sessions[0].device_type == expected_device_type
 
 
 def test_password_reset_proof_is_bound_to_challenge_and_token_type() -> None:

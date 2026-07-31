@@ -29,7 +29,6 @@ from app.auth.workflows.notifications import AuthNotificationGateway, Notificati
 from app.auth.workflows.otp import IssuedOTP, OTPService
 from app.auth.workflows.session_tokens import SessionTokenIssuer
 from app.common.exceptions import AuthenticationError, InvalidCredentialsError
-from app.common.schemas import DeviceContext
 from app.core.config import AppSettings
 from app.db.uow import SQLAlchemyUnitOfWork
 from app.models.enums import OTPChannel, OTPPurpose
@@ -65,7 +64,6 @@ class _LoginBase:
         *,
         user: Users,
         repository: LoginRepository,
-        payload: DeviceContext,
         context: AuthRequestContext,
         auth_method: str,
     ) -> TokenPairResponse:
@@ -86,7 +84,6 @@ class _LoginBase:
             permissions=claims.permissions,
             session_writer=repository,
             request_context=context,
-            device=payload,
             auth_methods=[auth_method],
         )
         return TokenPairResponse(
@@ -280,7 +277,6 @@ class PasswordLoginService(_LoginBase):
         result = await self._issue_tokens(
             user=user,
             repository=repository,
-            payload=payload,
             context=context,
             auth_method="password",
         )
@@ -423,7 +419,6 @@ class PhoneOtpLoginService(_LoginBase):
                     result = await self._issue_tokens(
                         user=user,
                         repository=repository,
-                        payload=payload,
                         context=context,
                         auth_method="otp",
                     )

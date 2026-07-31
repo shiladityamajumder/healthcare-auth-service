@@ -2,11 +2,11 @@
 
 Purpose:
 Defines email/password and phone/OTP registration inputs, initial role lists,
-device metadata, and registration responses.
+profile fields, and registration responses.
 
 Dependency flow:
 HTTP body or service result
--> Pydantic identity/role/device validation
+-> Pydantic identity, role, and profile validation
 -> registration route/service
 -> response-model serialization
 """
@@ -24,7 +24,7 @@ from app.common.auth_contracts import (
     TokenPairResponse,
     UserResponse,
 )
-from app.common.schemas import DeviceContext, StrictModel
+from app.common.schemas import StrictModel
 
 RoleCode = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_.-]{1,63}$")]
 
@@ -58,7 +58,6 @@ class _RegistrationProfile(StrictModel):
 
 
 class EmailPasswordRegistrationRequest(
-    DeviceContext,
     _RegistrationRoles,
     _RegistrationProfile,
 ):
@@ -80,7 +79,6 @@ class PhoneOtpRegistrationRequest(StrictModel):
 
 
 class PhoneOtpRegistrationVerifyRequest(
-    DeviceContext,
     _RegistrationRoles,
     _RegistrationProfile,
 ):

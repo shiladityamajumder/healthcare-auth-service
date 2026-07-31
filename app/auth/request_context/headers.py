@@ -251,8 +251,8 @@ def get_session_creation_headers(
             min_length=1,
             max_length=16,
             description=(
-                "Client platform: web, android, ios, or service; used as the "
-                "session device-type fallback."
+                "Client platform: web, android, ios, or service. Used as the "
+                "session device type when X-Device-Type is not supplied."
             ),
         ),
     ] = None,
@@ -263,8 +263,8 @@ def get_session_creation_headers(
             min_length=1,
             max_length=255,
             description=(
-                "Optional stable identifier used for rate limits and as the "
-                "session fallback when device_id is absent from the body."
+                "Optional stable device identifier used as a rate-limit "
+                "dimension and persisted on newly issued sessions."
             ),
         ),
     ] = None,
@@ -275,7 +275,7 @@ def get_session_creation_headers(
             min_length=1,
             max_length=32,
             description=(
-                "Optional session device type used when device_type is absent from the body."
+                "Optional device type persisted on newly issued or rotated sessions."
             ),
         ),
     ] = None,

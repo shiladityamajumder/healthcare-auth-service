@@ -130,8 +130,14 @@ class TokenManagementService:
                         session.last_seen_at = now
                         session.ip_address = context.ip_address
                         session.user_agent = context.user_agent
-                        session.device_id = payload.device_id or session.device_id
-                        session.device_type = payload.device_type or session.device_type
+                        # Rotation refreshes session metadata only from the
+                        # validated header-derived request context.
+                        session.device_id = context.device_id or session.device_id
+                        session.device_type = (
+                            context.device_type
+                            or context.platform
+                            or session.device_type
+                        )
                         profile = await repository.get_active_profile(user.id)
                         user_dto = UserResponse.model_validate(
                             public_user_data(

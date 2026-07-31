@@ -30,11 +30,7 @@ from app.auth.security.passwords import PasswordManager
 from app.auth.security.tokens import TokenManager
 from app.auth.workflows.notifications import AuthNotificationGateway, NotificationDispatcher
 from app.auth.workflows.otp import IssuedOTP, OTPService
-from app.auth.workflows.session_tokens import (
-    DeviceMetadataPort,
-    IssuedSessionTokens,
-    SessionTokenIssuer,
-)
+from app.auth.workflows.session_tokens import IssuedSessionTokens, SessionTokenIssuer
 from app.common.exceptions import (
     IdentityAlreadyExistsError,
     InfrastructureUnavailableError,
@@ -273,7 +269,6 @@ class _RegistrationBase:
         profile: UserProfiles | None,
         repository: RegistrationRepository,
         context: AuthRequestContext,
-        device: DeviceMetadataPort,
         auth_methods: list[str],
     ) -> TokenPairResponse:
         """Issue the first session using current roles and request metadata."""
@@ -290,7 +285,6 @@ class _RegistrationBase:
             permissions=claims.permissions,
             session_writer=repository,
             request_context=context,
-            device=device,
             auth_methods=auth_methods,
         )
         return _token_response(issued, user=user_dto)
@@ -367,7 +361,6 @@ class EmailPasswordRegistrationService(_RegistrationBase):
                         profile=profile,
                         repository=repository,
                         context=context,
-                        device=payload,
                         auth_methods=["password"],
                     )
                     result = RegistrationResponse(
@@ -493,7 +486,6 @@ class PhoneOtpRegistrationService(_RegistrationBase):
                     profile=profile,
                     repository=repository,
                     context=context,
-                    device=payload,
                     auth_methods=["otp"],
                 )
         except IntegrityError as exc:

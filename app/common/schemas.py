@@ -1,11 +1,11 @@
 """File: app/common/schemas.py
 
 Purpose:
-Defines strict shared Pydantic bases and reusable device-context input fields.
+Defines the strict shared Pydantic base used by transport schemas.
 
 Dependency flow:
 HTTP input or service output
--> StrictModel/DeviceContext validation
+-> StrictModel validation
 -> owning module schema
 -> route or service
 
@@ -15,7 +15,7 @@ contracts remain inside their owning vertical module.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict
 
 
 class StrictModel(BaseModel):
@@ -24,26 +24,4 @@ class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
 
-class DeviceContext(StrictModel):
-    """Optional device metadata accepted by session-creating workflows.
-
-    These values are metadata only. They never replace JWT authentication or
-    server-side session validation.
-    """
-
-    device_id: str | None = Field(default=None, max_length=255)
-    device_type: str | None = Field(default=None, max_length=32)
-    device_name: str | None = Field(default=None, max_length=128)
-    device_fingerprint: str | None = Field(default=None, min_length=16, max_length=512)
-
-    @field_validator("device_id", "device_type", "device_name", "device_fingerprint")
-    @classmethod
-    def blank_to_none(cls, value: str | None) -> str | None:
-        """Convert whitespace-only device values to ``None``."""
-        if value is None:
-            return None
-        normalized = value.strip()
-        return normalized or None
-
-
-__all__ = ["DeviceContext", "StrictModel"]
+__all__ = ["StrictModel"]

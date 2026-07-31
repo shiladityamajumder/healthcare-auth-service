@@ -15,11 +15,11 @@ from __future__ import annotations
 from pydantic import Field
 
 from app.common.auth_contracts import MessageResponse, TokenPairResponse, UserResponse
-from app.common.schemas import DeviceContext, StrictModel
+from app.common.schemas import StrictModel
 
 
-class RefreshTokenRequest(DeviceContext):
-    """Refresh token and optional updated device metadata."""
+class RefreshTokenRequest(StrictModel):
+    """Refresh token used to rotate its persisted session."""
 
     refresh_token: str = Field(min_length=32, max_length=8192)
 

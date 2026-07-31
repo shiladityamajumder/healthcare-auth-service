@@ -190,7 +190,7 @@ def get_session_creation_request_context(
     )
 
 
-# Builds request and device metadata consumed during session issuance/rotation.
+# Builds validated header-derived metadata consumed during session issuance or rotation.
 SessionCreationRequestContextDep = Annotated[
     AuthRequestContext,
     Depends(get_session_creation_request_context),

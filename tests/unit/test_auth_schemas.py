@@ -63,6 +63,17 @@ def test_phone_otp_verify_rejects_non_numeric_code() -> None:
         )
 
 
+def test_session_device_metadata_is_rejected_from_request_bodies() -> None:
+    """Require clients to send session device metadata through headers."""
+    with pytest.raises(ValidationError):
+        PasswordLoginRequest(
+            channel="email",
+            email="person@example.com",
+            password="StrongPassword!123",  # noqa: S106 - inert test input
+            device_id="device-1",  # type: ignore[call-arg]
+        )
+
+
 def test_permission_master_accepts_normalized_definition() -> None:
     payload = CreatePermissionRequest(
         code="inventory.products.read",

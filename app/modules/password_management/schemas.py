@@ -6,7 +6,7 @@ password change/set contracts.
 
 Dependency flow:
 HTTP body or service proof result
--> Pydantic identity/password/device validation
+-> Pydantic identity/password validation
 -> password route/service
 -> response-model serialization
 """
@@ -23,7 +23,7 @@ from app.common.auth_contracts import (
     TokenPairResponse,
     UserResponse,
 )
-from app.common.schemas import DeviceContext, StrictModel
+from app.common.schemas import StrictModel
 
 
 class IdentityRequest(StrictModel):
@@ -62,21 +62,21 @@ class ResetPasswordProofResponse(StrictModel):
     expires_at: datetime
 
 
-class ResetPasswordWithTokenRequest(DeviceContext):
+class ResetPasswordWithTokenRequest(StrictModel):
     """Final password reset request using a signed proof."""
 
     reset_token: str = Field(min_length=32, max_length=4096)
     new_password: str = Field(min_length=1, max_length=128)
 
 
-class ChangePasswordRequest(DeviceContext):
+class ChangePasswordRequest(StrictModel):
     """Authenticated password change request."""
 
     current_password: str = Field(min_length=1, max_length=128)
     new_password: str = Field(min_length=1, max_length=128)
 
 
-class SetPasswordRequest(DeviceContext):
+class SetPasswordRequest(StrictModel):
     """Initial password for an OTP-only account."""
 
     new_password: str = Field(min_length=1, max_length=128)
