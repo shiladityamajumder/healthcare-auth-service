@@ -49,9 +49,6 @@ class OTPPurpose(StrEnum):
     Purpose-specific values distinguish workflows and delivery channels so
     challenges cannot be reused across unrelated authentication operations.
 
-    Legacy values remain available during rolling deployments so challenges
-    issued by an older application version can still complete safely. New OTP
-    challenges should use the purpose-specific values whenever possible.
     """
 
     # Registration verification
@@ -74,13 +71,6 @@ class OTPPurpose(StrEnum):
     # Multi-factor authentication
     MFA_LOGIN = "mfa_login"
     MFA_RECOVERY = "mfa_recovery"
-
-    # Legacy values retained for backward compatibility with OTP challenges
-    # that may already exist in the database during a rolling deployment.
-    REGISTER_MOBILE = "register_mobile"
-    LOGIN = "login"
-    PASSWORD_RESET = "password_reset"  # noqa: S105
-
 
 class MFAFactorType(StrEnum):
     """Multi-factor authentication methods supported by the service."""

@@ -585,7 +585,6 @@ Public email/password registration body.  Role assignment is deliberately absent
 | `first_name` | string or null | No | None |
 | `last_name` | string or null | No | None |
 | `preferred_name` | string or null | No | None |
-| `avatar_object_key` | string or null | No | None |
 | `email` | string (email) | Yes | Valid email address |
 | `password` | string | Yes | Min length: 1<br>Max length: 128 |
 | `preferred_locale` | string | No | Min length: 2<br>Max length: 16<br>Default: `en-IN` |
@@ -645,7 +644,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_object_key": null
+        "avatar_file_id": null
       }
     },
     "verification_required": true,
@@ -785,7 +784,6 @@ Public phone OTP proof and optional initial password/profile.
 | `first_name` | string or null | No | None |
 | `last_name` | string or null | No | None |
 | `preferred_name` | string or null | No | None |
-| `avatar_object_key` | string or null | No | None |
 | `challenge_id` | string (uuid) | Yes | Valid UUID |
 | `phone_country_code` | string | Yes | Min length: 1<br>Max length: 8 |
 | `phone_number` | string | Yes | Min length: 6<br>Max length: 32 |
@@ -853,7 +851,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_object_key": null
+        "avatar_file_id": null
       }
     }
   },
@@ -1038,7 +1036,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_object_key": null
+        "avatar_file_id": null
       }
     }
   },
@@ -1153,7 +1151,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_object_key": null
+        "avatar_file_id": null
       }
     }
   },
@@ -1336,7 +1334,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_object_key": null
+        "avatar_file_id": null
       }
     }
   },
@@ -1687,7 +1685,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_object_key": null
+        "avatar_file_id": null
       }
     }
   },
@@ -1925,7 +1923,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_object_key": null
+        "avatar_file_id": null
       }
     }
   },
@@ -2029,7 +2027,7 @@ curl --request PUT \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_object_key": null
+        "avatar_file_id": null
       }
     }
   },
@@ -2224,7 +2222,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_object_key": null
+        "avatar_file_id": null
       }
     }
   },
@@ -2461,7 +2459,7 @@ curl --request GET \
       "first_name": "Example",
       "last_name": "User",
       "preferred_name": "Example User",
-      "avatar_object_key": null
+      "avatar_file_id": null
     }
   },
   "error": null,
@@ -2507,7 +2505,7 @@ Identity preferences and profile values editable by their owner.
 | `first_name` | string or null | No | None |
 | `last_name` | string or null | No | None |
 | `preferred_name` | string or null | No | None |
-| `avatar_object_key` | string or null | No | None |
+| `avatar_file_id` | string (uuid) or null | No | File object returned by the file service. |
 
 Example:
 
@@ -2518,7 +2516,7 @@ Example:
   "first_name": "Example",
   "last_name": "User",
   "preferred_name": "Example User",
-  "avatar_object_key": "avatars/users/example-user.webp"
+  "avatar_file_id": "22222222-2222-2222-2222-222222222222"
 }
 ```
 
@@ -2529,7 +2527,7 @@ curl --request PATCH \
   --url 'http://localhost:5555/api/v1/users/me' \
   --header 'Authorization: Bearer <access-token>' \
   --header 'Content-Type: application/json' \
-  --data '{"preferred_locale":"en-IN","timezone":"Asia/Kolkata","first_name":"Example","last_name":"User","preferred_name":"Example User","avatar_object_key":"avatars/users/example-user.webp"}'
+  --data '{"preferred_locale":"en-IN","timezone":"Asia/Kolkata","first_name":"Example","last_name":"User","preferred_name":"Example User","avatar_file_id":"22222222-2222-2222-2222-222222222222"}'
 ```
 
 #### Success response
@@ -2554,7 +2552,7 @@ curl --request PATCH \
       "first_name": "Example",
       "last_name": "User",
       "preferred_name": "Example User",
-      "avatar_object_key": null
+      "avatar_file_id": null
     }
   },
   "error": null,
@@ -2640,7 +2638,7 @@ curl --request GET \
           "first_name": "Example",
           "last_name": "User",
           "preferred_name": "Example User",
-          "avatar_object_key": null
+          "avatar_file_id": null
         },
         "roles": [
           "customer"
@@ -2734,7 +2732,7 @@ curl --request GET \
       "first_name": "Example",
       "last_name": "User",
       "preferred_name": "Example User",
-      "avatar_object_key": null
+      "avatar_file_id": null
     },
     "roles": [
       "customer"
@@ -2907,7 +2905,7 @@ curl --request PATCH \
       "first_name": "Example",
       "last_name": "User",
       "preferred_name": "Example User",
-      "avatar_object_key": null
+      "avatar_file_id": null
     },
     "roles": [
       "customer"
@@ -4191,7 +4189,7 @@ Example:
     "first_name": "Example",
     "last_name": "User",
     "preferred_name": "Example User",
-    "avatar_object_key": null
+    "avatar_file_id": null
   }
 }
 ```
@@ -4233,7 +4231,7 @@ Example:
       "first_name": "Example",
       "last_name": "User",
       "preferred_name": "Example User",
-      "avatar_object_key": null
+      "avatar_file_id": null
     }
   }
 }
@@ -4295,7 +4293,7 @@ Example:
       "first_name": "Example",
       "last_name": "User",
       "preferred_name": "Example User",
-      "avatar_object_key": null
+      "avatar_file_id": null
     }
   },
   "verification_required": true,
@@ -4400,7 +4398,7 @@ Example:
     "first_name": "Example",
     "last_name": "User",
     "preferred_name": "Example User",
-    "avatar_object_key": null
+    "avatar_file_id": null
   },
   "roles": [
     "customer"

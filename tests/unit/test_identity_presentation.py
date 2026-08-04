@@ -36,11 +36,12 @@ def _user(**overrides: object) -> SimpleNamespace:
 
 
 def test_authenticated_user_data_projects_profile_and_display_name() -> None:
+    avatar_file_id = uuid.UUID("22222222-2222-2222-2222-222222222222")
     profile = SimpleNamespace(
         first_name="Augusta",
         last_name="Lovelace",
         preferred_name="Ada",
-        avatar_object_key="avatars/ada.png",
+        avatar_file_id=avatar_file_id,
     )
 
     result = authenticated_user_data(_user(), profile=profile)
@@ -50,7 +51,7 @@ def test_authenticated_user_data_projects_profile_and_display_name() -> None:
         "first_name": "Augusta",
         "last_name": "Lovelace",
         "preferred_name": "Ada",
-        "avatar_object_key": "avatars/ada.png",
+        "avatar_file_id": avatar_file_id,
     }
 
 
@@ -59,7 +60,7 @@ def test_authenticated_user_data_uses_identity_fallbacks() -> None:
         first_name="Ada",
         last_name="Lovelace",
         preferred_name=None,
-        avatar_object_key=None,
+        avatar_file_id=None,
     )
 
     assert authenticated_user_data(_user(), profile=profile)["display_name"] == "Ada Lovelace"

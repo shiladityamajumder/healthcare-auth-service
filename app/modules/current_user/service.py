@@ -31,7 +31,7 @@ _PROFILE_FIELDS = {
     "first_name",
     "last_name",
     "preferred_name",
-    "avatar_object_key",
+    "avatar_file_id",
 }
 
 
@@ -87,7 +87,7 @@ class CurrentUserService:
                     first_name=profile_updates.get("first_name"),
                     last_name=profile_updates.get("last_name"),
                     preferred_name=profile_updates.get("preferred_name"),
-                    avatar_object_key=profile_updates.get("avatar_object_key"),
+                    avatar_file_id=profile_updates.get("avatar_file_id"),
                     created_by=user.id,
                     updated_by=user.id,
                 )

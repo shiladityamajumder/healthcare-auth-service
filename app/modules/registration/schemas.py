@@ -32,7 +32,6 @@ class _RegistrationProfile(StrictModel):
     first_name: str | None = Field(default=None, min_length=1, max_length=100)
     last_name: str | None = Field(default=None, min_length=1, max_length=100)
     preferred_name: str | None = Field(default=None, min_length=1, max_length=100)
-    avatar_object_key: str | None = Field(default=None, min_length=1, max_length=512)
 
 
 class EmailPasswordRegistrationRequest(

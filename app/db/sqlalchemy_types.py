@@ -13,8 +13,7 @@ Aware application datetime
 
 Application timestamps originate in the timezone configured through
 ``AppSettings.TIMEZONE``. Before persistence, timestamps are normalized to
-naive UTC because MySQL and SQL Server ``DATETIME`` columns do not reliably
-preserve timezone offsets.
+aware UTC values for PostgreSQL ``TIMESTAMP WITH TIME ZONE`` columns.
 
 Values restored from the database are returned as timezone-aware UTC
 datetimes. Application-facing layers can convert them using
@@ -45,7 +44,7 @@ class UTCDateTime(TypeDecorator[datetime]):
     and are converted to UTC at this database boundary.
     """
 
-    impl = DateTime
+    impl = DateTime(timezone=True)
     cache_ok = True
 
     def process_bind_param(
@@ -53,14 +52,14 @@ class UTCDateTime(TypeDecorator[datetime]):
         value: datetime | None,
         dialect: Dialect,
     ) -> datetime | None:
-        """Normalize a timezone-aware datetime to naive UTC.
+        """Normalize a timezone-aware datetime to aware UTC.
 
         Args:
             value: Optional timezone-aware datetime.
             dialect: Active SQLAlchemy database dialect.
 
         Returns:
-            Naive UTC datetime suitable for database persistence, or ``None``.
+            Aware UTC datetime suitable for database persistence, or ``None``.
 
         Raises:
             ValueError: If ``value`` is timezone-naive.
@@ -70,7 +69,7 @@ class UTCDateTime(TypeDecorator[datetime]):
         if value is None:
             return None
 
-        return to_utc(value).replace(tzinfo=None)
+        return to_utc(value)
 
     def process_result_value(
         self,
@@ -79,8 +78,8 @@ class UTCDateTime(TypeDecorator[datetime]):
     ) -> datetime | None:
         """Restore a database datetime as timezone-aware UTC.
 
-        Database values are expected to be naive UTC. If a driver unexpectedly
-        returns a timezone-aware value, it is normalized to UTC.
+        PostgreSQL normally returns timezone-aware values. A naive driver value
+        is treated as UTC defensively; aware values are normalized to UTC.
 
         Args:
             value: Optional datetime returned by the database driver.

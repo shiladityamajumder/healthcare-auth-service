@@ -123,7 +123,6 @@ class _RegistrationWriter:
         first_name: str | None,
         last_name: str | None,
         preferred_name: str | None,
-        avatar_object_key: str | None,
     ) -> tuple[Users, UserProfiles | None]:
         """Resolve the self-registration role and stage the account/profile."""
         roles = await self._self_registration_roles(repository=repository)
@@ -145,13 +144,12 @@ class _RegistrationWriter:
         )
         repository.add_user(user)
         profile: UserProfiles | None = None
-        if any((first_name, last_name, preferred_name, avatar_object_key)):
+        if any((first_name, last_name, preferred_name)):
             profile = UserProfiles(
                 user_id=user.id,
                 first_name=first_name,
                 last_name=last_name,
                 preferred_name=preferred_name,
-                avatar_object_key=avatar_object_key,
                 created_by=user.id,
                 updated_by=user.id,
             )
@@ -274,7 +272,6 @@ class EmailPasswordRegistrationService(_RegistrationBase):
                     first_name=payload.first_name,
                     last_name=payload.last_name,
                     preferred_name=payload.preferred_name,
-                    avatar_object_key=payload.avatar_object_key,
                 )
                 if self._settings.EMAIL_VERIFICATION_REQUIRED:
                     issued_otp = await self._otp.issue(
@@ -388,10 +385,7 @@ class PhoneOtpRegistrationService(_RegistrationBase):
                     challenge_id=payload.challenge_id,
                     channel=OTPChannel.SMS.value,
                     destination=destination,
-                    purpose={
-                        OTPPurpose.REGISTRATION_PHONE.value,
-                        OTPPurpose.REGISTER_MOBILE.value,
-                    },
+                    purpose=OTPPurpose.REGISTRATION_PHONE.value,
                     code=payload.code,
                 )
                 OtpVerificationPolicy.require_valid(verification)
@@ -416,7 +410,6 @@ class PhoneOtpRegistrationService(_RegistrationBase):
                     first_name=payload.first_name,
                     last_name=payload.last_name,
                     preferred_name=payload.preferred_name,
-                    avatar_object_key=payload.avatar_object_key,
                 )
                 return await self._issue_tokens(
                     user=user,

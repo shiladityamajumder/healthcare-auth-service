@@ -75,7 +75,7 @@ def authenticated_user_data(
             "first_name": profile.first_name,
             "last_name": profile.last_name,
             "preferred_name": profile.preferred_name,
-            "avatar_object_key": profile.avatar_object_key,
+            "avatar_file_id": profile.avatar_file_id,
         }
 
     # Prefer profile names but always provide a stable fallback for identities

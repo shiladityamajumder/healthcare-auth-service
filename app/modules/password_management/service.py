@@ -202,7 +202,7 @@ class PasswordManagementService:
                 challenge_id=payload.challenge_id,
                 channel=identity.channel,
                 destination=identity.destination,
-                purpose={purpose, OTPPurpose.PASSWORD_RESET.value},
+                purpose=purpose,
                 code=payload.code,
             )
             user = await self._get_identity_user(
@@ -256,10 +256,7 @@ class PasswordManagementService:
         except (KeyError, TypeError, ValueError) as exc:
             raise AuthenticationError("The password-reset proof is invalid.") from exc
 
-        accepted_purposes = {
-            self._reset_purpose(channel.value),
-            OTPPurpose.PASSWORD_RESET.value,
-        }
+        accepted_purpose = self._reset_purpose(channel.value)
         async with self._uow:
             repository = PasswordRepository(self._uow.session)
             # Lock the consumed challenge so concurrent reset-proof redemption
@@ -271,7 +268,7 @@ class PasswordManagementService:
                 or challenge.consumed_at is None
                 or challenge.blocked_at is not None
                 or challenge.channel != channel.value
-                or challenge.purpose not in accepted_purposes
+                or challenge.purpose != accepted_purpose
                 or challenge.destination_hash != destination_hash
             ):
                 raise AuthenticationError(

@@ -359,10 +359,7 @@ class PhoneOtpLoginService(_LoginBase):
                 challenge_id=payload.challenge_id,
                 channel=OTPChannel.SMS.value,
                 destination=destination,
-                purpose={
-                    OTPPurpose.LOGIN_PHONE.value,
-                    OTPPurpose.LOGIN.value,
-                },
+                purpose=OTPPurpose.LOGIN_PHONE.value,
                 code=payload.code,
             )
             user = await repository.get_by_phone(country, phone, for_update=True)

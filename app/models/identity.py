@@ -259,8 +259,9 @@ class UserProfiles(AuditMixin):
         String(100),
         nullable=True,
     )
-    avatar_object_key: Mapped[str | None] = mapped_column(
-        String(512),
+    # healthcare_db owns and enforces the cross-schema file-object foreign key.
+    avatar_file_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
         nullable=True,
     )
 
@@ -890,12 +891,11 @@ class ApiClientSecrets(RecordMixin):
         nullable=False,
     )
 
-    # The application-side default ensures the value passes through
-    # UTCDateTime and is normalized consistently before persistence.
     valid_from: Mapped[datetime] = mapped_column(
         UTCDateTime(),
         nullable=False,
         default=current_datetime,
+        server_default=text("now()"),
     )
     expires_at: Mapped[datetime | None] = mapped_column(
         UTCDateTime(),

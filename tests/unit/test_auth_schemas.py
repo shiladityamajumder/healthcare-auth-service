@@ -13,6 +13,8 @@ Test payload
 
 from __future__ import annotations
 
+import uuid
+
 import pytest
 from app.modules.admin_permissions.schemas import (
     CreatePermissionRequest,
@@ -104,7 +106,6 @@ def test_registration_accepts_optional_universal_profile() -> None:
         first_name="Ada",
         last_name="Lovelace",
         preferred_name="Ada",
-        avatar_object_key="avatars/user.png",
     )
 
     assert payload.first_name == "Ada"
@@ -160,3 +161,11 @@ def test_current_user_profile_allows_explicit_field_clear() -> None:
 
     assert "preferred_name" in payload.model_fields_set
     assert payload.preferred_name is None
+
+
+def test_current_user_profile_accepts_avatar_file_id() -> None:
+    avatar_file_id = uuid.UUID("22222222-2222-2222-2222-222222222222")
+
+    payload = UpdateCurrentUserRequest(avatar_file_id=avatar_file_id)
+
+    assert payload.avatar_file_id == avatar_file_id

@@ -13,6 +13,8 @@ HTTP body or service result
 
 from __future__ import annotations
 
+import uuid
+
 from pydantic import Field
 
 from app.common.auth_contracts import (
@@ -30,7 +32,7 @@ class UpdateCurrentUserRequest(StrictModel):
     first_name: str | None = Field(default=None, min_length=1, max_length=100)
     last_name: str | None = Field(default=None, min_length=1, max_length=100)
     preferred_name: str | None = Field(default=None, min_length=1, max_length=100)
-    avatar_object_key: str | None = Field(default=None, min_length=1, max_length=512)
+    avatar_file_id: uuid.UUID | None = None
 
 
 __all__ = [

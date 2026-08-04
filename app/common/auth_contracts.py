@@ -34,7 +34,7 @@ class UserProfileResponse(StrictModel):
     first_name: str | None
     last_name: str | None
     preferred_name: str | None
-    avatar_object_key: str | None
+    avatar_file_id: uuid.UUID | None
 
 
 class AuthenticatedUserResponse(StrictModel):
