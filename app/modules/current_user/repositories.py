@@ -21,7 +21,9 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.enums import FileAccessType, FileObjectStatus, MalwareScanStatus
 from app.models.identity import UserProfiles, Users
+from app.models.platform import IDENTITY_AVATAR_OWNER_TYPE, FileObjects
 
 
 class CurrentUserRepository:
@@ -60,6 +62,27 @@ class CurrentUserRepository:
     def add_profile(self, profile: UserProfiles) -> None:
         """Stage a new universal profile in the current transaction."""
         self._session.add(profile)
+
+    async def get_attachable_avatar_url(
+        self,
+        *,
+        file_id: uuid.UUID,
+        owner_user_id: uuid.UUID,
+    ) -> str | None:
+        """Resolve a client-safe avatar URL only when every file invariant holds."""
+        statement = select(FileObjects.public_url).where(
+            FileObjects.id == file_id,
+            FileObjects.owner_type == IDENTITY_AVATAR_OWNER_TYPE,
+            FileObjects.owner_id == owner_user_id,
+            FileObjects.content_type.like("image/%"),
+            FileObjects.access_type == FileAccessType.PUBLIC,
+            FileObjects.status == FileObjectStatus.AVAILABLE,
+            FileObjects.malware_scan_status == MalwareScanStatus.CLEAN,
+            FileObjects.public_url.is_not(None),
+            FileObjects.is_deleted.is_(False),
+        )
+        public_url = await self._session.scalar(statement)
+        return str(public_url) if public_url is not None else None
 
 
 __all__ = ["CurrentUserRepository"]

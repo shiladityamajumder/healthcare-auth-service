@@ -21,12 +21,19 @@ only to an authorized recipient.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, cast
 
 from app.auth.identity.normalization import (
     normalize_email,
     normalize_phone,
 )
+
+
+class _UseProfileAvatarUrl:
+    """Sentinel type for resolving the URL projected by the profile query."""
+
+
+_USE_PROFILE_AVATAR_URL = _UseProfileAvatarUrl()
 
 
 def admin_user_data(
@@ -59,6 +66,7 @@ def authenticated_user_data(
     user: Any,
     *,
     profile: Any | None = None,
+    avatar_url: str | _UseProfileAvatarUrl | None = _USE_PROFILE_AVATAR_URL,
 ) -> dict[str, object]:
     """Build a minimal authenticated profile without authorization lists."""
     phone_number_masked = None
@@ -71,11 +79,22 @@ def authenticated_user_data(
     status = getattr(user.status, "value", user.status)
     profile_data: dict[str, object] | None = None
     if profile is not None:
+        resolved_avatar_url = (
+            getattr(profile, "avatar_public_url", None)
+            if avatar_url is _USE_PROFILE_AVATAR_URL
+            else cast("str | None", avatar_url)
+        )
+        avatar = None
+        if profile.avatar_file_id is not None and resolved_avatar_url is not None:
+            avatar = {
+                "id": profile.avatar_file_id,
+                "url": resolved_avatar_url,
+            }
         profile_data = {
             "first_name": profile.first_name,
             "last_name": profile.last_name,
             "preferred_name": profile.preferred_name,
-            "avatar_file_id": profile.avatar_file_id,
+            "avatar": avatar,
         }
 
     # Prefer profile names but always provide a stable fallback for identities

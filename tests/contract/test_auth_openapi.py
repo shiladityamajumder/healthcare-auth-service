@@ -217,6 +217,14 @@ def test_every_token_response_uses_one_minimal_profile_contract() -> None:
     assert schemas["RegistrationResponse"]["properties"]["user"]["$ref"].endswith(
         "/AuthenticatedUserResponse"
     )
+    profile = schemas["UserProfileResponse"]["properties"]
+    avatar = profile["avatar"]["anyOf"][0]
+    public_file = schemas["PublicFileResponse"]["properties"]
+
+    assert avatar["$ref"].endswith("/PublicFileResponse")
+    assert set(public_file) == {"id", "url"}
+    assert "avatar_file_id" not in profile
+    assert {"object_key", "bucket", "encryption_key_ref"}.isdisjoint(public_file)
 
 
 def test_all_token_producing_surfaces_share_the_token_pair_contract() -> None:

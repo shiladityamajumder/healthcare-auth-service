@@ -1,8 +1,8 @@
 """File: tests/integration/test_auth_postgres_mapping.py
 
 Purpose:
-Provides an opt-in integration check for required externally migrated identity
-tables in PostgreSQL.
+Provides an opt-in integration check for every externally migrated table auth
+requires in PostgreSQL.
 
 Dependency flow:
 Integration environment URL
@@ -16,13 +16,14 @@ from __future__ import annotations
 import os
 
 import pytest
-from sqlalchemy import text
+from app.models.identity import UserProfiles
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import create_async_engine
 
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_required_identity_tables_are_available() -> None:
+async def test_required_auth_tables_are_available() -> None:
     if os.getenv("RUN_POSTGRES_INTEGRATION", "false").casefold() != "true":
         pytest.skip("Set RUN_POSTGRES_INTEGRATION=true for database tests")
 
@@ -58,5 +59,18 @@ async def test_required_identity_tables_are_available() -> None:
             )
             available = set(rows.all())
             assert required.issubset(available)
+            platform_file_objects = await connection.scalar(
+                text(
+                    "SELECT EXISTS ("
+                    "SELECT 1 FROM information_schema.tables "
+                    "WHERE table_schema = 'platform' AND table_name = 'file_objects'"
+                    ")"
+                )
+            )
+            assert platform_file_objects is True
+            # Exercise the real profile projection used by login/current-user
+            # responses, including its filtered platform.file_objects subquery
+            # and the row-lock form used by profile updates.
+            await connection.execute(select(UserProfiles).limit(1).with_for_update())
     finally:
         await engine.dispose()

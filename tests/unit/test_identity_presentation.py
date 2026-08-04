@@ -42,6 +42,7 @@ def test_authenticated_user_data_projects_profile_and_display_name() -> None:
         last_name="Lovelace",
         preferred_name="Ada",
         avatar_file_id=avatar_file_id,
+        avatar_public_url="https://cdn.example.com/avatars/ada.webp",
     )
 
     result = authenticated_user_data(_user(), profile=profile)
@@ -51,7 +52,10 @@ def test_authenticated_user_data_projects_profile_and_display_name() -> None:
         "first_name": "Augusta",
         "last_name": "Lovelace",
         "preferred_name": "Ada",
-        "avatar_file_id": avatar_file_id,
+        "avatar": {
+            "id": avatar_file_id,
+            "url": "https://cdn.example.com/avatars/ada.webp",
+        },
     }
 
 
@@ -61,6 +65,7 @@ def test_authenticated_user_data_uses_identity_fallbacks() -> None:
         last_name="Lovelace",
         preferred_name=None,
         avatar_file_id=None,
+        avatar_public_url=None,
     )
 
     assert authenticated_user_data(_user(), profile=profile)["display_name"] == "Ada Lovelace"

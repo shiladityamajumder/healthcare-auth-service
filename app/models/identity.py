@@ -21,7 +21,7 @@ profile information remains owned by its corresponding bounded context.
 
 All datetime attributes declared in this module use ``UTCDateTime``. Values
 supplied by application code must be timezone-aware. They are normalized to
-naive UTC before persistence and restored as timezone-aware UTC datetimes when
+aware UTC before persistence and restored as timezone-aware UTC datetimes when
 read from the database.
 
 Creation and update timestamps inherited from ``AuditMixin``, ``RecordMixin``,
@@ -46,6 +46,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     false,
+    select,
     text,
     true,
 )
@@ -56,6 +57,7 @@ from sqlalchemy.dialects.postgresql import (
 )
 from sqlalchemy.orm import (
     Mapped,
+    column_property,
     mapped_column,
 )
 
@@ -68,8 +70,12 @@ from app.db.sqlalchemy_types import UTCDateTime
 from app.models.common import enum_column
 from app.models.enums import (
     ActiveStatus,
+    FileAccessType,
+    FileObjectStatus,
+    MalwareScanStatus,
     UserStatus,
 )
+from app.models.platform import IDENTITY_AVATAR_OWNER_TYPE, FileObjects
 from app.utils.datetime_utils import current_datetime
 
 
@@ -259,10 +265,29 @@ class UserProfiles(AuditMixin):
         String(100),
         nullable=True,
     )
-    # healthcare_db owns and enforces the cross-schema file-object foreign key.
     avatar_file_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
+        ForeignKey(
+            "platform.file_objects.id",
+            ondelete="SET NULL",
+        ),
         nullable=True,
+    )
+    avatar_public_url: Mapped[str | None] = column_property(
+        select(FileObjects.public_url)
+        .where(
+            FileObjects.id == avatar_file_id,
+            FileObjects.owner_type == IDENTITY_AVATAR_OWNER_TYPE,
+            FileObjects.owner_id == user_id,
+            FileObjects.content_type.like("image/%"),
+            FileObjects.access_type == FileAccessType.PUBLIC,
+            FileObjects.status == FileObjectStatus.AVAILABLE,
+            FileObjects.malware_scan_status == MalwareScanStatus.CLEAN,
+            FileObjects.public_url.is_not(None),
+            FileObjects.is_deleted.is_(False),
+        )
+        .correlate_except(FileObjects)
+        .scalar_subquery()
     )
 
 

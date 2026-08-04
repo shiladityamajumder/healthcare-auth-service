@@ -1,10 +1,10 @@
 """File: app/models/common.py
 
 Purpose:
-Provides shared SQLAlchemy enum-column mappings for identity ORM models.
+Provides shared SQLAlchemy enum-column mappings for externally managed models.
 
 Dependency flow:
-Identity StrEnum type
+Persisted StrEnum type
 -> enum_column()
 -> VARCHAR-backed SQLAlchemy enum with a CHECK constraint
 -> externally managed PostgreSQL column

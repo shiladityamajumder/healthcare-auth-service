@@ -1,7 +1,7 @@
 """File: app/models/enums.py
 
 Purpose:
-Defines identity-domain string enums that must remain aligned with persisted
+Defines auth-consumed string enums that must remain aligned with persisted
 PostgreSQL values and API contracts.
 
 Dependency flow:
@@ -34,6 +34,35 @@ class ActiveStatus(StrEnum):
 
     ACTIVE = "active"
     INACTIVE = "inactive"
+
+
+class FileAccessType(StrEnum):
+    """How a file object may be delivered to an API client."""
+
+    PUBLIC = "public"
+    PRIVATE = "private"
+
+
+class FileObjectStatus(StrEnum):
+    """Lifecycle states persisted by the file service."""
+
+    PENDING_UPLOAD = "pending_upload"
+    UPLOADED = "uploaded"
+    SCANNING = "scanning"
+    AVAILABLE = "available"
+    QUARANTINED = "quarantined"
+    REJECTED = "rejected"
+    DELETED = "deleted"
+
+
+class MalwareScanStatus(StrEnum):
+    """Malware scan states persisted for a file object."""
+
+    PENDING = "pending"
+    SCANNING = "scanning"
+    CLEAN = "clean"
+    INFECTED = "infected"
+    FAILED = "failed"
 
 
 class OTPChannel(StrEnum):
@@ -81,7 +110,10 @@ class MFAFactorType(StrEnum):
 
 __all__ = [
     "ActiveStatus",
+    "FileAccessType",
+    "FileObjectStatus",
     "MFAFactorType",
+    "MalwareScanStatus",
     "OTPChannel",
     "OTPPurpose",
     "UserStatus",

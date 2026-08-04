@@ -1,5 +1,4 @@
-"""File: app/models/__init__.py
-Public ORM model exports for the externally managed identity schema."""
+"""Public ORM exports for externally managed identity and platform tables."""
 
 from app.models.identity import (
     ApiClients,
@@ -17,10 +16,12 @@ from app.models.identity import (
     UserRoles,
     Users,
 )
+from app.models.platform import FileObjects
 
 __all__ = [
     "ApiClientSecrets",
     "ApiClients",
+    "FileObjects",
     "LoginAttempts",
     "MfaFactors",
     "OtpChallenges",

@@ -104,8 +104,8 @@ class PostgreSQLDatabase:
         async with self._engine.connect() as connection:
             await connection.execute(text("SELECT 1"))
 
-    async def verify_identity_schema(self) -> bool:
-        """Return whether every externally managed identity table exists."""
+    async def verify_required_schemas(self) -> bool:
+        """Return whether every externally managed table required by auth exists."""
 
         statement = text(
             "SELECT "
@@ -122,7 +122,8 @@ class PostgreSQLDatabase:
             "to_regclass('identity.login_attempts') IS NOT NULL AND "
             "to_regclass('identity.password_history') IS NOT NULL AND "
             "to_regclass('identity.api_clients') IS NOT NULL AND "
-            "to_regclass('identity.api_client_secrets') IS NOT NULL"
+            "to_regclass('identity.api_client_secrets') IS NOT NULL AND "
+            "to_regclass('platform.file_objects') IS NOT NULL"
         )
         async with self._engine.connect() as connection:
             return bool(await connection.scalar(statement))
@@ -145,7 +146,7 @@ class PostgreSQLDatabase:
             async with asyncio.timeout(timeout_seconds):
                 await self.ping()
                 if verify_schema:
-                    schema_ready = await self.verify_identity_schema()
+                    schema_ready = await self.verify_required_schemas()
         except Exception:
             healthy = False
             schema_ready = False

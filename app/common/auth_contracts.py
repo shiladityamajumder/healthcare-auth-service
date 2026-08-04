@@ -19,6 +19,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from pydantic import AnyHttpUrl
+
 from app.common.schemas import StrictModel
 
 
@@ -28,13 +30,20 @@ class MessageResponse(StrictModel):
     message: str
 
 
+class PublicFileResponse(StrictModel):
+    """Client-safe reference to an available public file."""
+
+    id: uuid.UUID
+    url: AnyHttpUrl
+
+
 class UserProfileResponse(StrictModel):
     """Optional human-readable profile attached to an identity."""
 
     first_name: str | None
     last_name: str | None
     preferred_name: str | None
-    avatar_file_id: uuid.UUID | None
+    avatar: PublicFileResponse | None
 
 
 class AuthenticatedUserResponse(StrictModel):
@@ -86,6 +95,7 @@ __all__ = [
     "CurrentAuthorizationResponse",
     "MessageResponse",
     "OtpChallengeResponse",
+    "PublicFileResponse",
     "TokenPairResponse",
     "UserProfileResponse",
 ]

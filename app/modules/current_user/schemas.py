@@ -32,7 +32,13 @@ class UpdateCurrentUserRequest(StrictModel):
     first_name: str | None = Field(default=None, min_length=1, max_length=100)
     last_name: str | None = Field(default=None, min_length=1, max_length=100)
     preferred_name: str | None = Field(default=None, min_length=1, max_length=100)
-    avatar_file_id: uuid.UUID | None = None
+    avatar_file_id: uuid.UUID | None = Field(
+        default=None,
+        description=(
+            "Available public image owned by the current user and created for "
+            "the identity.user_profile.avatar file scope. Null detaches the avatar."
+        ),
+    )
 
 
 __all__ = [

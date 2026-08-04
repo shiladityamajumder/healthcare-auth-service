@@ -416,7 +416,7 @@ curl --request GET \
 
 **Summary:** Traffic readiness
 
-**Why use it:** Use before sending production traffic. It verifies that startup completed and that PostgreSQL plus the required identity schema are available.
+**Why use it:** Use before sending production traffic. It verifies that startup completed and that PostgreSQL plus the required identity and platform tables are available.
 
 | Security property | Requirement |
 | --- | --- |
@@ -644,7 +644,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_file_id": null
+        "avatar": null
       }
     },
     "verification_required": true,
@@ -851,7 +851,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_file_id": null
+        "avatar": null
       }
     }
   },
@@ -1036,7 +1036,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_file_id": null
+        "avatar": null
       }
     }
   },
@@ -1151,7 +1151,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_file_id": null
+        "avatar": null
       }
     }
   },
@@ -1334,7 +1334,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_file_id": null
+        "avatar": null
       }
     }
   },
@@ -1685,7 +1685,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_file_id": null
+        "avatar": null
       }
     }
   },
@@ -1923,7 +1923,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_file_id": null
+        "avatar": null
       }
     }
   },
@@ -2027,7 +2027,7 @@ curl --request PUT \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_file_id": null
+        "avatar": null
       }
     }
   },
@@ -2222,7 +2222,7 @@ curl --request POST \
         "first_name": "Example",
         "last_name": "User",
         "preferred_name": "Example User",
-        "avatar_file_id": null
+        "avatar": null
       }
     }
   },
@@ -2459,7 +2459,10 @@ curl --request GET \
       "first_name": "Example",
       "last_name": "User",
       "preferred_name": "Example User",
-      "avatar_file_id": null
+      "avatar": {
+        "id": "22222222-2222-2222-2222-222222222222",
+        "url": "https://cdn.example.com/avatars/22222222.webp"
+      }
     }
   },
   "error": null,
@@ -2486,7 +2489,7 @@ curl --request GET \
 | Authorization required | **Yes** |
 | Authentication / permission | Bearer access token bound to an active persisted session. No additional RBAC permission is required for this self-service endpoint. |
 | Rate limiting | Sensitive authenticated API limit |
-| Typical errors | `401` invalid/missing bearer token or session, `404` resource not found, `429` rate limit, `503` dependency failure |
+| Typical errors | `401` invalid/missing bearer token or session, `404` resource not found, `422` avatar reference is not attachable, `429` rate limit, `503` dependency failure |
 
 #### Request headers
 
@@ -2505,7 +2508,7 @@ Identity preferences and profile values editable by their owner.
 | `first_name` | string or null | No | None |
 | `last_name` | string or null | No | None |
 | `preferred_name` | string or null | No | None |
-| `avatar_file_id` | string (uuid) or null | No | File object returned by the file service. |
+| `avatar_file_id` | string (uuid) or null | No | An available, malware-clean public image owned by the current user with owner type `identity.user_profile.avatar`. Send `null` to detach it. |
 
 Example:
 
@@ -2552,7 +2555,10 @@ curl --request PATCH \
       "first_name": "Example",
       "last_name": "User",
       "preferred_name": "Example User",
-      "avatar_file_id": null
+      "avatar": {
+        "id": "22222222-2222-2222-2222-222222222222",
+        "url": "https://cdn.example.com/avatars/22222222.webp"
+      }
     }
   },
   "error": null,
@@ -2569,6 +2575,9 @@ curl --request PATCH \
 #### Important behavior
 
 - The strict schema rejects unrelated fields such as `email`, `status`, `roles`, and `permissions`.
+- Auth accepts an avatar only when `platform.file_objects` identifies it as an available, malware-clean, non-deleted public image owned by the current user.
+- Auth returns only the file UUID and CDN URL. Bucket names, object keys, encryption references, and private-file URLs are never exposed.
+- The avatar is resolved in the profile database query, so login, token refresh, current-user, and administrative user responses do not call the file service.
 
 ---
 
@@ -2638,7 +2647,7 @@ curl --request GET \
           "first_name": "Example",
           "last_name": "User",
           "preferred_name": "Example User",
-          "avatar_file_id": null
+          "avatar": null
         },
         "roles": [
           "customer"
@@ -2732,7 +2741,7 @@ curl --request GET \
       "first_name": "Example",
       "last_name": "User",
       "preferred_name": "Example User",
-      "avatar_file_id": null
+      "avatar": null
     },
     "roles": [
       "customer"
@@ -2905,7 +2914,7 @@ curl --request PATCH \
       "first_name": "Example",
       "last_name": "User",
       "preferred_name": "Example User",
-      "avatar_file_id": null
+      "avatar": null
     },
     "roles": [
       "customer"
@@ -4189,10 +4198,30 @@ Example:
     "first_name": "Example",
     "last_name": "User",
     "preferred_name": "Example User",
-    "avatar_file_id": null
+    "avatar": null
   }
 }
 ```
+
+### `UserProfileResponse`
+
+Optional human-readable identity profile.
+
+| Field | Type | Required | Constraints / meaning |
+| --- | --- | --- | --- |
+| `first_name` | string or null | Yes | None |
+| `last_name` | string or null | Yes | None |
+| `preferred_name` | string or null | Yes | None |
+| `avatar` | `PublicFileResponse` or null | Yes | Present only when the referenced file remains safe and publicly available. |
+
+### `PublicFileResponse`
+
+Client-safe reference to an available public file. Auth currently uses this model for avatars.
+
+| Field | Type | Required | Constraints / meaning |
+| --- | --- | --- | --- |
+| `id` | string (uuid) | Yes | Canonical `platform.file_objects.id`. |
+| `url` | string (URI) | Yes | Public CDN URL; never a private presigned URL or storage key. |
 
 ### `TokenPairResponse`
 
@@ -4231,7 +4260,7 @@ Example:
       "first_name": "Example",
       "last_name": "User",
       "preferred_name": "Example User",
-      "avatar_file_id": null
+      "avatar": null
     }
   }
 }
@@ -4293,7 +4322,7 @@ Example:
       "first_name": "Example",
       "last_name": "User",
       "preferred_name": "Example User",
-      "avatar_file_id": null
+      "avatar": null
     }
   },
   "verification_required": true,
@@ -4398,7 +4427,7 @@ Example:
     "first_name": "Example",
     "last_name": "User",
     "preferred_name": "Example User",
-    "avatar_file_id": null
+    "avatar": null
   },
   "roles": [
     "customer"

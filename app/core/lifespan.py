@@ -292,7 +292,7 @@ async def _initialize_postgresql(
             "PostgreSQL startup validation succeeded",
             extra={
                 "postgresql_healthy": health.healthy,
-                "identity_schema_ready": health.schema_ready,
+                "required_schemas_ready": health.schema_ready,
                 "duration_ms": health.duration_ms,
             },
         )
@@ -303,14 +303,14 @@ async def _initialize_postgresql(
         "PostgreSQL validation failed; degraded startup requested",
         extra={
             "postgresql_healthy": health.healthy,
-            "identity_schema_ready": health.schema_ready,
+            "required_schemas_ready": health.schema_ready,
             "duration_ms": health.duration_ms,
             "database_fail_fast": settings.DATABASE_FAIL_FAST,
         },
     )
 
     if settings.DATABASE_FAIL_FAST:
-        raise RuntimeError("PostgreSQL connectivity or identity schema validation failed")
+        raise RuntimeError("PostgreSQL connectivity or required schema validation failed")
 
     return "degraded"
 

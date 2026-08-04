@@ -18,7 +18,7 @@ from __future__ import annotations
 import uuid
 
 from app.auth.identity.presentation import authenticated_user_data
-from app.common.exceptions import NotFoundError
+from app.common.exceptions import NotFoundError, ValidationError
 from app.db.uow import SQLAlchemyUnitOfWork
 from app.models.identity import UserProfiles
 from app.modules.current_user.repositories import CurrentUserRepository
@@ -81,6 +81,21 @@ class CurrentUserService:
                 include=_PROFILE_FIELDS,
                 exclude_unset=True,
             )
+            avatar_url = getattr(profile, "avatar_public_url", None)
+            if "avatar_file_id" in profile_updates:
+                avatar_file_id = profile_updates["avatar_file_id"]
+                if avatar_file_id is None:
+                    avatar_url = None
+                else:
+                    avatar_url = await users.get_attachable_avatar_url(
+                        file_id=avatar_file_id,
+                        owner_user_id=user.id,
+                    )
+                    if avatar_url is None:
+                        raise ValidationError(
+                            "avatar_file_id must reference an available public image "
+                            "owned by the current user."
+                        )
             if profile is None and any(value is not None for value in profile_updates.values()):
                 profile = UserProfiles(
                     user_id=user.id,
@@ -98,7 +113,11 @@ class CurrentUserService:
                 profile.updated_by = user.id
 
             return AuthenticatedUserResponse.model_validate(
-                authenticated_user_data(user, profile=profile)
+                authenticated_user_data(
+                    user,
+                    profile=profile,
+                    avatar_url=avatar_url,
+                )
             )
 
 

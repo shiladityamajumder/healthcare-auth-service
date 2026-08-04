@@ -51,6 +51,7 @@ Detailed architecture decisions are documented in [`Architecture.md`](Architectu
 - Initial password setup
 - Password change
 - Current-user profile management
+- Safe public-avatar attachment and CDN URL projection
 - Database-backed roles and permissions
 - Scoped and time-bound role assignments
 - Administrative user and RBAC management
@@ -220,7 +221,9 @@ For Linux Docker environments, configure the appropriate Docker network hostname
 
 ### 6. Prepare the database
 
-The required PostgreSQL schema and tables must exist before application readiness succeeds.
+The required PostgreSQL tables must exist before application readiness succeeds. Auth
+requires its 14 `identity` tables plus `platform.file_objects`, all migrated by
+`healthcare_db`.
 
 Run the database migrations using the migration process configured for your environment.
 
@@ -449,12 +452,22 @@ Login, verification completion, password completion, and token refresh return th
     "preferred_locale": "en-IN",
     "timezone": "Asia/Kolkata",
     "display_name": "Example User",
-    "profile": null
+    "profile": {
+      "first_name": "Example",
+      "last_name": "User",
+      "preferred_name": "Example User",
+      "avatar": {
+        "id": "22222222-2222-2222-2222-222222222222",
+        "url": "https://cdn.example.com/avatars/22222222.webp"
+      }
+    }
   }
 }
 ```
 
-The login response does not contain roles or permissions.
+The login response does not contain roles or permissions. Public avatar URLs are
+resolved from `platform.file_objects` in the profile query; auth never returns a
+bucket, storage key, encryption reference, private file, or presigned URL.
 
 ### Authorization
 
@@ -547,6 +560,9 @@ pytest tests/integration -q
 ### PostgreSQL integration tests
 
 PostgreSQL integration tests are opt-in.
+
+The migrated test database must contain the required `identity` tables and
+`platform.file_objects`.
 
 #### Linux or macOS
 

@@ -37,7 +37,7 @@ from app.utils.datetime_utils import (
 
 
 class UTCDateTime(TypeDecorator[datetime]):
-    """Persist datetimes as naive UTC and restore aware UTC in Python.
+    """Persist datetimes as aware UTC and restore aware UTC in Python.
 
     Incoming values must contain timezone information. Values created by the
     audit-column factories originate in the configured application timezone

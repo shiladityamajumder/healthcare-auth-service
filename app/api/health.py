@@ -54,7 +54,7 @@ async def readiness(request: Request) -> JSONResponse:
     if not check.healthy or not check.schema_ready:
         return APIResponse.error(
             error_code="SERVICE_NOT_READY",
-            message="PostgreSQL or the migrated identity schema is unavailable.",
+            message="PostgreSQL or a required migrated schema is unavailable.",
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             details={
                 "checks": {

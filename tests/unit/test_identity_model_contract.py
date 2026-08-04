@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from app.db.base import Base
 from app.models.identity import ApiClients, Sessions, UserProfiles, Users
+from app.models.platform import FileObjects
+from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 
 
@@ -49,11 +51,38 @@ def test_user_profile_belongs_to_identity_user() -> None:
     assert "identity.users.id" in foreign_keys
 
 
-def test_avatar_is_an_external_uuid_reference() -> None:
+def test_avatar_is_a_platform_file_object_reference() -> None:
     avatar_file_id = UserProfiles.__table__.columns["avatar_file_id"]
 
     assert avatar_file_id.type.compile(dialect=postgresql.dialect()) == "UUID"
     assert avatar_file_id.nullable is True
+    assert {foreign_key.target_fullname for foreign_key in avatar_file_id.foreign_keys} == {
+        "platform.file_objects.id"
+    }
+
+
+def test_file_object_projection_matches_platform_schema() -> None:
+    assert FileObjects.__table__.schema == "platform"
+    assert FileObjects.public_url.nullable is True
+    assert FileObjects.object_key.type.length == 512
+    assert FileObjects.public_url.type.length == 2048
+    assert "avatar_public_url" not in UserProfiles.__table__.columns
+
+
+def test_avatar_url_projection_is_filtered_to_safe_public_files() -> None:
+    statement = select(UserProfiles).compile(
+        dialect=postgresql.dialect(),
+        compile_kwargs={"literal_binds": True},
+    )
+    sql = str(statement)
+
+    assert "platform.file_objects" in sql
+    assert "identity.user_profile.avatar" in sql
+    assert "image/%%" in sql
+    assert "access_type = 'public'" in sql
+    assert "status = 'available'" in sql
+    assert "malware_scan_status = 'clean'" in sql
+    assert "is_deleted IS false" in sql
 
 
 def test_identity_timestamps_match_timezone_aware_postgres_columns() -> None:
