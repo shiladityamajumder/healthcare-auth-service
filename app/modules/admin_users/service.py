@@ -147,7 +147,7 @@ class AdminUsersService:
         logger.info(
             "Security audit event",
             extra={
-                "event": "admin_user_status_changed",
+                "event": "admin.user.status.changed",
                 "actor_user_id": str(actor_user_id),
                 "target_user_id": str(user_id),
                 "new_status": payload.status.value,
@@ -176,7 +176,7 @@ class AdminUsersService:
         logger.info(
             "Security audit event",
             extra={
-                "event": "admin_user_logout_all",
+                "event": "admin.user.logout.all",
                 "actor_user_id": str(actor_user_id),
                 "target_user_id": str(user_id),
                 "reason": payload.reason,

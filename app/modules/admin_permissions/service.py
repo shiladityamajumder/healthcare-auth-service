@@ -97,7 +97,7 @@ class AdminPermissionsService:
         logger.info(
             "Security audit event",
             extra={
-                "event": "permission_created",
+                "event": "permission.created",
                 "actor_user_id": str(actor_user_id),
                 "permission_id": str(response.id),
                 "permission_code": response.code,
@@ -148,7 +148,7 @@ class AdminPermissionsService:
         logger.info(
             "Security audit event",
             extra={
-                "event": "permission_updated",
+                "event": "permission.updated",
                 "actor_user_id": str(actor_user_id),
                 "permission_id": str(permission_id),
                 "permission_code": response.code,
@@ -178,7 +178,7 @@ class AdminPermissionsService:
         logger.info(
             "Security audit event",
             extra={
-                "event": "permission_deleted",
+                "event": "permission.deleted",
                 "actor_user_id": str(actor_user_id),
                 "permission_id": str(permission_id),
                 "permission_code": permission.code,
@@ -235,7 +235,7 @@ class AdminPermissionsService:
         logger.info(
             "Security audit event",
             extra={
-                "event": "role_permissions_replaced",
+                "event": "role.permissions.replaced",
                 "actor_user_id": str(actor_user_id),
                 "role_id": str(role_id),
                 "permission_count": len(payload.permission_ids),

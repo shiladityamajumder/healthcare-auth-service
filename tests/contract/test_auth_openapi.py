@@ -42,23 +42,23 @@ EXPECTED_IDENTITY_PATHS = {
     "/api/v1/auth/logout/all",
     "/api/v1/auth/users/me/authorization",
     "/api/v1/auth/sessions",
-    "/api/v1/auth/sessions/{session_id}",
+    "/api/v1/auth/sessions/{sessionId}",
     "/api/v1/auth/password/forgot",
     "/api/v1/auth/password/reset/verify-otp",
     "/api/v1/auth/password/reset",
     "/api/v1/auth/password",
     "/api/v1/users/me",
     "/api/v1/admin/users",
-    "/api/v1/admin/users/{user_id}",
-    "/api/v1/admin/users/{user_id}/status",
-    "/api/v1/admin/users/{user_id}/logout-all",
+    "/api/v1/admin/users/{userId}",
+    "/api/v1/admin/users/{userId}/status",
+    "/api/v1/admin/users/{userId}/logout-all",
     "/api/v1/admin/roles",
-    "/api/v1/admin/roles/{role_id}",
+    "/api/v1/admin/roles/{roleId}",
     "/api/v1/admin/permissions",
-    "/api/v1/admin/permissions/{permission_id}",
-    "/api/v1/admin/roles/{role_id}/permissions",
-    "/api/v1/admin/users/{user_id}/roles",
-    "/api/v1/admin/users/{user_id}/roles/{user_role_id}",
+    "/api/v1/admin/permissions/{permissionId}",
+    "/api/v1/admin/roles/{roleId}/permissions",
+    "/api/v1/admin/users/{userId}/roles",
+    "/api/v1/admin/users/{userId}/roles/{userRoleId}",
 }
 
 
@@ -265,7 +265,7 @@ def test_public_capabilities_are_anonymous_and_do_not_publish_authorization() ->
 
     assert "security" not in operation
     assert {"roles", "permissions"}.isdisjoint(properties)
-    assert {"schema", "registration", "login", "verification", "password_policy"} <= set(properties)
+    assert {"schema", "registration", "login", "verification", "passwordPolicy"} <= set(properties)
 
 
 def test_public_capabilities_work_and_removed_authorization_routes_are_404() -> None:
@@ -302,10 +302,25 @@ def test_password_and_role_paths_publish_expected_methods() -> None:
 
     assert {"put", "post"}.issubset(paths["/api/v1/auth/password"])
     assert {"get", "post"}.issubset(paths["/api/v1/admin/roles"])
-    assert {"get", "patch", "delete"}.issubset(paths["/api/v1/admin/roles/{role_id}"])
-    assert {"get", "put"}.issubset(paths["/api/v1/admin/roles/{role_id}/permissions"])
+    assert {"get", "patch", "delete"}.issubset(paths["/api/v1/admin/roles/{roleId}"])
+    assert {"get", "put"}.issubset(paths["/api/v1/admin/roles/{roleId}/permissions"])
     assert {"get", "post"}.issubset(paths["/api/v1/admin/permissions"])
-    assert {"get", "patch", "delete"}.issubset(paths["/api/v1/admin/permissions/{permission_id}"])
+    assert {"get", "patch", "delete"}.issubset(paths["/api/v1/admin/permissions/{permissionId}"])
+
+
+def test_external_contract_names_are_camel_case() -> None:
+    """Prevent snake_case Python names from leaking into the public OpenAPI contract."""
+    schema = create_app().openapi()
+
+    for component in schema.get("components", {}).get("schemas", {}).values():
+        assert all("_" not in name for name in component.get("properties", {}))
+
+    for path, path_item in schema["paths"].items():
+        assert "_" not in path
+        for operation in path_item.values():
+            if not isinstance(operation, dict):
+                continue
+            assert all("_" not in item["name"] for item in operation.get("parameters", []))
 
 
 def test_no_anonymous_role_or_permission_catalog_is_exposed() -> None:

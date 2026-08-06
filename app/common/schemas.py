@@ -16,12 +16,18 @@ contracts remain inside their owning vertical module.
 from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
 
 class StrictModel(BaseModel):
-    """Reject unknown fields and normalize surrounding string whitespace."""
+    """Keep Python names snake_case while exposing camelCase transport fields."""
 
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        extra="forbid",
+        populate_by_name=True,
+        str_strip_whitespace=True,
+    )
 
 
 __all__ = ["StrictModel"]

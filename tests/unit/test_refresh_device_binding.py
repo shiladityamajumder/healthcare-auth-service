@@ -445,5 +445,5 @@ async def test_logout_all_and_others_scope_session_revocation(
         (user.id, None, "user_logout_all"),
     ]
     events = {getattr(record, "event", None) for record in caplog.records}
-    assert {"other_sessions_logged_out", "all_sessions_logged_out"}.issubset(events)
+    assert {"other.sessions.logged.out", "all.sessions.logged.out"}.issubset(events)
     assert REFRESH_TOKEN not in caplog.text

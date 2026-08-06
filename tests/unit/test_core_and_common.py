@@ -65,10 +65,10 @@ def test_success_response_contract() -> None:
     assert body["data"] == {"id": 10}
     assert body["error"] is None
     assert body["meta"]["pagination"] == {
-        "total_count": 25,
+        "totalCount": 25,
         "limit": 10,
         "offset": 0,
-        "has_next": True,
+        "hasNext": True,
     }
 
 

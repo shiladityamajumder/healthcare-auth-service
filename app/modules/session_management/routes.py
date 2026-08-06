@@ -14,8 +14,9 @@ HTTP request
 """
 
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Path
 from fastapi.responses import JSONResponse
 
 from app.common.response import APIResponse, APIResponseModel
@@ -53,12 +54,12 @@ async def list_sessions(
 
 
 @router.delete(
-    "/{session_id}",
+    "/{sessionId}",
     response_model=APIResponseModel[MessageResponse],
     summary="Revoke a selected session",
 )
 async def revoke_session(
-    session_id: uuid.UUID,
+    session_id: Annotated[uuid.UUID, Path(alias="sessionId")],
     principal: SessionRevokeAccess,
     service: SessionManagementServiceDep,
 ) -> JSONResponse:

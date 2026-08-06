@@ -23,8 +23,10 @@ from typing import Any
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import Field, field_validator
+from pydantic.alias_generators import to_camel
 
+from app.common.schemas import StrictModel
 from app.core.request_context import (
     get_api_version,
     get_correlation_id,
@@ -33,7 +35,19 @@ from app.core.request_context import (
 from app.utils.datetime_utils import utc_now
 
 
-class PaginationMeta(BaseModel):
+def _camelize_contract_keys(value: Any) -> Any:
+    """Recursively normalize mapping keys at the external JSON boundary."""
+    if isinstance(value, dict):
+        return {
+            to_camel(key) if isinstance(key, str) else key: _camelize_contract_keys(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, (list, tuple)):
+        return [_camelize_contract_keys(item) for item in value]
+    return value
+
+
+class PaginationMeta(StrictModel):
     """Offset-pagination metadata exposed to API clients.
 
     Attributes:
@@ -43,15 +57,13 @@ class PaginationMeta(BaseModel):
         has_next: Whether another result page is available.
     """
 
-    model_config = ConfigDict(extra="forbid")
-
     total_count: int = Field(ge=0)
     limit: int = Field(ge=1)
     offset: int = Field(ge=0)
     has_next: bool
 
 
-class ErrorBody(BaseModel):
+class ErrorBody(StrictModel):
     """Machine-readable and client-safe error information.
 
     Attributes:
@@ -59,8 +71,6 @@ class ErrorBody(BaseModel):
         message: Human-readable client-safe message.
         details: Optional structured error context.
     """
-
-    model_config = ConfigDict(extra="forbid")
 
     code: str
     message: str
@@ -88,7 +98,7 @@ class ErrorBody(BaseModel):
         return normalized
 
 
-class ResponseMeta(BaseModel):
+class ResponseMeta(StrictModel):
     """Operational metadata included in every API response.
 
     Attributes:
@@ -98,8 +108,6 @@ class ResponseMeta(BaseModel):
         timestamp: UTC timestamp representing response creation time.
         pagination: Optional pagination metadata for list responses.
     """
-
-    model_config = ConfigDict(extra="forbid")
 
     request_id: str | None
     correlation_id: str | None
@@ -129,14 +137,12 @@ class ResponseMeta(BaseModel):
         return normalized
 
 
-class APIResponseModel[DataT](BaseModel):
+class APIResponseModel[DataT](StrictModel):
     """Stable response contract for success and failure payloads.
 
     Type Parameters:
         DataT: Type of the successful response payload.
     """
-
-    model_config = ConfigDict(extra="forbid")
 
     success: bool
     data: DataT | None
@@ -195,9 +201,11 @@ class APIResponse:
 
         response = JSONResponse(
             status_code=status_code,
-            content=jsonable_encoder(
-                body,
-                exclude_none=False,
+            content=_camelize_contract_keys(
+                jsonable_encoder(
+                    body,
+                    exclude_none=False,
+                )
             ),
             headers=headers,
         )
@@ -246,9 +254,11 @@ class APIResponse:
 
         response = JSONResponse(
             status_code=status_code,
-            content=jsonable_encoder(
-                body,
-                exclude_none=False,
+            content=_camelize_contract_keys(
+                jsonable_encoder(
+                    body,
+                    exclude_none=False,
+                )
             ),
             headers=headers,
         )

@@ -96,7 +96,7 @@ class TokenManagementService:
                 )
                 pending_error = RefreshTokenReuseError()
                 audit_event = {
-                    "event": "refresh_token_family_mismatch",
+                    "event": "refresh.token.family.mismatch",
                     "user_id": str(user_id),
                     "session_id": str(session_id),
                     "token_family_id": str(session.token_family_id),
@@ -111,7 +111,7 @@ class TokenManagementService:
                 )
                 pending_error = RefreshTokenReuseError()
                 audit_event = {
-                    "event": "refresh_token_reuse_detected",
+                    "event": "refresh.token.reuse.detected",
                     "user_id": str(user_id),
                     "session_id": str(session_id),
                     "token_family_id": str(session.token_family_id),
@@ -196,7 +196,7 @@ class TokenManagementService:
         logger.info(
             "Security audit event",
             extra={
-                "event": "session_logout_processed",
+                "event": "session.logout.processed",
                 "session_id": str(session_id),
                 "session_revoked": session_revoked,
             },
@@ -220,7 +220,7 @@ class TokenManagementService:
         logger.info(
             "Security audit event",
             extra={
-                "event": "other_sessions_logged_out",
+                "event": "other.sessions.logged.out",
                 "user_id": str(user_id),
                 "preserved_session_id": str(current_session_id),
                 "revoked_count": revoked_count,
@@ -239,7 +239,7 @@ class TokenManagementService:
         logger.info(
             "Security audit event",
             extra={
-                "event": "all_sessions_logged_out",
+                "event": "all.sessions.logged.out",
                 "user_id": str(user_id),
                 "revoked_count": revoked_count,
             },

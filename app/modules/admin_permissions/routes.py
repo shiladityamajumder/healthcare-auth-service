@@ -1,7 +1,7 @@
 """File: app/modules/admin_permissions/routes.py
 
 Purpose:
-Defines ``/admin/permissions`` CRUD and ``/admin/roles/{role_id}/permissions``
+Defines ``/admin/permissions`` CRUD and ``/admin/roles/{roleId}/permissions``
 policy endpoints.
 
 Dependency flow:
@@ -16,8 +16,9 @@ HTTP request
 from __future__ import annotations
 
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Path, status
 from fastapi.responses import JSONResponse
 
 from app.common.response import APIResponse, APIResponseModel
@@ -92,12 +93,12 @@ async def create_permission(
 
 
 @permissions_router.get(
-    "/{permission_id}",
+    "/{permissionId}",
     response_model=APIResponseModel[PermissionResponse],
     summary="Get permission",
 )
 async def get_permission(
-    permission_id: uuid.UUID,
+    permission_id: Annotated[uuid.UUID, Path(alias="permissionId")],
     principal: PermissionReadAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
@@ -108,12 +109,12 @@ async def get_permission(
 
 
 @permissions_router.patch(
-    "/{permission_id}",
+    "/{permissionId}",
     response_model=APIResponseModel[PermissionResponse],
     summary="Update permission",
 )
 async def update_permission(
-    permission_id: uuid.UUID,
+    permission_id: Annotated[uuid.UUID, Path(alias="permissionId")],
     payload: UpdatePermissionRequest,
     principal: PermissionManageAccess,
     service: AdminPermissionsServiceDep,
@@ -133,12 +134,12 @@ async def update_permission(
 
 
 @permissions_router.delete(
-    "/{permission_id}",
+    "/{permissionId}",
     response_model=APIResponseModel[MessageResponse],
     summary="Delete permission",
 )
 async def delete_permission(
-    permission_id: uuid.UUID,
+    permission_id: Annotated[uuid.UUID, Path(alias="permissionId")],
     principal: PermissionManageAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
@@ -155,12 +156,12 @@ async def delete_permission(
 
 
 @role_permissions_router.get(
-    "/{role_id}/permissions",
+    "/{roleId}/permissions",
     response_model=APIResponseModel[RolePermissionsResponse],
     summary="Get role permissions",
 )
 async def get_role_permissions(
-    role_id: uuid.UUID,
+    role_id: Annotated[uuid.UUID, Path(alias="roleId")],
     principal: PermissionReadAccess,
     service: AdminPermissionsServiceDep,
 ) -> JSONResponse:
@@ -175,12 +176,12 @@ async def get_role_permissions(
 
 
 @role_permissions_router.put(
-    "/{role_id}/permissions",
+    "/{roleId}/permissions",
     response_model=APIResponseModel[RolePermissionsResponse],
     summary="Replace role permissions",
 )
 async def replace_role_permissions(
-    role_id: uuid.UUID,
+    role_id: Annotated[uuid.UUID, Path(alias="roleId")],
     payload: ReplaceRolePermissionsRequest,
     principal: PermissionManageAccess,
     service: AdminPermissionsServiceDep,

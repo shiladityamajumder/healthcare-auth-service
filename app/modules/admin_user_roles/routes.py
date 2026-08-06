@@ -1,7 +1,7 @@
 """File: app/modules/admin_user_roles/routes.py
 
 Purpose:
-Defines ``/admin/users/{user_id}/roles`` permission-protected assignment list,
+Defines ``/admin/users/{userId}/roles`` permission-protected assignment list,
 create, update, and removal endpoints.
 
 Dependency flow:
@@ -16,8 +16,9 @@ HTTP request
 from __future__ import annotations
 
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Path, status
 from fastapi.responses import JSONResponse
 
 from app.common.response import APIResponse, APIResponseModel
@@ -43,12 +44,12 @@ router = APIRouter(
 
 
 @router.get(
-    "/{user_id}/roles",
+    "/{userId}/roles",
     response_model=APIResponseModel[UserRoleListResponse],
     summary="Get user role assignments",
 )
 async def list_user_roles(
-    user_id: uuid.UUID,
+    user_id: Annotated[uuid.UUID, Path(alias="userId")],
     principal: UserRoleReadAccess,
     service: AdminUserRolesServiceDep,
 ) -> JSONResponse:
@@ -63,13 +64,13 @@ async def list_user_roles(
 
 
 @router.post(
-    "/{user_id}/roles",
+    "/{userId}/roles",
     response_model=APIResponseModel[UserRoleResponse],
     status_code=status.HTTP_201_CREATED,
     summary="Assign role to user",
 )
 async def assign_user_role(
-    user_id: uuid.UUID,
+    user_id: Annotated[uuid.UUID, Path(alias="userId")],
     payload: AssignUserRoleRequest,
     principal: UserRoleManageAccess,
     service: AdminUserRolesServiceDep,
@@ -88,13 +89,13 @@ async def assign_user_role(
 
 
 @router.patch(
-    "/{user_id}/roles/{user_role_id}",
+    "/{userId}/roles/{userRoleId}",
     response_model=APIResponseModel[UserRoleResponse],
     summary="Update user role assignment",
 )
 async def update_user_role(
-    user_id: uuid.UUID,
-    user_role_id: uuid.UUID,
+    user_id: Annotated[uuid.UUID, Path(alias="userId")],
+    user_role_id: Annotated[uuid.UUID, Path(alias="userRoleId")],
     payload: UpdateUserRoleRequest,
     principal: UserRoleManageAccess,
     service: AdminUserRolesServiceDep,
@@ -115,13 +116,13 @@ async def update_user_role(
 
 
 @router.delete(
-    "/{user_id}/roles/{user_role_id}",
+    "/{userId}/roles/{userRoleId}",
     response_model=APIResponseModel[MessageResponse],
     summary="Remove user role assignment",
 )
 async def remove_user_role(
-    user_id: uuid.UUID,
-    user_role_id: uuid.UUID,
+    user_id: Annotated[uuid.UUID, Path(alias="userId")],
+    user_role_id: Annotated[uuid.UUID, Path(alias="userRoleId")],
     principal: UserRoleManageAccess,
     service: AdminUserRolesServiceDep,
 ) -> JSONResponse:

@@ -18,7 +18,7 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Path, Query
 from fastapi.responses import JSONResponse
 
 from app.common.response import APIResponse, APIResponseModel
@@ -74,12 +74,12 @@ async def list_users(
 
 
 @router.get(
-    "/{user_id}",
+    "/{userId}",
     response_model=APIResponseModel[AdminUserResponse],
     summary="Get user",
 )
 async def get_user(
-    user_id: uuid.UUID,
+    user_id: Annotated[uuid.UUID, Path(alias="userId")],
     principal: AdminUserReadAccess,
     service: AdminUsersServiceDep,
 ) -> JSONResponse:
@@ -94,12 +94,12 @@ async def get_user(
 
 
 @router.patch(
-    "/{user_id}/status",
+    "/{userId}/status",
     response_model=APIResponseModel[AdminUserResponse],
     summary="Update user status",
 )
 async def update_user_status(
-    user_id: uuid.UUID,
+    user_id: Annotated[uuid.UUID, Path(alias="userId")],
     payload: UpdateUserStatusRequest,
     principal: AdminUserManageAccess,
     service: AdminUsersServiceDep,
@@ -119,12 +119,12 @@ async def update_user_status(
 
 
 @router.post(
-    "/{user_id}/logout-all",
+    "/{userId}/logout-all",
     response_model=APIResponseModel[MessageResponse],
     summary="Logout user from all devices",
 )
 async def logout_user_from_all_devices(
-    user_id: uuid.UUID,
+    user_id: Annotated[uuid.UUID, Path(alias="userId")],
     payload: AdminLogoutAllRequest,
     principal: AdminUserManageAccess,
     service: AdminUsersServiceDep,

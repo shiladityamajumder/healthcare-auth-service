@@ -71,7 +71,7 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
             data={
                 "service": resolved.PROJECT_NAME,
                 "version": resolved.APP_VERSION,
-                "api_base": resolved.API_V1_STR,
+                "apiBase": resolved.API_V1_STR,
                 "documentation": "/docs" if resolved.DOCS_ENABLED else None,
                 "health": {
                     "liveness": "/health/live",

@@ -15,8 +15,9 @@ HTTP request
 from __future__ import annotations
 
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Path, status
 from fastapi.responses import JSONResponse
 
 from app.common.response import APIResponse, APIResponseModel
@@ -81,12 +82,12 @@ async def create_role(
 
 
 @router.get(
-    "/{role_id}",
+    "/{roleId}",
     response_model=APIResponseModel[RoleResponse],
     summary="Get role",
 )
 async def get_role(
-    role_id: uuid.UUID,
+    role_id: Annotated[uuid.UUID, Path(alias="roleId")],
     principal: RoleReadAccess,
     service: AdminRolesServiceDep,
 ) -> JSONResponse:
@@ -97,12 +98,12 @@ async def get_role(
 
 
 @router.patch(
-    "/{role_id}",
+    "/{roleId}",
     response_model=APIResponseModel[RoleResponse],
     summary="Update role",
 )
 async def update_role(
-    role_id: uuid.UUID,
+    role_id: Annotated[uuid.UUID, Path(alias="roleId")],
     payload: UpdateRoleRequest,
     principal: RoleManageAccess,
     service: AdminRolesServiceDep,
@@ -122,12 +123,12 @@ async def update_role(
 
 
 @router.delete(
-    "/{role_id}",
+    "/{roleId}",
     response_model=APIResponseModel[MessageResponse],
     summary="Delete role",
 )
 async def delete_role(
-    role_id: uuid.UUID,
+    role_id: Annotated[uuid.UUID, Path(alias="roleId")],
     principal: RoleManageAccess,
     service: AdminRolesServiceDep,
 ) -> JSONResponse:

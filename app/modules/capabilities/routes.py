@@ -48,7 +48,7 @@ async def get_auth_capabilities(
         ),
         supported_platforms=["android", "ios", "web"],
     )
-    digest = hashlib.sha256(data.model_dump_json().encode("utf-8")).hexdigest()
+    digest = hashlib.sha256(data.model_dump_json(by_alias=True).encode("utf-8")).hexdigest()
     etag = f'"{digest}"'
     cache_headers = {
         "Cache-Control": "public, max-age=300",

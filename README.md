@@ -347,7 +347,7 @@ POST /api/v1/auth/logout/all
 
 ```text
 GET    /api/v1/auth/sessions
-DELETE /api/v1/auth/sessions/{session_id}
+DELETE /api/v1/auth/sessions/{sessionId}
 ```
 
 ### Password management
@@ -436,26 +436,26 @@ Login, verification completion, password completion, and token refresh return th
 
 ```json
 {
-  "access_token": "<access-token>",
-  "refresh_token": "<refresh-token>",
-  "token_type": "Bearer",
-  "access_expires_at": "2026-07-31T07:30:00Z",
-  "refresh_expires_at": "2026-08-30T07:15:00Z",
+  "accessToken": "<access-token>",
+  "refreshToken": "<refresh-token>",
+  "tokenType": "Bearer",
+  "accessExpiresAt": "2026-07-31T07:30:00Z",
+  "refreshExpiresAt": "2026-08-30T07:15:00Z",
   "user": {
     "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
     "email": "user@example.com",
-    "email_verified": true,
-    "phone_country_code": "+91",
-    "phone_number_masked": "+91******0001",
-    "phone_verified": true,
+    "emailVerified": true,
+    "phoneCountryCode": "+91",
+    "phoneNumberMasked": "+91******0001",
+    "phoneVerified": true,
     "status": "active",
-    "preferred_locale": "en-IN",
+    "preferredLocale": "en-IN",
     "timezone": "Asia/Kolkata",
-    "display_name": "Example User",
+    "displayName": "Example User",
     "profile": {
-      "first_name": "Example",
-      "last_name": "User",
-      "preferred_name": "Example User",
+      "firstName": "Example",
+      "lastName": "User",
+      "preferredName": "Example User",
       "avatar": {
         "id": "22222222-2222-2222-2222-222222222222",
         "url": "https://cdn.example.com/avatars/22222222.webp"

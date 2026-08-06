@@ -102,9 +102,9 @@ The access token itself is not the source of the permission decision.
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -129,9 +129,9 @@ The access token itself is not the source of the permission decision.
     ]
   },
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -142,9 +142,9 @@ The access token itself is not the source of the permission decision.
 
 | Field | Meaning |
 | --- | --- |
-| `request_id` | Unique identifier for one HTTP request. |
-| `correlation_id` | Identifier shared across related requests or services. |
-| `api_version` | Versioned API context, normally `api/v1`. |
+| `requestId` | Unique identifier for one HTTP request. |
+| `correlationId` | Identifier shared across related requests or services. |
+| `apiVersion` | Versioned API context, normally `api/v1`. |
 | `timestamp` | UTC response creation time. |
 | `pagination` | Present for paginated list responses; otherwise `null`. |
 
@@ -195,7 +195,7 @@ Authentication errors include `WWW-Authenticate: Bearer`. Rate-limit responses m
 | `POST` | `/api/v1/auth/logout/others` | Yes | None | Logout from every other device |
 | `POST` | `/api/v1/auth/token/refresh` | No bearer token | None | Rotate a refresh token |
 | `GET` | `/api/v1/auth/sessions` | Yes | None | List active sessions |
-| `DELETE` | `/api/v1/auth/sessions/{session_id}` | Yes | None | Revoke a selected session |
+| `DELETE` | `/api/v1/auth/sessions/{sessionId}` | Yes | None | Revoke a selected session |
 | `POST` | `/api/v1/auth/password` | Yes | None | Set password for an OTP-only account |
 | `PUT` | `/api/v1/auth/password` | Yes | None | Change authenticated user's password |
 | `POST` | `/api/v1/auth/password/forgot` | No | None | Request password reset OTP |
@@ -205,25 +205,25 @@ Authentication errors include `WWW-Authenticate: Bearer`. Rate-limit responses m
 | `GET` | `/api/v1/users/me` | Yes | None | Get current user |
 | `PATCH` | `/api/v1/users/me` | Yes | None | Update current user profile |
 | `GET` | `/api/v1/admin/users` | Yes | `identity.users.read` | List users |
-| `GET` | `/api/v1/admin/users/{user_id}` | Yes | `identity.users.read` | Get user |
-| `POST` | `/api/v1/admin/users/{user_id}/logout-all` | Yes | `identity.users.manage` | Logout user from all devices |
-| `PATCH` | `/api/v1/admin/users/{user_id}/status` | Yes | `identity.users.manage` | Update user status |
+| `GET` | `/api/v1/admin/users/{userId}` | Yes | `identity.users.read` | Get user |
+| `POST` | `/api/v1/admin/users/{userId}/logout-all` | Yes | `identity.users.manage` | Logout user from all devices |
+| `PATCH` | `/api/v1/admin/users/{userId}/status` | Yes | `identity.users.manage` | Update user status |
 | `GET` | `/api/v1/admin/roles` | Yes | `identity.roles.read` | List roles |
 | `POST` | `/api/v1/admin/roles` | Yes | `identity.roles.manage` | Create role |
-| `GET` | `/api/v1/admin/roles/{role_id}` | Yes | `identity.roles.read` | Get role |
-| `PATCH` | `/api/v1/admin/roles/{role_id}` | Yes | `identity.roles.manage` | Update role |
-| `DELETE` | `/api/v1/admin/roles/{role_id}` | Yes | `identity.roles.manage` | Delete role |
+| `GET` | `/api/v1/admin/roles/{roleId}` | Yes | `identity.roles.read` | Get role |
+| `PATCH` | `/api/v1/admin/roles/{roleId}` | Yes | `identity.roles.manage` | Update role |
+| `DELETE` | `/api/v1/admin/roles/{roleId}` | Yes | `identity.roles.manage` | Delete role |
 | `GET` | `/api/v1/admin/permissions` | Yes | `identity.permissions.read` | List permissions |
 | `POST` | `/api/v1/admin/permissions` | Yes | `identity.permissions.manage` | Create permission |
-| `GET` | `/api/v1/admin/permissions/{permission_id}` | Yes | `identity.permissions.read` | Get permission |
-| `PATCH` | `/api/v1/admin/permissions/{permission_id}` | Yes | `identity.permissions.manage` | Update permission |
-| `DELETE` | `/api/v1/admin/permissions/{permission_id}` | Yes | `identity.permissions.manage` | Delete permission |
-| `GET` | `/api/v1/admin/roles/{role_id}/permissions` | Yes | `identity.permissions.read` | Get role permissions |
-| `PUT` | `/api/v1/admin/roles/{role_id}/permissions` | Yes | `identity.permissions.manage` | Replace role permissions |
-| `GET` | `/api/v1/admin/users/{user_id}/roles` | Yes | `identity.user_roles.read` | Get user role assignments |
-| `POST` | `/api/v1/admin/users/{user_id}/roles` | Yes | `identity.user_roles.manage` | Assign role to user |
-| `PATCH` | `/api/v1/admin/users/{user_id}/roles/{user_role_id}` | Yes | `identity.user_roles.manage` | Update user role assignment |
-| `DELETE` | `/api/v1/admin/users/{user_id}/roles/{user_role_id}` | Yes | `identity.user_roles.manage` | Remove user role assignment |
+| `GET` | `/api/v1/admin/permissions/{permissionId}` | Yes | `identity.permissions.read` | Get permission |
+| `PATCH` | `/api/v1/admin/permissions/{permissionId}` | Yes | `identity.permissions.manage` | Update permission |
+| `DELETE` | `/api/v1/admin/permissions/{permissionId}` | Yes | `identity.permissions.manage` | Delete permission |
+| `GET` | `/api/v1/admin/roles/{roleId}/permissions` | Yes | `identity.permissions.read` | Get role permissions |
+| `PUT` | `/api/v1/admin/roles/{roleId}/permissions` | Yes | `identity.permissions.manage` | Replace role permissions |
+| `GET` | `/api/v1/admin/users/{userId}/roles` | Yes | `identity.user_roles.read` | Get user role assignments |
+| `POST` | `/api/v1/admin/users/{userId}/roles` | Yes | `identity.user_roles.manage` | Assign role to user |
+| `PATCH` | `/api/v1/admin/users/{userId}/roles/{user_roleId}` | Yes | `identity.user_roles.manage` | Update user role assignment |
+| `DELETE` | `/api/v1/admin/users/{userId}/roles/{user_roleId}` | Yes | `identity.user_roles.manage` | Remove user role assignment |
 
 ---
 
@@ -271,7 +271,7 @@ curl --request GET \
   "data": {
     "service": "pharmacy_identity_service",
     "version": "1.0.0",
-    "api_base": "/api/v1",
+    "apiBase": "/api/v1",
     "documentation": "/docs",
     "health": {
       "liveness": "/health/live",
@@ -281,9 +281,9 @@ curl --request GET \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -336,16 +336,16 @@ curl --request GET \
     "checks": {
       "postgresql": {
         "healthy": true,
-        "schema_ready": true,
-        "duration_ms": 12.4
+        "schemaReady": true,
+        "durationMs": 12.4
       }
     }
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -401,9 +401,9 @@ curl --request GET \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -454,15 +454,15 @@ curl --request GET \
     "checks": {
       "postgresql": {
         "healthy": true,
-        "schema_ready": true
+        "schemaReady": true
       }
     }
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -513,22 +513,22 @@ curl --request GET \
   "data": {
     "schema": "auth-capabilities",
     "registration": {
-      "email_enabled": true,
-      "phone_enabled": true
+      "emailEnabled": true,
+      "phoneEnabled": true
     },
     "login": {
-      "password_enabled": true,
-      "phone_otp_enabled": true
+      "passwordEnabled": true,
+      "phoneOtpEnabled": true
     },
     "verification": {
-      "email_required": true,
-      "phone_required": true
+      "emailRequired": true,
+      "phoneRequired": true
     },
-    "password_policy": {
-      "minimum_length": 12,
-      "minimum_character_classes": 3
+    "passwordPolicy": {
+      "minimumLength": 12,
+      "minimumCharacterClasses": 3
     },
-    "supported_platforms": [
+    "supportedPlatforms": [
       "android",
       "ios",
       "web"
@@ -536,9 +536,9 @@ curl --request GET \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -582,15 +582,15 @@ Public email/password registration body.  Role assignment is deliberately absent
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `first_name` | string or null | No | None |
-| `last_name` | string or null | No | None |
-| `preferred_name` | string or null | No | None |
+| `firstName` | string or null | No | None |
+| `lastName` | string or null | No | None |
+| `preferredName` | string or null | No | None |
 | `email` | string (email) | Yes | Valid email address |
 | `password` | string | Yes | Min length: 1<br>Max length: 128 |
-| `preferred_locale` | string | No | Min length: 2<br>Max length: 16<br>Default: `en-IN` |
+| `preferredLocale` | string | No | Min length: 2<br>Max length: 16<br>Default: `en-IN` |
 | `timezone` | string | No | Min length: 3<br>Max length: 64<br>Default: `Asia/Kolkata` |
-| `terms_version` | string or null | No | None |
-| `privacy_version` | string or null | No | None |
+| `termsVersion` | string or null | No | None |
+| `privacyVersion` | string or null | No | None |
 
 Example:
 
@@ -598,13 +598,13 @@ Example:
 {
   "email": "user@example.com",
   "password": "StrongPassword#2026",
-  "first_name": "Example",
-  "last_name": "User",
-  "preferred_name": "Example User",
-  "preferred_locale": "en-IN",
+  "firstName": "Example",
+  "lastName": "User",
+  "preferredName": "Example User",
+  "preferredLocale": "en-IN",
   "timezone": "Asia/Kolkata",
-  "terms_version": "2026-07",
-  "privacy_version": "2026-07"
+  "termsVersion": "2026-07",
+  "privacyVersion": "2026-07"
 }
 ```
 
@@ -618,7 +618,7 @@ curl --request POST \
   --header 'X-Device-ID: web-device-a7f9' \
   --header 'X-Device-Type: desktop' \
   --header 'Content-Type: application/json' \
-  --data '{"email":"user@example.com","password":"StrongPassword#2026","first_name":"Example","last_name":"User","preferred_name":"Example User","preferred_locale":"en-IN","timezone":"Asia/Kolkata","terms_version":"2026-07","privacy_version":"2026-07"}'
+  --data '{"email":"user@example.com","password":"StrongPassword#2026","firstName":"Example","lastName":"User","preferredName":"Example User","preferredLocale":"en-IN","timezone":"Asia/Kolkata","termsVersion":"2026-07","privacyVersion":"2026-07"}'
 ```
 
 #### Success response
@@ -632,32 +632,32 @@ curl --request POST \
     "user": {
       "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
       "email": "user@example.com",
-      "email_verified": false,
-      "phone_country_code": "+91",
-      "phone_number_masked": "+91******0001",
-      "phone_verified": true,
+      "emailVerified": false,
+      "phoneCountryCode": "+91",
+      "phoneNumberMasked": "+91******0001",
+      "phoneVerified": true,
       "status": "active",
-      "preferred_locale": "en-IN",
+      "preferredLocale": "en-IN",
       "timezone": "Asia/Kolkata",
-      "display_name": "Example User",
+      "displayName": "Example User",
       "profile": {
-        "first_name": "Example",
-        "last_name": "User",
-        "preferred_name": "Example User",
+        "firstName": "Example",
+        "lastName": "User",
+        "preferredName": "Example User",
         "avatar": null
       }
     },
-    "verification_required": true,
-    "challenge_id": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
-    "expires_at": "2026-07-31T10:05:00Z",
-    "development_otp": null,
+    "verificationRequired": true,
+    "challengeId": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
+    "expiresAt": "2026-07-31T10:05:00Z",
+    "developmentOtp": null,
     "tokens": null
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -698,15 +698,15 @@ Phone destination used to request a registration OTP.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `phone_country_code` | string | Yes | Min length: 1<br>Max length: 8 |
-| `phone_number` | string | Yes | Min length: 6<br>Max length: 32 |
+| `phoneCountryCode` | string | Yes | Min length: 1<br>Max length: 8 |
+| `phoneNumber` | string | Yes | Min length: 6<br>Max length: 32 |
 
 Example:
 
 ```json
 {
-  "phone_country_code": "+91",
-  "phone_number": "9876540001"
+  "phoneCountryCode": "+91",
+  "phoneNumber": "9876540001"
 }
 ```
 
@@ -718,7 +718,7 @@ curl --request POST \
   --header 'X-Client-ID: pharmacy-web' \
   --header 'X-Device-ID: web-device-a7f9' \
   --header 'Content-Type: application/json' \
-  --data '{"phone_country_code":"+91","phone_number":"9876540001"}'
+  --data '{"phoneCountryCode":"+91","phoneNumber":"9876540001"}'
 ```
 
 #### Success response
@@ -730,16 +730,16 @@ curl --request POST \
   "success": true,
   "data": {
     "accepted": true,
-    "challenge_id": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
-    "expires_at": "2026-07-31T10:05:00Z",
-    "retry_after_seconds": 60,
-    "development_otp": null
+    "challengeId": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
+    "expiresAt": "2026-07-31T10:05:00Z",
+    "retryAfterSeconds": 60,
+    "developmentOtp": null
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -781,31 +781,31 @@ Public phone OTP proof and optional initial password/profile.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `first_name` | string or null | No | None |
-| `last_name` | string or null | No | None |
-| `preferred_name` | string or null | No | None |
-| `challenge_id` | string (uuid) | Yes | Valid UUID |
-| `phone_country_code` | string | Yes | Min length: 1<br>Max length: 8 |
-| `phone_number` | string | Yes | Min length: 6<br>Max length: 32 |
+| `firstName` | string or null | No | None |
+| `lastName` | string or null | No | None |
+| `preferredName` | string or null | No | None |
+| `challengeId` | string (uuid) | Yes | Valid UUID |
+| `phoneCountryCode` | string | Yes | Min length: 1<br>Max length: 8 |
+| `phoneNumber` | string | Yes | Min length: 6<br>Max length: 32 |
 | `code` | string | Yes | Pattern: `^[0-9]{6}$` |
 | `password` | string or null | No | None |
-| `preferred_locale` | string | No | Min length: 2<br>Max length: 16<br>Default: `en-IN` |
+| `preferredLocale` | string | No | Min length: 2<br>Max length: 16<br>Default: `en-IN` |
 | `timezone` | string | No | Min length: 3<br>Max length: 64<br>Default: `Asia/Kolkata` |
-| `terms_version` | string or null | No | None |
-| `privacy_version` | string or null | No | None |
+| `termsVersion` | string or null | No | None |
+| `privacyVersion` | string or null | No | None |
 
 Example:
 
 ```json
 {
-  "challenge_id": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
-  "phone_country_code": "+91",
-  "phone_number": "9876540001",
+  "challengeId": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
+  "phoneCountryCode": "+91",
+  "phoneNumber": "9876540001",
   "code": "123456",
   "password": "StrongPassword#2026",
-  "first_name": "Example",
-  "last_name": "User",
-  "preferred_locale": "en-IN",
+  "firstName": "Example",
+  "lastName": "User",
+  "preferredLocale": "en-IN",
   "timezone": "Asia/Kolkata"
 }
 ```
@@ -820,7 +820,7 @@ curl --request POST \
   --header 'X-Device-ID: web-device-a7f9' \
   --header 'X-Device-Type: desktop' \
   --header 'Content-Type: application/json' \
-  --data '{"challenge_id":"c7ef9dbe-3599-4d72-a522-74672a49ae85","phone_country_code":"+91","phone_number":"9876540001","code":"123456","password":"StrongPassword#2026","first_name":"Example","last_name":"User","preferred_locale":"en-IN","timezone":"Asia/Kolkata"}'
+  --data '{"challengeId":"c7ef9dbe-3599-4d72-a522-74672a49ae85","phoneCountryCode":"+91","phoneNumber":"9876540001","code":"123456","password":"StrongPassword#2026","firstName":"Example","lastName":"User","preferredLocale":"en-IN","timezone":"Asia/Kolkata"}'
 ```
 
 #### Success response
@@ -831,35 +831,35 @@ curl --request POST \
 {
   "success": true,
   "data": {
-    "access_token": "<signed-access-token>",
-    "refresh_token": "<signed-refresh-token>",
-    "token_type": "Bearer",
-    "access_expires_at": "2026-07-31T10:15:00Z",
-    "refresh_expires_at": "2026-08-30T10:00:00Z",
+    "accessToken": "<signed-access-token>",
+    "refreshToken": "<signed-refresh-token>",
+    "tokenType": "Bearer",
+    "accessExpiresAt": "2026-07-31T10:15:00Z",
+    "refreshExpiresAt": "2026-08-30T10:00:00Z",
     "user": {
       "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
       "email": "user@example.com",
-      "email_verified": true,
-      "phone_country_code": "+91",
-      "phone_number_masked": "+91******0001",
-      "phone_verified": true,
+      "emailVerified": true,
+      "phoneCountryCode": "+91",
+      "phoneNumberMasked": "+91******0001",
+      "phoneVerified": true,
       "status": "active",
-      "preferred_locale": "en-IN",
+      "preferredLocale": "en-IN",
       "timezone": "Asia/Kolkata",
-      "display_name": "Example User",
+      "displayName": "Example User",
       "profile": {
-        "first_name": "Example",
-        "last_name": "User",
-        "preferred_name": "Example User",
+        "firstName": "Example",
+        "lastName": "User",
+        "preferredName": "Example User",
         "avatar": null
       }
     }
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -868,7 +868,7 @@ curl --request POST \
 
 #### Important behavior
 
-- The `challenge_id`, destination, purpose, and OTP code must match the same unconsumed challenge.
+- The `challengeId`, destination, purpose, and OTP code must match the same unconsumed challenge.
 - The optional password is validated using the same password policy as email registration.
 
 ---
@@ -931,16 +931,16 @@ curl --request POST \
   "success": true,
   "data": {
     "accepted": true,
-    "challenge_id": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
-    "expires_at": "2026-07-31T10:05:00Z",
-    "retry_after_seconds": 60,
-    "development_otp": null
+    "challengeId": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
+    "expiresAt": "2026-07-31T10:05:00Z",
+    "retryAfterSeconds": 60,
+    "developmentOtp": null
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -981,7 +981,7 @@ Email verification OTP proof.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `challenge_id` | string (uuid) | Yes | Valid UUID |
+| `challengeId` | string (uuid) | Yes | Valid UUID |
 | `email` | string (email) | Yes | Valid email address |
 | `code` | string | Yes | Pattern: `^[0-9]{6}$` |
 
@@ -989,7 +989,7 @@ Example:
 
 ```json
 {
-  "challenge_id": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
+  "challengeId": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
   "email": "user@example.com",
   "code": "123456"
 }
@@ -1005,7 +1005,7 @@ curl --request POST \
   --header 'X-Device-ID: web-device-a7f9' \
   --header 'X-Device-Type: desktop' \
   --header 'Content-Type: application/json' \
-  --data '{"challenge_id":"c7ef9dbe-3599-4d72-a522-74672a49ae85","email":"user@example.com","code":"123456"}'
+  --data '{"challengeId":"c7ef9dbe-3599-4d72-a522-74672a49ae85","email":"user@example.com","code":"123456"}'
 ```
 
 #### Success response
@@ -1016,35 +1016,35 @@ curl --request POST \
 {
   "success": true,
   "data": {
-    "access_token": "<signed-access-token>",
-    "refresh_token": "<signed-refresh-token>",
-    "token_type": "Bearer",
-    "access_expires_at": "2026-07-31T10:15:00Z",
-    "refresh_expires_at": "2026-08-30T10:00:00Z",
+    "accessToken": "<signed-access-token>",
+    "refreshToken": "<signed-refresh-token>",
+    "tokenType": "Bearer",
+    "accessExpiresAt": "2026-07-31T10:15:00Z",
+    "refreshExpiresAt": "2026-08-30T10:00:00Z",
     "user": {
       "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
       "email": "user@example.com",
-      "email_verified": true,
-      "phone_country_code": "+91",
-      "phone_number_masked": "+91******0001",
-      "phone_verified": true,
+      "emailVerified": true,
+      "phoneCountryCode": "+91",
+      "phoneNumberMasked": "+91******0001",
+      "phoneVerified": true,
       "status": "active",
-      "preferred_locale": "en-IN",
+      "preferredLocale": "en-IN",
       "timezone": "Asia/Kolkata",
-      "display_name": "Example User",
+      "displayName": "Example User",
       "profile": {
-        "first_name": "Example",
-        "last_name": "User",
-        "preferred_name": "Example User",
+        "firstName": "Example",
+        "lastName": "User",
+        "preferredName": "Example User",
         "avatar": null
       }
     }
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -1085,8 +1085,8 @@ Unified password login body supporting email or phone identities.
 | --- | --- | --- | --- |
 | `channel` | string | Yes | Pattern: `^(email|phone)$` |
 | `email` | string (email) or null | No | None |
-| `phone_country_code` | string or null | No | None |
-| `phone_number` | string or null | No | None |
+| `phoneCountryCode` | string or null | No | None |
+| `phoneNumber` | string or null | No | None |
 | `password` | string | Yes | Min length: 1<br>Max length: 128 |
 
 Example:
@@ -1104,8 +1104,8 @@ Phone-channel alternative:
 ```json
 {
   "channel": "phone",
-  "phone_country_code": "+91",
-  "phone_number": "9876540001",
+  "phoneCountryCode": "+91",
+  "phoneNumber": "9876540001",
   "password": "StrongPassword#2026"
 }
 ```
@@ -1131,35 +1131,35 @@ curl --request POST \
 {
   "success": true,
   "data": {
-    "access_token": "<signed-access-token>",
-    "refresh_token": "<signed-refresh-token>",
-    "token_type": "Bearer",
-    "access_expires_at": "2026-07-31T10:15:00Z",
-    "refresh_expires_at": "2026-08-30T10:00:00Z",
+    "accessToken": "<signed-access-token>",
+    "refreshToken": "<signed-refresh-token>",
+    "tokenType": "Bearer",
+    "accessExpiresAt": "2026-07-31T10:15:00Z",
+    "refreshExpiresAt": "2026-08-30T10:00:00Z",
     "user": {
       "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
       "email": "user@example.com",
-      "email_verified": true,
-      "phone_country_code": "+91",
-      "phone_number_masked": "+91******0001",
-      "phone_verified": true,
+      "emailVerified": true,
+      "phoneCountryCode": "+91",
+      "phoneNumberMasked": "+91******0001",
+      "phoneVerified": true,
       "status": "active",
-      "preferred_locale": "en-IN",
+      "preferredLocale": "en-IN",
       "timezone": "Asia/Kolkata",
-      "display_name": "Example User",
+      "displayName": "Example User",
       "profile": {
-        "first_name": "Example",
-        "last_name": "User",
-        "preferred_name": "Example User",
+        "firstName": "Example",
+        "lastName": "User",
+        "preferredName": "Example User",
         "avatar": null
       }
     }
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -1168,7 +1168,7 @@ curl --request POST \
 
 #### Important behavior
 
-- For `channel=email`, `email` is required. For `channel=phone`, both `phone_country_code` and `phone_number` are required.
+- For `channel=email`, `email` is required. For `channel=phone`, both `phoneCountryCode` and `phoneNumber` are required.
 - Unknown identities receive dummy password verification to reduce timing-based account enumeration.
 
 ---
@@ -1199,15 +1199,15 @@ Phone destination used to request a login OTP.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `phone_country_code` | string | Yes | Min length: 1<br>Max length: 8 |
-| `phone_number` | string | Yes | Min length: 6<br>Max length: 32 |
+| `phoneCountryCode` | string | Yes | Min length: 1<br>Max length: 8 |
+| `phoneNumber` | string | Yes | Min length: 6<br>Max length: 32 |
 
 Example:
 
 ```json
 {
-  "phone_country_code": "+91",
-  "phone_number": "9876540001"
+  "phoneCountryCode": "+91",
+  "phoneNumber": "9876540001"
 }
 ```
 
@@ -1219,7 +1219,7 @@ curl --request POST \
   --header 'X-Client-ID: pharmacy-web' \
   --header 'X-Device-ID: web-device-a7f9' \
   --header 'Content-Type: application/json' \
-  --data '{"phone_country_code":"+91","phone_number":"9876540001"}'
+  --data '{"phoneCountryCode":"+91","phoneNumber":"9876540001"}'
 ```
 
 #### Success response
@@ -1231,16 +1231,16 @@ curl --request POST \
   "success": true,
   "data": {
     "accepted": true,
-    "challenge_id": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
-    "expires_at": "2026-07-31T10:05:00Z",
-    "retry_after_seconds": 60,
-    "development_otp": null
+    "challengeId": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
+    "expiresAt": "2026-07-31T10:05:00Z",
+    "retryAfterSeconds": 60,
+    "developmentOtp": null
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -1277,18 +1277,18 @@ Phone OTP proof used to create a session.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `challenge_id` | string (uuid) | Yes | Valid UUID |
-| `phone_country_code` | string | Yes | Min length: 1<br>Max length: 8 |
-| `phone_number` | string | Yes | Min length: 6<br>Max length: 32 |
+| `challengeId` | string (uuid) | Yes | Valid UUID |
+| `phoneCountryCode` | string | Yes | Min length: 1<br>Max length: 8 |
+| `phoneNumber` | string | Yes | Min length: 6<br>Max length: 32 |
 | `code` | string | Yes | Pattern: `^[0-9]{6}$` |
 
 Example:
 
 ```json
 {
-  "challenge_id": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
-  "phone_country_code": "+91",
-  "phone_number": "9876540001",
+  "challengeId": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
+  "phoneCountryCode": "+91",
+  "phoneNumber": "9876540001",
   "code": "123456"
 }
 ```
@@ -1303,7 +1303,7 @@ curl --request POST \
   --header 'X-Device-ID: web-device-a7f9' \
   --header 'X-Device-Type: desktop' \
   --header 'Content-Type: application/json' \
-  --data '{"challenge_id":"c7ef9dbe-3599-4d72-a522-74672a49ae85","phone_country_code":"+91","phone_number":"9876540001","code":"123456"}'
+  --data '{"challengeId":"c7ef9dbe-3599-4d72-a522-74672a49ae85","phoneCountryCode":"+91","phoneNumber":"9876540001","code":"123456"}'
 ```
 
 #### Success response
@@ -1314,35 +1314,35 @@ curl --request POST \
 {
   "success": true,
   "data": {
-    "access_token": "<signed-access-token>",
-    "refresh_token": "<signed-refresh-token>",
-    "token_type": "Bearer",
-    "access_expires_at": "2026-07-31T10:15:00Z",
-    "refresh_expires_at": "2026-08-30T10:00:00Z",
+    "accessToken": "<signed-access-token>",
+    "refreshToken": "<signed-refresh-token>",
+    "tokenType": "Bearer",
+    "accessExpiresAt": "2026-07-31T10:15:00Z",
+    "refreshExpiresAt": "2026-08-30T10:00:00Z",
     "user": {
       "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
       "email": "user@example.com",
-      "email_verified": true,
-      "phone_country_code": "+91",
-      "phone_number_masked": "+91******0001",
-      "phone_verified": true,
+      "emailVerified": true,
+      "phoneCountryCode": "+91",
+      "phoneNumberMasked": "+91******0001",
+      "phoneVerified": true,
       "status": "active",
-      "preferred_locale": "en-IN",
+      "preferredLocale": "en-IN",
       "timezone": "Asia/Kolkata",
-      "display_name": "Example User",
+      "displayName": "Example User",
       "profile": {
-        "first_name": "Example",
-        "last_name": "User",
-        "preferred_name": "Example User",
+        "firstName": "Example",
+        "lastName": "User",
+        "preferredName": "Example User",
         "avatar": null
       }
     }
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -1408,9 +1408,9 @@ curl --request GET \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -1450,13 +1450,13 @@ Refresh token identifying the session to revoke.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `refresh_token` | string | Yes | Min length: 32<br>Max length: 8192 |
+| `refreshToken` | string | Yes | Min length: 32<br>Max length: 8192 |
 
 Example:
 
 ```json
 {
-  "refresh_token": "<signed-refresh-token>"
+  "refreshToken": "<signed-refresh-token>"
 }
 ```
 
@@ -1468,7 +1468,7 @@ curl --request POST \
   --header 'X-Client-ID: pharmacy-web' \
   --header 'X-Device-ID: web-device-a7f9' \
   --header 'Content-Type: application/json' \
-  --data '{"refresh_token":"<signed-refresh-token>"}'
+  --data '{"refreshToken":"<signed-refresh-token>"}'
 ```
 
 #### Success response
@@ -1483,9 +1483,9 @@ curl --request POST \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -1541,9 +1541,9 @@ curl --request POST \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -1599,9 +1599,9 @@ curl --request POST \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -1636,13 +1636,13 @@ Refresh token used to rotate its persisted session.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `refresh_token` | string | Yes | Min length: 32<br>Max length: 8192 |
+| `refreshToken` | string | Yes | Min length: 32<br>Max length: 8192 |
 
 Example:
 
 ```json
 {
-  "refresh_token": "<signed-refresh-token>"
+  "refreshToken": "<signed-refresh-token>"
 }
 ```
 
@@ -1654,7 +1654,7 @@ curl --request POST \
   --header 'X-Client-ID: pharmacy-web' \
   --header 'X-Device-ID: web-device-a7f9' \
   --header 'Content-Type: application/json' \
-  --data '{"refresh_token":"<signed-refresh-token>"}'
+  --data '{"refreshToken":"<signed-refresh-token>"}'
 ```
 
 #### Success response
@@ -1665,35 +1665,35 @@ curl --request POST \
 {
   "success": true,
   "data": {
-    "access_token": "<signed-access-token>",
-    "refresh_token": "<signed-refresh-token>",
-    "token_type": "Bearer",
-    "access_expires_at": "2026-07-31T10:15:00Z",
-    "refresh_expires_at": "2026-08-30T10:00:00Z",
+    "accessToken": "<signed-access-token>",
+    "refreshToken": "<signed-refresh-token>",
+    "tokenType": "Bearer",
+    "accessExpiresAt": "2026-07-31T10:15:00Z",
+    "refreshExpiresAt": "2026-08-30T10:00:00Z",
     "user": {
       "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
       "email": "user@example.com",
-      "email_verified": true,
-      "phone_country_code": "+91",
-      "phone_number_masked": "+91******0001",
-      "phone_verified": true,
+      "emailVerified": true,
+      "phoneCountryCode": "+91",
+      "phoneNumberMasked": "+91******0001",
+      "phoneVerified": true,
       "status": "active",
-      "preferred_locale": "en-IN",
+      "preferredLocale": "en-IN",
       "timezone": "Asia/Kolkata",
-      "display_name": "Example User",
+      "displayName": "Example User",
       "profile": {
-        "first_name": "Example",
-        "last_name": "User",
-        "preferred_name": "Example User",
+        "firstName": "Example",
+        "lastName": "User",
+        "preferredName": "Example User",
         "avatar": null
       }
     }
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -1752,22 +1752,22 @@ curl --request GET \
     "sessions": [
       {
         "id": "17157083-e4f2-48b4-9571-19e030d0ee7d",
-        "device_id": "web-device-a7f9",
-        "device_type": "desktop",
-        "ip_address": "203.0.113.10",
-        "user_agent": "Mozilla/5.0",
-        "created_at": "2026-07-31T10:00:00Z",
-        "last_seen_at": "2026-07-31T10:00:00Z",
-        "expires_at": "2026-08-30T10:00:00Z",
+        "deviceId": "web-device-a7f9",
+        "deviceType": "desktop",
+        "ipAddress": "203.0.113.10",
+        "userAgent": "Mozilla/5.0",
+        "createdAt": "2026-07-31T10:00:00Z",
+        "lastSeenAt": "2026-07-31T10:00:00Z",
+        "expiresAt": "2026-08-30T10:00:00Z",
         "current": true
       }
     ]
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -1776,7 +1776,7 @@ curl --request GET \
 
 ---
 
-### `DELETE /api/v1/auth/sessions/{session_id}`
+### `DELETE /api/v1/auth/sessions/{sessionId}`
 
 **Summary:** Revoke a selected session
 
@@ -1799,7 +1799,7 @@ curl --request GET \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `session_id` | path | string (uuid) | Yes | Valid UUID |
+| `sessionId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -1825,9 +1825,9 @@ curl --request DELETE \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -1871,13 +1871,13 @@ Initial password for an OTP-only account.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `new_password` | string | Yes | Min length: 1<br>Max length: 128 |
+| `newPassword` | string | Yes | Min length: 1<br>Max length: 128 |
 
 Example:
 
 ```json
 {
-  "new_password": "StrongPassword#2026"
+  "newPassword": "StrongPassword#2026"
 }
 ```
 
@@ -1892,7 +1892,7 @@ curl --request POST \
   --header 'X-Device-ID: web-device-a7f9' \
   --header 'X-Device-Type: desktop' \
   --header 'Content-Type: application/json' \
-  --data '{"new_password":"StrongPassword#2026"}'
+  --data '{"newPassword":"StrongPassword#2026"}'
 ```
 
 #### Success response
@@ -1903,35 +1903,35 @@ curl --request POST \
 {
   "success": true,
   "data": {
-    "access_token": "<signed-access-token>",
-    "refresh_token": "<signed-refresh-token>",
-    "token_type": "Bearer",
-    "access_expires_at": "2026-07-31T10:15:00Z",
-    "refresh_expires_at": "2026-08-30T10:00:00Z",
+    "accessToken": "<signed-access-token>",
+    "refreshToken": "<signed-refresh-token>",
+    "tokenType": "Bearer",
+    "accessExpiresAt": "2026-07-31T10:15:00Z",
+    "refreshExpiresAt": "2026-08-30T10:00:00Z",
     "user": {
       "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
       "email": "user@example.com",
-      "email_verified": true,
-      "phone_country_code": "+91",
-      "phone_number_masked": "+91******0001",
-      "phone_verified": true,
+      "emailVerified": true,
+      "phoneCountryCode": "+91",
+      "phoneNumberMasked": "+91******0001",
+      "phoneVerified": true,
       "status": "active",
-      "preferred_locale": "en-IN",
+      "preferredLocale": "en-IN",
       "timezone": "Asia/Kolkata",
-      "display_name": "Example User",
+      "displayName": "Example User",
       "profile": {
-        "first_name": "Example",
-        "last_name": "User",
-        "preferred_name": "Example User",
+        "firstName": "Example",
+        "lastName": "User",
+        "preferredName": "Example User",
         "avatar": null
       }
     }
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -1973,15 +1973,15 @@ Authenticated password change request.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `current_password` | string | Yes | Min length: 1<br>Max length: 128 |
-| `new_password` | string | Yes | Min length: 1<br>Max length: 128 |
+| `currentPassword` | string | Yes | Min length: 1<br>Max length: 128 |
+| `newPassword` | string | Yes | Min length: 1<br>Max length: 128 |
 
 Example:
 
 ```json
 {
-  "current_password": "StrongPassword#2026",
-  "new_password": "NewStrongPassword#2026"
+  "currentPassword": "StrongPassword#2026",
+  "newPassword": "NewStrongPassword#2026"
 }
 ```
 
@@ -1996,7 +1996,7 @@ curl --request PUT \
   --header 'X-Device-ID: web-device-a7f9' \
   --header 'X-Device-Type: desktop' \
   --header 'Content-Type: application/json' \
-  --data '{"current_password":"StrongPassword#2026","new_password":"NewStrongPassword#2026"}'
+  --data '{"currentPassword":"StrongPassword#2026","newPassword":"NewStrongPassword#2026"}'
 ```
 
 #### Success response
@@ -2007,35 +2007,35 @@ curl --request PUT \
 {
   "success": true,
   "data": {
-    "access_token": "<signed-access-token>",
-    "refresh_token": "<signed-refresh-token>",
-    "token_type": "Bearer",
-    "access_expires_at": "2026-07-31T10:15:00Z",
-    "refresh_expires_at": "2026-08-30T10:00:00Z",
+    "accessToken": "<signed-access-token>",
+    "refreshToken": "<signed-refresh-token>",
+    "tokenType": "Bearer",
+    "accessExpiresAt": "2026-07-31T10:15:00Z",
+    "refreshExpiresAt": "2026-08-30T10:00:00Z",
     "user": {
       "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
       "email": "user@example.com",
-      "email_verified": true,
-      "phone_country_code": "+91",
-      "phone_number_masked": "+91******0001",
-      "phone_verified": true,
+      "emailVerified": true,
+      "phoneCountryCode": "+91",
+      "phoneNumberMasked": "+91******0001",
+      "phoneVerified": true,
       "status": "active",
-      "preferred_locale": "en-IN",
+      "preferredLocale": "en-IN",
       "timezone": "Asia/Kolkata",
-      "display_name": "Example User",
+      "displayName": "Example User",
       "profile": {
-        "first_name": "Example",
-        "last_name": "User",
-        "preferred_name": "Example User",
+        "firstName": "Example",
+        "lastName": "User",
+        "preferredName": "Example User",
         "avatar": null
       }
     }
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -2076,8 +2076,8 @@ Identity used to request a password-reset OTP.
 | --- | --- | --- | --- |
 | `channel` | string | Yes | Pattern: `^(email|sms)$` |
 | `email` | string (email) or null | No | None |
-| `phone_country_code` | string or null | No | None |
-| `phone_number` | string or null | No | None |
+| `phoneCountryCode` | string or null | No | None |
+| `phoneNumber` | string or null | No | None |
 
 Example:
 
@@ -2093,8 +2093,8 @@ SMS-channel alternative:
 ```json
 {
   "channel": "sms",
-  "phone_country_code": "+91",
-  "phone_number": "9876540001"
+  "phoneCountryCode": "+91",
+  "phoneNumber": "9876540001"
 }
 ```
 
@@ -2118,16 +2118,16 @@ curl --request POST \
   "success": true,
   "data": {
     "accepted": true,
-    "challenge_id": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
-    "expires_at": "2026-07-31T10:05:00Z",
-    "retry_after_seconds": 60,
-    "development_otp": null
+    "challengeId": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
+    "expiresAt": "2026-07-31T10:05:00Z",
+    "retryAfterSeconds": 60,
+    "developmentOtp": null
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -2169,15 +2169,15 @@ Final password reset request using a signed proof.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `reset_token` | string | Yes | Min length: 32<br>Max length: 4096 |
-| `new_password` | string | Yes | Min length: 1<br>Max length: 128 |
+| `resetToken` | string | Yes | Min length: 32<br>Max length: 4096 |
+| `newPassword` | string | Yes | Min length: 1<br>Max length: 128 |
 
 Example:
 
 ```json
 {
-  "reset_token": "<signed-one-time-reset-proof>",
-  "new_password": "NewStrongPassword#2026"
+  "resetToken": "<signed-one-time-reset-proof>",
+  "newPassword": "NewStrongPassword#2026"
 }
 ```
 
@@ -2191,7 +2191,7 @@ curl --request POST \
   --header 'X-Device-ID: web-device-a7f9' \
   --header 'X-Device-Type: desktop' \
   --header 'Content-Type: application/json' \
-  --data '{"reset_token":"<signed-one-time-reset-proof>","new_password":"NewStrongPassword#2026"}'
+  --data '{"resetToken":"<signed-one-time-reset-proof>","newPassword":"NewStrongPassword#2026"}'
 ```
 
 #### Success response
@@ -2202,35 +2202,35 @@ curl --request POST \
 {
   "success": true,
   "data": {
-    "access_token": "<signed-access-token>",
-    "refresh_token": "<signed-refresh-token>",
-    "token_type": "Bearer",
-    "access_expires_at": "2026-07-31T10:15:00Z",
-    "refresh_expires_at": "2026-08-30T10:00:00Z",
+    "accessToken": "<signed-access-token>",
+    "refreshToken": "<signed-refresh-token>",
+    "tokenType": "Bearer",
+    "accessExpiresAt": "2026-07-31T10:15:00Z",
+    "refreshExpiresAt": "2026-08-30T10:00:00Z",
     "user": {
       "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
       "email": "user@example.com",
-      "email_verified": true,
-      "phone_country_code": "+91",
-      "phone_number_masked": "+91******0001",
-      "phone_verified": true,
+      "emailVerified": true,
+      "phoneCountryCode": "+91",
+      "phoneNumberMasked": "+91******0001",
+      "phoneVerified": true,
       "status": "active",
-      "preferred_locale": "en-IN",
+      "preferredLocale": "en-IN",
       "timezone": "Asia/Kolkata",
-      "display_name": "Example User",
+      "displayName": "Example User",
       "profile": {
-        "first_name": "Example",
-        "last_name": "User",
-        "preferred_name": "Example User",
+        "firstName": "Example",
+        "lastName": "User",
+        "preferredName": "Example User",
         "avatar": null
       }
     }
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -2271,9 +2271,9 @@ OTP proof used to obtain a one-time reset token.
 | --- | --- | --- | --- |
 | `channel` | string | Yes | Pattern: `^(email|sms)$` |
 | `email` | string (email) or null | No | None |
-| `phone_country_code` | string or null | No | None |
-| `phone_number` | string or null | No | None |
-| `challenge_id` | string (uuid) | Yes | Valid UUID |
+| `phoneCountryCode` | string or null | No | None |
+| `phoneNumber` | string or null | No | None |
+| `challengeId` | string (uuid) | Yes | Valid UUID |
 | `code` | string | Yes | Pattern: `^[0-9]{6}$` |
 
 Example:
@@ -2282,7 +2282,7 @@ Example:
 {
   "channel": "email",
   "email": "user@example.com",
-  "challenge_id": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
+  "challengeId": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
   "code": "123456"
 }
 ```
@@ -2292,9 +2292,9 @@ SMS-channel alternative:
 ```json
 {
   "channel": "sms",
-  "phone_country_code": "+91",
-  "phone_number": "9876540001",
-  "challenge_id": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
+  "phoneCountryCode": "+91",
+  "phoneNumber": "9876540001",
+  "challengeId": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
   "code": "123456"
 }
 ```
@@ -2307,7 +2307,7 @@ curl --request POST \
   --header 'X-Client-ID: pharmacy-web' \
   --header 'X-Device-ID: web-device-a7f9' \
   --header 'Content-Type: application/json' \
-  --data '{"channel":"email","email":"user@example.com","challenge_id":"c7ef9dbe-3599-4d72-a522-74672a49ae85","code":"123456"}'
+  --data '{"channel":"email","email":"user@example.com","challengeId":"c7ef9dbe-3599-4d72-a522-74672a49ae85","code":"123456"}'
 ```
 
 #### Success response
@@ -2318,14 +2318,14 @@ curl --request POST \
 {
   "success": true,
   "data": {
-    "reset_token": "<signed-one-time-reset-proof>",
-    "expires_at": "2026-07-31T10:10:00Z"
+    "resetToken": "<signed-one-time-reset-proof>",
+    "expiresAt": "2026-07-31T10:10:00Z"
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -2390,9 +2390,9 @@ curl --request GET \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -2447,18 +2447,18 @@ curl --request GET \
   "data": {
     "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
     "email": "user@example.com",
-    "email_verified": true,
-    "phone_country_code": "+91",
-    "phone_number_masked": "+91******0001",
-    "phone_verified": true,
+    "emailVerified": true,
+    "phoneCountryCode": "+91",
+    "phoneNumberMasked": "+91******0001",
+    "phoneVerified": true,
     "status": "active",
-    "preferred_locale": "en-IN",
+    "preferredLocale": "en-IN",
     "timezone": "Asia/Kolkata",
-    "display_name": "Example User",
+    "displayName": "Example User",
     "profile": {
-      "first_name": "Example",
-      "last_name": "User",
-      "preferred_name": "Example User",
+      "firstName": "Example",
+      "lastName": "User",
+      "preferredName": "Example User",
       "avatar": {
         "id": "22222222-2222-2222-2222-222222222222",
         "url": "https://cdn.example.com/avatars/22222222.webp"
@@ -2467,9 +2467,9 @@ curl --request GET \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -2503,23 +2503,23 @@ Identity preferences and profile values editable by their owner.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `preferred_locale` | string or null | No | None |
+| `preferredLocale` | string or null | No | None |
 | `timezone` | string or null | No | None |
-| `first_name` | string or null | No | None |
-| `last_name` | string or null | No | None |
-| `preferred_name` | string or null | No | None |
-| `avatar_file_id` | string (uuid) or null | No | An available, malware-clean public image owned by the current user with owner type `identity.user_profile.avatar`. Send `null` to detach it. |
+| `firstName` | string or null | No | None |
+| `lastName` | string or null | No | None |
+| `preferredName` | string or null | No | None |
+| `avatarFileId` | string (uuid) or null | No | An available, malware-clean public image owned by the current user with owner type `identity.user_profile.avatar`. Send `null` to detach it. |
 
 Example:
 
 ```json
 {
-  "preferred_locale": "en-IN",
+  "preferredLocale": "en-IN",
   "timezone": "Asia/Kolkata",
-  "first_name": "Example",
-  "last_name": "User",
-  "preferred_name": "Example User",
-  "avatar_file_id": "22222222-2222-2222-2222-222222222222"
+  "firstName": "Example",
+  "lastName": "User",
+  "preferredName": "Example User",
+  "avatarFileId": "22222222-2222-2222-2222-222222222222"
 }
 ```
 
@@ -2530,7 +2530,7 @@ curl --request PATCH \
   --url 'http://localhost:5555/api/v1/users/me' \
   --header 'Authorization: Bearer <access-token>' \
   --header 'Content-Type: application/json' \
-  --data '{"preferred_locale":"en-IN","timezone":"Asia/Kolkata","first_name":"Example","last_name":"User","preferred_name":"Example User","avatar_file_id":"22222222-2222-2222-2222-222222222222"}'
+  --data '{"preferredLocale":"en-IN","timezone":"Asia/Kolkata","firstName":"Example","lastName":"User","preferredName":"Example User","avatarFileId":"22222222-2222-2222-2222-222222222222"}'
 ```
 
 #### Success response
@@ -2543,18 +2543,18 @@ curl --request PATCH \
   "data": {
     "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
     "email": "user@example.com",
-    "email_verified": true,
-    "phone_country_code": "+91",
-    "phone_number_masked": "+91******0001",
-    "phone_verified": true,
+    "emailVerified": true,
+    "phoneCountryCode": "+91",
+    "phoneNumberMasked": "+91******0001",
+    "phoneVerified": true,
     "status": "active",
-    "preferred_locale": "en-IN",
+    "preferredLocale": "en-IN",
     "timezone": "Asia/Kolkata",
-    "display_name": "Example User",
+    "displayName": "Example User",
     "profile": {
-      "first_name": "Example",
-      "last_name": "User",
-      "preferred_name": "Example User",
+      "firstName": "Example",
+      "lastName": "User",
+      "preferredName": "Example User",
       "avatar": {
         "id": "22222222-2222-2222-2222-222222222222",
         "url": "https://cdn.example.com/avatars/22222222.webp"
@@ -2563,9 +2563,9 @@ curl --request PATCH \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -2635,18 +2635,18 @@ curl --request GET \
       {
         "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
         "email": "user@example.com",
-        "email_verified": true,
-        "phone_country_code": "+91",
-        "phone_number_masked": "+91******0001",
-        "phone_verified": true,
+        "emailVerified": true,
+        "phoneCountryCode": "+91",
+        "phoneNumberMasked": "+91******0001",
+        "phoneVerified": true,
         "status": "active",
-        "preferred_locale": "en-IN",
+        "preferredLocale": "en-IN",
         "timezone": "Asia/Kolkata",
-        "display_name": "Example User",
+        "displayName": "Example User",
         "profile": {
-          "first_name": "Example",
-          "last_name": "User",
-          "preferred_name": "Example User",
+          "firstName": "Example",
+          "lastName": "User",
+          "preferredName": "Example User",
           "avatar": null
         },
         "roles": [
@@ -2660,15 +2660,15 @@ curl --request GET \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": {
-      "total_count": 1,
+      "totalCount": 1,
       "limit": 20,
       "offset": 0,
-      "has_next": false
+      "hasNext": false
     }
   }
 }
@@ -2682,7 +2682,7 @@ curl --request GET \
 
 ---
 
-### `GET /api/v1/admin/users/{user_id}`
+### `GET /api/v1/admin/users/{userId}`
 
 **Summary:** Get user
 
@@ -2705,7 +2705,7 @@ curl --request GET \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `user_id` | path | string (uuid) | Yes | Valid UUID |
+| `userId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -2729,18 +2729,18 @@ curl --request GET \
   "data": {
     "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
     "email": "user@example.com",
-    "email_verified": true,
-    "phone_country_code": "+91",
-    "phone_number_masked": "+91******0001",
-    "phone_verified": true,
+    "emailVerified": true,
+    "phoneCountryCode": "+91",
+    "phoneNumberMasked": "+91******0001",
+    "phoneVerified": true,
     "status": "active",
-    "preferred_locale": "en-IN",
+    "preferredLocale": "en-IN",
     "timezone": "Asia/Kolkata",
-    "display_name": "Example User",
+    "displayName": "Example User",
     "profile": {
-      "first_name": "Example",
-      "last_name": "User",
-      "preferred_name": "Example User",
+      "firstName": "Example",
+      "lastName": "User",
+      "preferredName": "Example User",
       "avatar": null
     },
     "roles": [
@@ -2752,9 +2752,9 @@ curl --request GET \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -2763,7 +2763,7 @@ curl --request GET \
 
 ---
 
-### `POST /api/v1/admin/users/{user_id}/logout-all`
+### `POST /api/v1/admin/users/{userId}/logout-all`
 
 **Summary:** Logout user from all devices
 
@@ -2786,7 +2786,7 @@ curl --request GET \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `user_id` | path | string (uuid) | Yes | Valid UUID |
+| `userId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -2826,9 +2826,9 @@ curl --request POST \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -2837,7 +2837,7 @@ curl --request POST \
 
 ---
 
-### `PATCH /api/v1/admin/users/{user_id}/status`
+### `PATCH /api/v1/admin/users/{userId}/status`
 
 **Summary:** Update user status
 
@@ -2860,7 +2860,7 @@ curl --request POST \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `user_id` | path | string (uuid) | Yes | Valid UUID |
+| `userId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -2870,7 +2870,7 @@ Administrative user status transition.
 | --- | --- | --- | --- |
 | `status` | `UserStatus` | Yes | None |
 | `reason` | string | Yes | Min length: 3<br>Max length: 255 |
-| `revoke_sessions` | boolean | No | Default: `True` |
+| `revokeSessions` | boolean | No | Default: `True` |
 
 Example:
 
@@ -2878,7 +2878,7 @@ Example:
 {
   "status": "suspended",
   "reason": "Manual compliance review",
-  "revoke_sessions": true
+  "revokeSessions": true
 }
 ```
 
@@ -2889,7 +2889,7 @@ curl --request PATCH \
   --url 'http://localhost:5555/api/v1/admin/users/5a9fcb15-f491-4ce3-93cf-f827694845c6/status' \
   --header 'Authorization: Bearer <access-token>' \
   --header 'Content-Type: application/json' \
-  --data '{"status":"suspended","reason":"Manual compliance review","revoke_sessions":true}'
+  --data '{"status":"suspended","reason":"Manual compliance review","revokeSessions":true}'
 ```
 
 #### Success response
@@ -2902,18 +2902,18 @@ curl --request PATCH \
   "data": {
     "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
     "email": "user@example.com",
-    "email_verified": true,
-    "phone_country_code": "+91",
-    "phone_number_masked": "+91******0001",
-    "phone_verified": true,
+    "emailVerified": true,
+    "phoneCountryCode": "+91",
+    "phoneNumberMasked": "+91******0001",
+    "phoneVerified": true,
     "status": "active",
-    "preferred_locale": "en-IN",
+    "preferredLocale": "en-IN",
     "timezone": "Asia/Kolkata",
-    "display_name": "Example User",
+    "displayName": "Example User",
     "profile": {
-      "first_name": "Example",
-      "last_name": "User",
-      "preferred_name": "Example User",
+      "firstName": "Example",
+      "lastName": "User",
+      "preferredName": "Example User",
       "avatar": null
     },
     "roles": [
@@ -2925,9 +2925,9 @@ curl --request PATCH \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -2936,7 +2936,7 @@ curl --request PATCH \
 
 #### Important behavior
 
-- When `revoke_sessions=true`, active sessions are revoked as part of the administrative status workflow.
+- When `revokeSessions=true`, active sessions are revoked as part of the administrative status workflow.
 - Status transitions remain subject to service-level invariants.
 
 ---
@@ -2988,17 +2988,17 @@ curl --request GET \
         "code": "warehouse_manager",
         "name": "Warehouse Manager",
         "description": "Manages warehouse operations.",
-        "is_system": false,
-        "created_at": "2026-07-31T10:00:00Z",
-        "updated_at": "2026-07-31T10:00:00Z"
+        "isSystem": false,
+        "createdAt": "2026-07-31T10:00:00Z",
+        "updatedAt": "2026-07-31T10:00:00Z"
       }
     ]
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3068,15 +3068,15 @@ curl --request POST \
     "code": "warehouse_manager",
     "name": "Warehouse Manager",
     "description": "Manages warehouse operations.",
-    "is_system": false,
-    "created_at": "2026-07-31T10:00:00Z",
-    "updated_at": "2026-07-31T10:00:00Z"
+    "isSystem": false,
+    "createdAt": "2026-07-31T10:00:00Z",
+    "updatedAt": "2026-07-31T10:00:00Z"
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3089,7 +3089,7 @@ curl --request POST \
 
 ---
 
-### `GET /api/v1/admin/roles/{role_id}`
+### `GET /api/v1/admin/roles/{roleId}`
 
 **Summary:** Get role
 
@@ -3112,7 +3112,7 @@ curl --request POST \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `role_id` | path | string (uuid) | Yes | Valid UUID |
+| `roleId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -3138,15 +3138,15 @@ curl --request GET \
     "code": "warehouse_manager",
     "name": "Warehouse Manager",
     "description": "Manages warehouse operations.",
-    "is_system": false,
-    "created_at": "2026-07-31T10:00:00Z",
-    "updated_at": "2026-07-31T10:00:00Z"
+    "isSystem": false,
+    "createdAt": "2026-07-31T10:00:00Z",
+    "updatedAt": "2026-07-31T10:00:00Z"
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3155,7 +3155,7 @@ curl --request GET \
 
 ---
 
-### `PATCH /api/v1/admin/roles/{role_id}`
+### `PATCH /api/v1/admin/roles/{roleId}`
 
 **Summary:** Update role
 
@@ -3178,7 +3178,7 @@ curl --request GET \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `role_id` | path | string (uuid) | Yes | Valid UUID |
+| `roleId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -3220,15 +3220,15 @@ curl --request PATCH \
     "code": "warehouse_manager",
     "name": "Warehouse Manager",
     "description": "Manages warehouse operations.",
-    "is_system": false,
-    "created_at": "2026-07-31T10:00:00Z",
-    "updated_at": "2026-07-31T10:00:00Z"
+    "isSystem": false,
+    "createdAt": "2026-07-31T10:00:00Z",
+    "updatedAt": "2026-07-31T10:00:00Z"
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3241,7 +3241,7 @@ curl --request PATCH \
 
 ---
 
-### `DELETE /api/v1/admin/roles/{role_id}`
+### `DELETE /api/v1/admin/roles/{roleId}`
 
 **Summary:** Delete role
 
@@ -3264,7 +3264,7 @@ curl --request PATCH \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `role_id` | path | string (uuid) | Yes | Valid UUID |
+| `roleId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -3290,9 +3290,9 @@ curl --request DELETE \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3349,16 +3349,16 @@ curl --request GET \
         "resource": "warehouse.inventory",
         "action": "read",
         "description": "Read warehouse inventory.",
-        "created_at": "2026-07-31T10:00:00Z",
-        "updated_at": "2026-07-31T10:00:00Z"
+        "createdAt": "2026-07-31T10:00:00Z",
+        "updatedAt": "2026-07-31T10:00:00Z"
       }
     ]
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3431,14 +3431,14 @@ curl --request POST \
     "resource": "warehouse.inventory",
     "action": "read",
     "description": "Read warehouse inventory.",
-    "created_at": "2026-07-31T10:00:00Z",
-    "updated_at": "2026-07-31T10:00:00Z"
+    "createdAt": "2026-07-31T10:00:00Z",
+    "updatedAt": "2026-07-31T10:00:00Z"
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3447,7 +3447,7 @@ curl --request POST \
 
 ---
 
-### `GET /api/v1/admin/permissions/{permission_id}`
+### `GET /api/v1/admin/permissions/{permissionId}`
 
 **Summary:** Get permission
 
@@ -3470,7 +3470,7 @@ curl --request POST \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `permission_id` | path | string (uuid) | Yes | Valid UUID |
+| `permissionId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -3497,14 +3497,14 @@ curl --request GET \
     "resource": "warehouse.inventory",
     "action": "read",
     "description": "Read warehouse inventory.",
-    "created_at": "2026-07-31T10:00:00Z",
-    "updated_at": "2026-07-31T10:00:00Z"
+    "createdAt": "2026-07-31T10:00:00Z",
+    "updatedAt": "2026-07-31T10:00:00Z"
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3513,7 +3513,7 @@ curl --request GET \
 
 ---
 
-### `PATCH /api/v1/admin/permissions/{permission_id}`
+### `PATCH /api/v1/admin/permissions/{permissionId}`
 
 **Summary:** Update permission
 
@@ -3536,7 +3536,7 @@ curl --request GET \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `permission_id` | path | string (uuid) | Yes | Valid UUID |
+| `permissionId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -3580,14 +3580,14 @@ curl --request PATCH \
     "resource": "warehouse.inventory",
     "action": "read",
     "description": "Read warehouse inventory.",
-    "created_at": "2026-07-31T10:00:00Z",
-    "updated_at": "2026-07-31T10:00:00Z"
+    "createdAt": "2026-07-31T10:00:00Z",
+    "updatedAt": "2026-07-31T10:00:00Z"
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3600,7 +3600,7 @@ curl --request PATCH \
 
 ---
 
-### `DELETE /api/v1/admin/permissions/{permission_id}`
+### `DELETE /api/v1/admin/permissions/{permissionId}`
 
 **Summary:** Delete permission
 
@@ -3623,7 +3623,7 @@ curl --request PATCH \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `permission_id` | path | string (uuid) | Yes | Valid UUID |
+| `permissionId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -3649,9 +3649,9 @@ curl --request DELETE \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3660,7 +3660,7 @@ curl --request DELETE \
 
 ---
 
-### `GET /api/v1/admin/roles/{role_id}/permissions`
+### `GET /api/v1/admin/roles/{roleId}/permissions`
 
 **Summary:** Get role permissions
 
@@ -3683,7 +3683,7 @@ curl --request DELETE \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `role_id` | path | string (uuid) | Yes | Valid UUID |
+| `roleId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -3705,7 +3705,7 @@ curl --request GET \
 {
   "success": true,
   "data": {
-    "role_id": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
+    "roleId": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
     "permissions": [
       {
         "id": "98a57e3d-297d-4ca6-99f4-5a44f524b510",
@@ -3713,16 +3713,16 @@ curl --request GET \
         "resource": "warehouse.inventory",
         "action": "read",
         "description": "Read warehouse inventory.",
-        "created_at": "2026-07-31T10:00:00Z",
-        "updated_at": "2026-07-31T10:00:00Z"
+        "createdAt": "2026-07-31T10:00:00Z",
+        "updatedAt": "2026-07-31T10:00:00Z"
       }
     ]
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3731,7 +3731,7 @@ curl --request GET \
 
 ---
 
-### `PUT /api/v1/admin/roles/{role_id}/permissions`
+### `PUT /api/v1/admin/roles/{roleId}/permissions`
 
 **Summary:** Replace role permissions
 
@@ -3754,7 +3754,7 @@ curl --request GET \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `role_id` | path | string (uuid) | Yes | Valid UUID |
+| `roleId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -3762,13 +3762,13 @@ Complete permission set for a role.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `permission_ids` | array of string (uuid) | No | None |
+| `permissionIds` | array of string (uuid) | No | None |
 
 Example:
 
 ```json
 {
-  "permission_ids": [
+  "permissionIds": [
     "98a57e3d-297d-4ca6-99f4-5a44f524b510",
     "2769e840-0564-42c5-a23e-d522dc2e346e"
   ]
@@ -3782,7 +3782,7 @@ curl --request PUT \
   --url 'http://localhost:5555/api/v1/admin/roles/30e94856-2a96-44a2-940d-0d40e1e6ebf2/permissions' \
   --header 'Authorization: Bearer <access-token>' \
   --header 'Content-Type: application/json' \
-  --data '{"permission_ids":["98a57e3d-297d-4ca6-99f4-5a44f524b510","2769e840-0564-42c5-a23e-d522dc2e346e"]}'
+  --data '{"permissionIds":["98a57e3d-297d-4ca6-99f4-5a44f524b510","2769e840-0564-42c5-a23e-d522dc2e346e"]}'
 ```
 
 #### Success response
@@ -3793,7 +3793,7 @@ curl --request PUT \
 {
   "success": true,
   "data": {
-    "role_id": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
+    "roleId": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
     "permissions": [
       {
         "id": "98a57e3d-297d-4ca6-99f4-5a44f524b510",
@@ -3801,16 +3801,16 @@ curl --request PUT \
         "resource": "warehouse.inventory",
         "action": "read",
         "description": "Read warehouse inventory.",
-        "created_at": "2026-07-31T10:00:00Z",
-        "updated_at": "2026-07-31T10:00:00Z"
+        "createdAt": "2026-07-31T10:00:00Z",
+        "updatedAt": "2026-07-31T10:00:00Z"
       }
     ]
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3820,13 +3820,13 @@ curl --request PUT \
 #### Important behavior
 
 - Duplicate permission IDs are rejected.
-- An empty `permission_ids` array removes every permission mapping from the role.
+- An empty `permissionIds` array removes every permission mapping from the role.
 
 ---
 
 ## Admin User Roles
 
-### `GET /api/v1/admin/users/{user_id}/roles`
+### `GET /api/v1/admin/users/{userId}/roles`
 
 **Summary:** Get user role assignments
 
@@ -3849,7 +3849,7 @@ curl --request PUT \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `user_id` | path | string (uuid) | Yes | Valid UUID |
+| `userId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -3874,25 +3874,25 @@ curl --request GET \
     "assignments": [
       {
         "id": "643b5e90-8587-441e-a69e-9bfdfd7a2c30",
-        "user_id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
-        "role_id": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
-        "role_code": "warehouse_manager",
-        "role_name": "Warehouse Manager",
-        "scope_type": "warehouse",
-        "scope_id": "c7ca7dda-6dd5-4f30-962a-6958dcd20e80",
-        "valid_from": "2026-07-31T10:00:00Z",
-        "valid_until": "2027-07-31T10:00:00Z",
-        "is_active": true,
-        "created_at": "2026-07-31T10:00:00Z",
-        "updated_at": "2026-07-31T10:00:00Z"
+        "userId": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
+        "roleId": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
+        "roleCode": "warehouse_manager",
+        "roleName": "Warehouse Manager",
+        "scopeType": "warehouse",
+        "scopeId": "c7ca7dda-6dd5-4f30-962a-6958dcd20e80",
+        "validFrom": "2026-07-31T10:00:00Z",
+        "validUntil": "2027-07-31T10:00:00Z",
+        "isActive": true,
+        "createdAt": "2026-07-31T10:00:00Z",
+        "updatedAt": "2026-07-31T10:00:00Z"
       }
     ]
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3901,7 +3901,7 @@ curl --request GET \
 
 ---
 
-### `POST /api/v1/admin/users/{user_id}/roles`
+### `POST /api/v1/admin/users/{userId}/roles`
 
 **Summary:** Assign role to user
 
@@ -3924,7 +3924,7 @@ curl --request GET \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `user_id` | path | string (uuid) | Yes | Valid UUID |
+| `userId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -3932,23 +3932,23 @@ Create a scoped or global role assignment.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `role_id` | string (uuid) | Yes | Valid UUID |
-| `scope_type` | string or null | No | None |
-| `scope_id` | string (uuid) or null | No | None |
-| `valid_from` | string (date-time) or null | No | None |
-| `valid_until` | string (date-time) or null | No | None |
-| `is_active` | boolean | No | Default: `True` |
+| `roleId` | string (uuid) | Yes | Valid UUID |
+| `scopeType` | string or null | No | None |
+| `scopeId` | string (uuid) or null | No | None |
+| `validFrom` | string (date-time) or null | No | None |
+| `validUntil` | string (date-time) or null | No | None |
+| `isActive` | boolean | No | Default: `True` |
 
 Example:
 
 ```json
 {
-  "role_id": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
-  "scope_type": "warehouse",
-  "scope_id": "c7ca7dda-6dd5-4f30-962a-6958dcd20e80",
-  "valid_from": "2026-07-31T10:00:00Z",
-  "valid_until": "2027-07-31T10:00:00Z",
-  "is_active": true
+  "roleId": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
+  "scopeType": "warehouse",
+  "scopeId": "c7ca7dda-6dd5-4f30-962a-6958dcd20e80",
+  "validFrom": "2026-07-31T10:00:00Z",
+  "validUntil": "2027-07-31T10:00:00Z",
+  "isActive": true
 }
 ```
 
@@ -3959,7 +3959,7 @@ curl --request POST \
   --url 'http://localhost:5555/api/v1/admin/users/5a9fcb15-f491-4ce3-93cf-f827694845c6/roles' \
   --header 'Authorization: Bearer <access-token>' \
   --header 'Content-Type: application/json' \
-  --data '{"role_id":"30e94856-2a96-44a2-940d-0d40e1e6ebf2","scope_type":"warehouse","scope_id":"c7ca7dda-6dd5-4f30-962a-6958dcd20e80","valid_from":"2026-07-31T10:00:00Z","valid_until":"2027-07-31T10:00:00Z","is_active":true}'
+  --data '{"roleId":"30e94856-2a96-44a2-940d-0d40e1e6ebf2","scopeType":"warehouse","scopeId":"c7ca7dda-6dd5-4f30-962a-6958dcd20e80","validFrom":"2026-07-31T10:00:00Z","validUntil":"2027-07-31T10:00:00Z","isActive":true}'
 ```
 
 #### Success response
@@ -3971,23 +3971,23 @@ curl --request POST \
   "success": true,
   "data": {
     "id": "643b5e90-8587-441e-a69e-9bfdfd7a2c30",
-    "user_id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
-    "role_id": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
-    "role_code": "warehouse_manager",
-    "role_name": "Warehouse Manager",
-    "scope_type": "warehouse",
-    "scope_id": "c7ca7dda-6dd5-4f30-962a-6958dcd20e80",
-    "valid_from": "2026-07-31T10:00:00Z",
-    "valid_until": "2027-07-31T10:00:00Z",
-    "is_active": true,
-    "created_at": "2026-07-31T10:00:00Z",
-    "updated_at": "2026-07-31T10:00:00Z"
+    "userId": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
+    "roleId": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
+    "roleCode": "warehouse_manager",
+    "roleName": "Warehouse Manager",
+    "scopeType": "warehouse",
+    "scopeId": "c7ca7dda-6dd5-4f30-962a-6958dcd20e80",
+    "validFrom": "2026-07-31T10:00:00Z",
+    "validUntil": "2027-07-31T10:00:00Z",
+    "isActive": true,
+    "createdAt": "2026-07-31T10:00:00Z",
+    "updatedAt": "2026-07-31T10:00:00Z"
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -3996,12 +3996,12 @@ curl --request POST \
 
 #### Important behavior
 
-- `scope_type` and `scope_id` must be supplied together or both omitted.
-- When both dates are supplied, `valid_until` must be later than `valid_from`.
+- `scopeType` and `scopeId` must be supplied together or both omitted.
+- When both dates are supplied, `validUntil` must be later than `validFrom`.
 
 ---
 
-### `PATCH /api/v1/admin/users/{user_id}/roles/{user_role_id}`
+### `PATCH /api/v1/admin/users/{userId}/roles/{user_roleId}`
 
 **Summary:** Update user role assignment
 
@@ -4024,8 +4024,8 @@ curl --request POST \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `user_id` | path | string (uuid) | Yes | Valid UUID |
-| `user_role_id` | path | string (uuid) | Yes | Valid UUID |
+| `userId` | path | string (uuid) | Yes | Valid UUID |
+| `user_roleId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -4033,18 +4033,18 @@ Update assignment scope, validity, or active state.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `scope_type` | string or null | No | None |
-| `scope_id` | string (uuid) or null | No | None |
-| `valid_from` | string (date-time) or null | No | None |
-| `valid_until` | string (date-time) or null | No | None |
-| `is_active` | boolean or null | No | None |
+| `scopeType` | string or null | No | None |
+| `scopeId` | string (uuid) or null | No | None |
+| `validFrom` | string (date-time) or null | No | None |
+| `validUntil` | string (date-time) or null | No | None |
+| `isActive` | boolean or null | No | None |
 
 Example:
 
 ```json
 {
-  "valid_until": "2027-12-31T23:59:59Z",
-  "is_active": true
+  "validUntil": "2027-12-31T23:59:59Z",
+  "isActive": true
 }
 ```
 
@@ -4055,7 +4055,7 @@ curl --request PATCH \
   --url 'http://localhost:5555/api/v1/admin/users/5a9fcb15-f491-4ce3-93cf-f827694845c6/roles/643b5e90-8587-441e-a69e-9bfdfd7a2c30' \
   --header 'Authorization: Bearer <access-token>' \
   --header 'Content-Type: application/json' \
-  --data '{"valid_until":"2027-12-31T23:59:59Z","is_active":true}'
+  --data '{"validUntil":"2027-12-31T23:59:59Z","isActive":true}'
 ```
 
 #### Success response
@@ -4067,23 +4067,23 @@ curl --request PATCH \
   "success": true,
   "data": {
     "id": "643b5e90-8587-441e-a69e-9bfdfd7a2c30",
-    "user_id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
-    "role_id": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
-    "role_code": "warehouse_manager",
-    "role_name": "Warehouse Manager",
-    "scope_type": "warehouse",
-    "scope_id": "c7ca7dda-6dd5-4f30-962a-6958dcd20e80",
-    "valid_from": "2026-07-31T10:00:00Z",
-    "valid_until": "2027-07-31T10:00:00Z",
-    "is_active": true,
-    "created_at": "2026-07-31T10:00:00Z",
-    "updated_at": "2026-07-31T10:00:00Z"
+    "userId": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
+    "roleId": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
+    "roleCode": "warehouse_manager",
+    "roleName": "Warehouse Manager",
+    "scopeType": "warehouse",
+    "scopeId": "c7ca7dda-6dd5-4f30-962a-6958dcd20e80",
+    "validFrom": "2026-07-31T10:00:00Z",
+    "validUntil": "2027-07-31T10:00:00Z",
+    "isActive": true,
+    "createdAt": "2026-07-31T10:00:00Z",
+    "updatedAt": "2026-07-31T10:00:00Z"
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -4097,7 +4097,7 @@ curl --request PATCH \
 
 ---
 
-### `DELETE /api/v1/admin/users/{user_id}/roles/{user_role_id}`
+### `DELETE /api/v1/admin/users/{userId}/roles/{user_roleId}`
 
 **Summary:** Remove user role assignment
 
@@ -4120,8 +4120,8 @@ curl --request PATCH \
 
 | Parameter | Location | Type | Required | Constraints |
 | --- | --- | --- | --- | --- |
-| `user_id` | path | string (uuid) | Yes | Valid UUID |
-| `user_role_id` | path | string (uuid) | Yes | Valid UUID |
+| `userId` | path | string (uuid) | Yes | Valid UUID |
+| `user_roleId` | path | string (uuid) | Yes | Valid UUID |
 
 #### Request body
 
@@ -4147,9 +4147,9 @@ curl --request DELETE \
   },
   "error": null,
   "meta": {
-    "request_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "correlation_id": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
-    "api_version": "api/v1",
+    "requestId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "correlationId": "8458f0d1-bf84-423f-925e-86cd65b0ba6e",
+    "apiVersion": "api/v1",
     "timestamp": "2026-07-31T10:00:00Z",
     "pagination": null
   }
@@ -4170,14 +4170,14 @@ Minimal authenticated identity profile without authorization lists.
 | --- | --- | --- | --- |
 | `id` | string (uuid) | Yes | Valid UUID |
 | `email` | string or null | Yes | None |
-| `email_verified` | boolean | Yes | None |
-| `phone_country_code` | string or null | Yes | None |
-| `phone_number_masked` | string or null | Yes | None |
-| `phone_verified` | boolean | Yes | None |
+| `emailVerified` | boolean | Yes | None |
+| `phoneCountryCode` | string or null | Yes | None |
+| `phoneNumberMasked` | string or null | Yes | None |
+| `phoneVerified` | boolean | Yes | None |
 | `status` | string | Yes | None |
-| `preferred_locale` | string | Yes | None |
+| `preferredLocale` | string | Yes | None |
 | `timezone` | string | Yes | None |
-| `display_name` | string | Yes | None |
+| `displayName` | string | Yes | None |
 | `profile` | `UserProfileResponse` or null | Yes | None |
 
 Example:
@@ -4186,18 +4186,18 @@ Example:
 {
   "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
   "email": "user@example.com",
-  "email_verified": true,
-  "phone_country_code": "+91",
-  "phone_number_masked": "+91******0001",
-  "phone_verified": true,
+  "emailVerified": true,
+  "phoneCountryCode": "+91",
+  "phoneNumberMasked": "+91******0001",
+  "phoneVerified": true,
   "status": "active",
-  "preferred_locale": "en-IN",
+  "preferredLocale": "en-IN",
   "timezone": "Asia/Kolkata",
-  "display_name": "Example User",
+  "displayName": "Example User",
   "profile": {
-    "first_name": "Example",
-    "last_name": "User",
-    "preferred_name": "Example User",
+    "firstName": "Example",
+    "lastName": "User",
+    "preferredName": "Example User",
     "avatar": null
   }
 }
@@ -4209,9 +4209,9 @@ Optional human-readable identity profile.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `first_name` | string or null | Yes | None |
-| `last_name` | string or null | Yes | None |
-| `preferred_name` | string or null | Yes | None |
+| `firstName` | string or null | Yes | None |
+| `lastName` | string or null | Yes | None |
+| `preferredName` | string or null | Yes | None |
 | `avatar` | `PublicFileResponse` or null | Yes | Present only when the referenced file remains safe and publicly available. |
 
 ### `PublicFileResponse`
@@ -4229,37 +4229,37 @@ Canonical token response with a minimal authenticated profile.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `access_token` | string | Yes | None |
-| `refresh_token` | string | Yes | None |
-| `token_type` | string | No | Default: `Bearer` |
-| `access_expires_at` | string (date-time) | Yes | ISO 8601 date-time |
-| `refresh_expires_at` | string (date-time) | Yes | ISO 8601 date-time |
+| `accessToken` | string | Yes | None |
+| `refreshToken` | string | Yes | None |
+| `tokenType` | string | No | Default: `Bearer` |
+| `accessExpiresAt` | string (date-time) | Yes | ISO 8601 date-time |
+| `refreshExpiresAt` | string (date-time) | Yes | ISO 8601 date-time |
 | `user` | `AuthenticatedUserResponse` | Yes | None |
 
 Example:
 
 ```json
 {
-  "access_token": "<signed-access-token>",
-  "refresh_token": "<signed-refresh-token>",
-  "token_type": "Bearer",
-  "access_expires_at": "2026-07-31T10:15:00Z",
-  "refresh_expires_at": "2026-08-30T10:00:00Z",
+  "accessToken": "<signed-access-token>",
+  "refreshToken": "<signed-refresh-token>",
+  "tokenType": "Bearer",
+  "accessExpiresAt": "2026-07-31T10:15:00Z",
+  "refreshExpiresAt": "2026-08-30T10:00:00Z",
   "user": {
     "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
     "email": "user@example.com",
-    "email_verified": true,
-    "phone_country_code": "+91",
-    "phone_number_masked": "+91******0001",
-    "phone_verified": true,
+    "emailVerified": true,
+    "phoneCountryCode": "+91",
+    "phoneNumberMasked": "+91******0001",
+    "phoneVerified": true,
     "status": "active",
-    "preferred_locale": "en-IN",
+    "preferredLocale": "en-IN",
     "timezone": "Asia/Kolkata",
-    "display_name": "Example User",
+    "displayName": "Example User",
     "profile": {
-      "first_name": "Example",
-      "last_name": "User",
-      "preferred_name": "Example User",
+      "firstName": "Example",
+      "lastName": "User",
+      "preferredName": "Example User",
       "avatar": null
     }
   }
@@ -4273,20 +4273,20 @@ Generic OTP issuance response that avoids account enumeration.
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
 | `accepted` | boolean | No | Default: `True` |
-| `challenge_id` | string (uuid) | Yes | Valid UUID |
-| `expires_at` | string (date-time) | Yes | ISO 8601 date-time |
-| `retry_after_seconds` | integer | Yes | None |
-| `development_otp` | string or null | No | None |
+| `challengeId` | string (uuid) | Yes | Valid UUID |
+| `expiresAt` | string (date-time) | Yes | ISO 8601 date-time |
+| `retryAfterSeconds` | integer | Yes | None |
+| `developmentOtp` | string or null | No | None |
 
 Example:
 
 ```json
 {
   "accepted": true,
-  "challenge_id": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
-  "expires_at": "2026-07-31T10:05:00Z",
-  "retry_after_seconds": 60,
-  "development_otp": null
+  "challengeId": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
+  "expiresAt": "2026-07-31T10:05:00Z",
+  "retryAfterSeconds": 60,
+  "developmentOtp": null
 }
 ```
 
@@ -4297,10 +4297,10 @@ Registration result with either verification or session information.
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
 | `user` | `AuthenticatedUserResponse` | Yes | None |
-| `verification_required` | boolean | Yes | None |
-| `challenge_id` | string (uuid) or null | No | None |
-| `expires_at` | string (date-time) or null | No | None |
-| `development_otp` | string or null | No | None |
+| `verificationRequired` | boolean | Yes | None |
+| `challengeId` | string (uuid) or null | No | None |
+| `expiresAt` | string (date-time) or null | No | None |
+| `developmentOtp` | string or null | No | None |
 | `tokens` | `TokenPairResponse` or null | No | None |
 
 Example:
@@ -4310,25 +4310,25 @@ Example:
   "user": {
     "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
     "email": "user@example.com",
-    "email_verified": false,
-    "phone_country_code": "+91",
-    "phone_number_masked": "+91******0001",
-    "phone_verified": true,
+    "emailVerified": false,
+    "phoneCountryCode": "+91",
+    "phoneNumberMasked": "+91******0001",
+    "phoneVerified": true,
     "status": "active",
-    "preferred_locale": "en-IN",
+    "preferredLocale": "en-IN",
     "timezone": "Asia/Kolkata",
-    "display_name": "Example User",
+    "displayName": "Example User",
     "profile": {
-      "first_name": "Example",
-      "last_name": "User",
-      "preferred_name": "Example User",
+      "firstName": "Example",
+      "lastName": "User",
+      "preferredName": "Example User",
       "avatar": null
     }
   },
-  "verification_required": true,
-  "challenge_id": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
-  "expires_at": "2026-07-31T10:05:00Z",
-  "development_otp": null,
+  "verificationRequired": true,
+  "challengeId": "c7ef9dbe-3599-4d72-a522-74672a49ae85",
+  "expiresAt": "2026-07-31T10:05:00Z",
+  "developmentOtp": null,
   "tokens": null
 }
 ```
@@ -4340,13 +4340,13 @@ Non-sensitive active session metadata.
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
 | `id` | string (uuid) | Yes | Valid UUID |
-| `device_id` | string or null | Yes | None |
-| `device_type` | string or null | Yes | None |
-| `ip_address` | string or null | Yes | None |
-| `user_agent` | string or null | Yes | None |
-| `created_at` | string (date-time) | Yes | ISO 8601 date-time |
-| `last_seen_at` | string (date-time) or null | Yes | None |
-| `expires_at` | string (date-time) | Yes | ISO 8601 date-time |
+| `deviceId` | string or null | Yes | None |
+| `deviceType` | string or null | Yes | None |
+| `ipAddress` | string or null | Yes | None |
+| `userAgent` | string or null | Yes | None |
+| `createdAt` | string (date-time) | Yes | ISO 8601 date-time |
+| `lastSeenAt` | string (date-time) or null | Yes | None |
+| `expiresAt` | string (date-time) | Yes | ISO 8601 date-time |
 | `current` | boolean | No | Default: `False` |
 
 Example:
@@ -4354,13 +4354,13 @@ Example:
 ```json
 {
   "id": "17157083-e4f2-48b4-9571-19e030d0ee7d",
-  "device_id": "web-device-a7f9",
-  "device_type": "desktop",
-  "ip_address": "203.0.113.10",
-  "user_agent": "Mozilla/5.0",
-  "created_at": "2026-07-31T10:00:00Z",
-  "last_seen_at": "2026-07-31T10:00:00Z",
-  "expires_at": "2026-08-30T10:00:00Z",
+  "deviceId": "web-device-a7f9",
+  "deviceType": "desktop",
+  "ipAddress": "203.0.113.10",
+  "userAgent": "Mozilla/5.0",
+  "createdAt": "2026-07-31T10:00:00Z",
+  "lastSeenAt": "2026-07-31T10:00:00Z",
+  "expiresAt": "2026-08-30T10:00:00Z",
   "current": true
 }
 ```
@@ -4397,14 +4397,14 @@ Administrative user projection with current authorization.
 | --- | --- | --- | --- |
 | `id` | string (uuid) | Yes | Valid UUID |
 | `email` | string or null | Yes | None |
-| `email_verified` | boolean | Yes | None |
-| `phone_country_code` | string or null | Yes | None |
-| `phone_number_masked` | string or null | Yes | None |
-| `phone_verified` | boolean | Yes | None |
+| `emailVerified` | boolean | Yes | None |
+| `phoneCountryCode` | string or null | Yes | None |
+| `phoneNumberMasked` | string or null | Yes | None |
+| `phoneVerified` | boolean | Yes | None |
 | `status` | string | Yes | None |
-| `preferred_locale` | string | Yes | None |
+| `preferredLocale` | string | Yes | None |
 | `timezone` | string | Yes | None |
-| `display_name` | string | Yes | None |
+| `displayName` | string | Yes | None |
 | `profile` | `UserProfileResponse` or null | Yes | None |
 | `roles` | array of string | Yes | None |
 | `permissions` | array of string | Yes | None |
@@ -4415,18 +4415,18 @@ Example:
 {
   "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
   "email": "user@example.com",
-  "email_verified": true,
-  "phone_country_code": "+91",
-  "phone_number_masked": "+91******0001",
-  "phone_verified": true,
+  "emailVerified": true,
+  "phoneCountryCode": "+91",
+  "phoneNumberMasked": "+91******0001",
+  "phoneVerified": true,
   "status": "active",
-  "preferred_locale": "en-IN",
+  "preferredLocale": "en-IN",
   "timezone": "Asia/Kolkata",
-  "display_name": "Example User",
+  "displayName": "Example User",
   "profile": {
-    "first_name": "Example",
-    "last_name": "User",
-    "preferred_name": "Example User",
+    "firstName": "Example",
+    "lastName": "User",
+    "preferredName": "Example User",
     "avatar": null
   },
   "roles": [
@@ -4448,9 +4448,9 @@ Public administrative role representation.
 | `code` | string | Yes | None |
 | `name` | string | Yes | None |
 | `description` | string or null | Yes | None |
-| `is_system` | boolean | Yes | None |
-| `created_at` | string (date-time) | Yes | ISO 8601 date-time |
-| `updated_at` | string (date-time) | Yes | ISO 8601 date-time |
+| `isSystem` | boolean | Yes | None |
+| `createdAt` | string (date-time) | Yes | ISO 8601 date-time |
+| `updatedAt` | string (date-time) | Yes | ISO 8601 date-time |
 
 Example:
 
@@ -4460,9 +4460,9 @@ Example:
   "code": "warehouse_manager",
   "name": "Warehouse Manager",
   "description": "Manages warehouse operations.",
-  "is_system": false,
-  "created_at": "2026-07-31T10:00:00Z",
-  "updated_at": "2026-07-31T10:00:00Z"
+  "isSystem": false,
+  "createdAt": "2026-07-31T10:00:00Z",
+  "updatedAt": "2026-07-31T10:00:00Z"
 }
 ```
 
@@ -4477,8 +4477,8 @@ Public administrative permission representation.
 | `resource` | string | Yes | None |
 | `action` | string | Yes | None |
 | `description` | string or null | Yes | None |
-| `created_at` | string (date-time) | Yes | ISO 8601 date-time |
-| `updated_at` | string (date-time) | Yes | ISO 8601 date-time |
+| `createdAt` | string (date-time) | Yes | ISO 8601 date-time |
+| `updatedAt` | string (date-time) | Yes | ISO 8601 date-time |
 
 Example:
 
@@ -4489,8 +4489,8 @@ Example:
   "resource": "warehouse.inventory",
   "action": "read",
   "description": "Read warehouse inventory.",
-  "created_at": "2026-07-31T10:00:00Z",
-  "updated_at": "2026-07-31T10:00:00Z"
+  "createdAt": "2026-07-31T10:00:00Z",
+  "updatedAt": "2026-07-31T10:00:00Z"
 }
 ```
 
@@ -4501,34 +4501,34 @@ Public administrative role assignment representation.
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
 | `id` | string (uuid) | Yes | Valid UUID |
-| `user_id` | string (uuid) | Yes | Valid UUID |
-| `role_id` | string (uuid) | Yes | Valid UUID |
-| `role_code` | string | Yes | None |
-| `role_name` | string | Yes | None |
-| `scope_type` | string or null | Yes | None |
-| `scope_id` | string (uuid) or null | Yes | None |
-| `valid_from` | string (date-time) or null | Yes | None |
-| `valid_until` | string (date-time) or null | Yes | None |
-| `is_active` | boolean | Yes | None |
-| `created_at` | string (date-time) | Yes | ISO 8601 date-time |
-| `updated_at` | string (date-time) | Yes | ISO 8601 date-time |
+| `userId` | string (uuid) | Yes | Valid UUID |
+| `roleId` | string (uuid) | Yes | Valid UUID |
+| `roleCode` | string | Yes | None |
+| `roleName` | string | Yes | None |
+| `scopeType` | string or null | Yes | None |
+| `scopeId` | string (uuid) or null | Yes | None |
+| `validFrom` | string (date-time) or null | Yes | None |
+| `validUntil` | string (date-time) or null | Yes | None |
+| `isActive` | boolean | Yes | None |
+| `createdAt` | string (date-time) | Yes | ISO 8601 date-time |
+| `updatedAt` | string (date-time) | Yes | ISO 8601 date-time |
 
 Example:
 
 ```json
 {
   "id": "643b5e90-8587-441e-a69e-9bfdfd7a2c30",
-  "user_id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
-  "role_id": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
-  "role_code": "warehouse_manager",
-  "role_name": "Warehouse Manager",
-  "scope_type": "warehouse",
-  "scope_id": "c7ca7dda-6dd5-4f30-962a-6958dcd20e80",
-  "valid_from": "2026-07-31T10:00:00Z",
-  "valid_until": "2027-07-31T10:00:00Z",
-  "is_active": true,
-  "created_at": "2026-07-31T10:00:00Z",
-  "updated_at": "2026-07-31T10:00:00Z"
+  "userId": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
+  "roleId": "30e94856-2a96-44a2-940d-0d40e1e6ebf2",
+  "roleCode": "warehouse_manager",
+  "roleName": "Warehouse Manager",
+  "scopeType": "warehouse",
+  "scopeId": "c7ca7dda-6dd5-4f30-962a-6958dcd20e80",
+  "validFrom": "2026-07-31T10:00:00Z",
+  "validUntil": "2027-07-31T10:00:00Z",
+  "isActive": true,
+  "createdAt": "2026-07-31T10:00:00Z",
+  "updatedAt": "2026-07-31T10:00:00Z"
 }
 ```
 
@@ -4542,8 +4542,8 @@ Safe pre-authentication client configuration.
 | `registration` | `RegistrationCapabilities` | Yes | None |
 | `login` | `LoginCapabilities` | Yes | None |
 | `verification` | `VerificationCapabilities` | Yes | None |
-| `password_policy` | `PasswordPolicyCapabilities` | Yes | None |
-| `supported_platforms` | array of string | Yes | None |
+| `passwordPolicy` | `PasswordPolicyCapabilities` | Yes | None |
+| `supportedPlatforms` | array of string | Yes | None |
 
 Example:
 
@@ -4551,22 +4551,22 @@ Example:
 {
   "schema": "auth-capabilities",
   "registration": {
-    "email_enabled": true,
-    "phone_enabled": true
+    "emailEnabled": true,
+    "phoneEnabled": true
   },
   "login": {
-    "password_enabled": true,
-    "phone_otp_enabled": true
+    "passwordEnabled": true,
+    "phoneOtpEnabled": true
   },
   "verification": {
-    "email_required": true,
-    "phone_required": true
+    "emailRequired": true,
+    "phoneRequired": true
   },
-  "password_policy": {
-    "minimum_length": 12,
-    "minimum_character_classes": 3
+  "passwordPolicy": {
+    "minimumLength": 12,
+    "minimumCharacterClasses": 3
   },
-  "supported_platforms": [
+  "supportedPlatforms": [
     "android",
     "ios",
     "web"
@@ -4580,15 +4580,15 @@ Short-lived one-time signed password-reset proof.
 
 | Field | Type | Required | Constraints / meaning |
 | --- | --- | --- | --- |
-| `reset_token` | string | Yes | None |
-| `expires_at` | string (date-time) | Yes | ISO 8601 date-time |
+| `resetToken` | string | Yes | None |
+| `expiresAt` | string (date-time) | Yes | ISO 8601 date-time |
 
 Example:
 
 ```json
 {
-  "reset_token": "<signed-one-time-reset-proof>",
-  "expires_at": "2026-07-31T10:10:00Z"
+  "resetToken": "<signed-one-time-reset-proof>",
+  "expiresAt": "2026-07-31T10:10:00Z"
 }
 ```
 
@@ -4611,9 +4611,9 @@ Example:
 
 ### OTP flows
 
-- Preserve the returned `challenge_id` and submit it with the same destination and purpose during verification.
-- Respect `retry_after_seconds` and HTTP `Retry-After` values.
-- Do not expose OTP codes in production. `development_otp` should remain `null` outside explicitly controlled local environments.
+- Preserve the returned `challengeId` and submit it with the same destination and purpose during verification.
+- Respect `retryAfterSeconds` and HTTP `Retry-After` values.
+- Do not expose OTP codes in production. `developmentOtp` should remain `null` outside explicitly controlled local environments.
 
 ### Request IDs
 

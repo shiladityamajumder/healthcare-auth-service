@@ -85,7 +85,7 @@ class SessionManagementService:
         logger.info(
             "Security audit event",
             extra={
-                "event": "session_revoked",
+                "event": "session.revoked",
                 "user_id": str(user_id),
                 "session_id": str(session_id),
                 "session_revoked": session_revoked,

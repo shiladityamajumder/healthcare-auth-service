@@ -1223,14 +1223,14 @@ Example user projection:
 {
   "id": "5a9fcb15-f491-4ce3-93cf-f827694845c6",
   "email": "user@example.com",
-  "email_verified": true,
-  "phone_country_code": "+91",
-  "phone_number_masked": "+91******0001",
-  "phone_verified": true,
+  "emailVerified": true,
+  "phoneCountryCode": "+91",
+  "phoneNumberMasked": "+91******0001",
+  "phoneVerified": true,
   "status": "active",
-  "preferred_locale": "en-IN",
+  "preferredLocale": "en-IN",
   "timezone": "Asia/Kolkata",
-  "display_name": "Example User",
+  "displayName": "Example User",
   "profile": null
 }
 ```

@@ -60,7 +60,7 @@ async def readiness(request: Request) -> JSONResponse:
                 "checks": {
                     "postgresql": {
                         "healthy": check.healthy,
-                        "schema_ready": check.schema_ready,
+                        "schemaReady": check.schema_ready,
                     }
                 }
             },
@@ -72,7 +72,7 @@ async def readiness(request: Request) -> JSONResponse:
             "checks": {
                 "postgresql": {
                     "healthy": True,
-                    "schema_ready": check.schema_ready,
+                    "schemaReady": check.schema_ready,
                 }
             },
         }
@@ -104,8 +104,8 @@ async def deep_health(request: Request) -> JSONResponse:
         "checks": {
             "postgresql": {
                 "healthy": check.healthy,
-                "schema_ready": check.schema_ready,
-                "duration_ms": check.duration_ms,
+                "schemaReady": check.schema_ready,
+                "durationMs": check.duration_ms,
             }
         },
     }

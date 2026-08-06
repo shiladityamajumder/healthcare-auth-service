@@ -86,7 +86,7 @@ class AdminRolesService:
         logger.info(
             "Security audit event",
             extra={
-                "event": "role_created",
+                "event": "role.created",
                 "actor_user_id": str(actor_user_id),
                 "role_id": str(response.id),
                 "role_code": response.code,
@@ -131,7 +131,7 @@ class AdminRolesService:
         logger.info(
             "Security audit event",
             extra={
-                "event": "role_updated",
+                "event": "role.updated",
                 "actor_user_id": str(actor_user_id),
                 "role_id": str(role_id),
             },
@@ -162,7 +162,7 @@ class AdminRolesService:
         logger.info(
             "Security audit event",
             extra={
-                "event": "role_deleted",
+                "event": "role.deleted",
                 "actor_user_id": str(actor_user_id),
                 "role_id": str(role_id),
             },

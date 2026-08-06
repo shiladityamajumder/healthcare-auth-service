@@ -26,7 +26,7 @@ async def test_public_capabilities_are_safe_and_cacheable() -> None:
     assert response.headers["cache-control"] == "public, max-age=300"
     assert response.headers["etag"].startswith('"')
     assert body["data"]["schema"] == "auth-capabilities"
-    assert body["data"]["password_policy"]["minimum_length"] == 12
+    assert body["data"]["passwordPolicy"]["minimumLength"] == 12
     assert '"roles"' not in serialized
     assert '"permissions"' not in serialized
     assert "jwt" not in serialized
