@@ -123,7 +123,7 @@ AUTH_ERROR_RESPONSES: Final[dict[int, OpenAPIResponseSpec]] = auth_error_respons
 
 
 __all__ = [
-    "AUTH_ERROR_RESPONSES",
-    "OpenAPIResponseSpec",
-    "auth_error_responses",
+    'AUTH_ERROR_RESPONSES',
+    'auth_error_responses',
+    'OpenAPIResponseSpec',
 ]

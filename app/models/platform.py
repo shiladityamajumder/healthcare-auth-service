@@ -118,4 +118,4 @@ class FileObjects(AuditMixin):
     )
 
 
-__all__ = ["IDENTITY_AVATAR_OWNER_TYPE", "FileObjects"]
+__all__ = ["FileObjects", "IDENTITY_AVATAR_OWNER_TYPE"]

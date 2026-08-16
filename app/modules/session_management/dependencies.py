@@ -48,8 +48,8 @@ SessionRevokeAccess = Annotated[
 ]
 
 __all__ = [
-    "SessionManagementServiceDep",
-    "SessionReadAccess",
-    "SessionRevokeAccess",
-    "get_session_management_service",
+    'get_session_management_service',
+    'SessionManagementServiceDep',
+    'SessionReadAccess',
+    'SessionRevokeAccess',
 ]

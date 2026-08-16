@@ -116,12 +116,12 @@ def _load_manifest(path: Path) -> tuple[BootstrapUser, ...]:
 
         email = normalize_email(_required_string(raw_user, "email"))
         country_code, phone_number = normalize_phone(
-            _required_string(raw_user, "phone_country_code"),
-            _required_string(raw_user, "phone_number"),
+            _required_string(raw_user, "phoneCountryCode"),
+            _required_string(raw_user, "phoneNumber"),
         )
-        role_codes = raw_user.get("role_codes")
+        role_codes = raw_user.get("roleCodes")
         if not isinstance(role_codes, list) or not role_codes:
-            raise ValueError(f"users[{index}].role_codes must be a non-empty array.")
+            raise ValueError(f"users[{index}].roleCodes must be a non-empty array.")
         normalized_roles = tuple(
             dict.fromkeys(_required_string({"role": role}, "role") for role in role_codes)
         )
@@ -140,10 +140,10 @@ def _load_manifest(path: Path) -> tuple[BootstrapUser, ...]:
                 phone_country_code=country_code,
                 phone_number=phone_number,
                 password=_required_string(raw_user, "password"),
-                first_name=_required_string(raw_user, "first_name"),
-                last_name=_optional_string(raw_user, "last_name"),
-                preferred_name=_optional_string(raw_user, "preferred_name"),
-                preferred_locale=(_optional_string(raw_user, "preferred_locale") or "en-IN"),
+                first_name=_required_string(raw_user, "firstName"),
+                last_name=_optional_string(raw_user, "lastName"),
+                preferred_name=_optional_string(raw_user, "preferredName"),
+                preferred_locale=(_optional_string(raw_user, "preferredLocale") or "en-IN"),
                 timezone_name=(_optional_string(raw_user, "timezone") or "Asia/Kolkata"),
                 role_codes=normalized_roles,
             )

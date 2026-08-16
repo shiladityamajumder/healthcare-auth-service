@@ -243,13 +243,13 @@ def apply_default_sort(
 
 
 __all__ = [
-    "SQLColumn",
-    "SQLOrderExpression",
-    "SQLSelect",
-    "SortOrder",
-    "apply_default_sort",
-    "apply_multi_sorting",
-    "apply_sorting",
-    "build_order_expression",
-    "normalize_sort_order",
+    'apply_default_sort',
+    'apply_multi_sorting',
+    'apply_sorting',
+    'build_order_expression',
+    'normalize_sort_order',
+    'SortOrder',
+    'SQLColumn',
+    'SQLOrderExpression',
+    'SQLSelect',
 ]

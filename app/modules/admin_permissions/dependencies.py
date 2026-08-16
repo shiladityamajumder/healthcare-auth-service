@@ -65,8 +65,8 @@ AdminPermissionsServiceDep = Annotated[
 ]
 
 __all__ = [
-    "AdminPermissionsServiceDep",
-    "PermissionManageAccess",
-    "PermissionReadAccess",
-    "get_admin_permissions_service",
+    'AdminPermissionsServiceDep',
+    'get_admin_permissions_service',
+    'PermissionManageAccess',
+    'PermissionReadAccess',
 ]

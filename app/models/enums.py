@@ -109,12 +109,12 @@ class MFAFactorType(StrEnum):
 
 
 __all__ = [
-    "ActiveStatus",
-    "FileAccessType",
-    "FileObjectStatus",
-    "MFAFactorType",
-    "MalwareScanStatus",
-    "OTPChannel",
-    "OTPPurpose",
-    "UserStatus",
+    'ActiveStatus',
+    'FileAccessType',
+    'FileObjectStatus',
+    'MalwareScanStatus',
+    'MFAFactorType',
+    'OTPChannel',
+    'OTPPurpose',
+    'UserStatus',
 ]

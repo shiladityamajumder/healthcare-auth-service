@@ -150,7 +150,7 @@ def updated_at_column(
 
 
 __all__ = [
-    "UTCDateTime",
-    "created_at_column",
-    "updated_at_column",
+    'created_at_column',
+    'updated_at_column',
+    'UTCDateTime',
 ]

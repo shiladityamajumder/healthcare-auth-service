@@ -142,9 +142,9 @@ def _operation_name(request: Request) -> str:
 
 
 __all__ = [
-    "APIRateLimitsDep",
-    "SecurityDependency",
-    "get_api_rate_limits",
-    "route_security_policy",
-    "secure_route",
+    'APIRateLimitsDep',
+    'get_api_rate_limits',
+    'route_security_policy',
+    'secure_route',
+    'SecurityDependency',
 ]

@@ -156,12 +156,12 @@ async def paginate_scalars[T](
 
 
 __all__ = [
-    "DEFAULT_LIMIT",
-    "MAX_LIMIT",
-    "MAX_OFFSET",
-    "PaginationParams",
-    "PaginationResult",
-    "apply_pagination",
-    "build_pagination_meta",
-    "paginate_scalars",
+    'apply_pagination',
+    'build_pagination_meta',
+    'DEFAULT_LIMIT',
+    'MAX_LIMIT',
+    'MAX_OFFSET',
+    'paginate_scalars',
+    'PaginationParams',
+    'PaginationResult',
 ]

@@ -1137,10 +1137,10 @@ def clear_settings_cache() -> None:
 
 
 __all__ = [
-    "AppSettings",
-    "Environment",
-    "JWTAlgorithm",
-    "RateLimitBackend",
-    "clear_settings_cache",
-    "get_settings",
+    'AppSettings',
+    'clear_settings_cache',
+    'Environment',
+    'get_settings',
+    'JWTAlgorithm',
+    'RateLimitBackend',
 ]

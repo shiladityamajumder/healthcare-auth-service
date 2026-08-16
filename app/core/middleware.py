@@ -608,10 +608,10 @@ def register_middleware(
 
 
 __all__ = [
-    "RequestContextMiddleware",
-    "RequestLoggingMiddleware",
-    "RequestSizeLimitMiddleware",
-    "SecurityHeadersMiddleware",
-    "TrustedHostValidationMiddleware",
-    "register_middleware",
+    'register_middleware',
+    'RequestContextMiddleware',
+    'RequestLoggingMiddleware',
+    'RequestSizeLimitMiddleware',
+    'SecurityHeadersMiddleware',
+    'TrustedHostValidationMiddleware',
 ]

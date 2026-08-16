@@ -49,9 +49,9 @@ EmailVerificationDep = Annotated[
 ]
 
 __all__ = [
-    "AuthRateLimitsDep",
-    "EmailVerificationDep",
-    "RateLimitRequestContextDep",
-    "SessionCreationRequestContextDep",
-    "get_email_verification_service",
+    'AuthRateLimitsDep',
+    'EmailVerificationDep',
+    'get_email_verification_service',
+    'RateLimitRequestContextDep',
+    'SessionCreationRequestContextDep',
 ]

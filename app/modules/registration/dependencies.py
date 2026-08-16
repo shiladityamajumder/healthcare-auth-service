@@ -79,11 +79,11 @@ PhoneOtpRegistrationDep = Annotated[
 ]
 
 __all__ = [
-    "AuthRateLimitsDep",
-    "EmailPasswordRegistrationDep",
-    "PhoneOtpRegistrationDep",
-    "RateLimitRequestContextDep",
-    "SessionCreationRequestContextDep",
-    "get_email_registration_service",
-    "get_phone_registration_service",
+    'AuthRateLimitsDep',
+    'EmailPasswordRegistrationDep',
+    'get_email_registration_service',
+    'get_phone_registration_service',
+    'PhoneOtpRegistrationDep',
+    'RateLimitRequestContextDep',
+    'SessionCreationRequestContextDep',
 ]

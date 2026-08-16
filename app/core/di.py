@@ -71,12 +71,12 @@ PostgresUOWDep = Annotated[SQLAlchemyUnitOfWork, Depends(get_postgres_uow)]
 
 
 __all__ = [
-    "DatabaseDep",
-    "PostgresSessionDep",
-    "PostgresUOWDep",
-    "SettingsDep",
-    "get_app_settings",
-    "get_database",
-    "get_postgres_session",
-    "get_postgres_uow",
+    'DatabaseDep',
+    'get_app_settings',
+    'get_database',
+    'get_postgres_session',
+    'get_postgres_uow',
+    'PostgresSessionDep',
+    'PostgresUOWDep',
+    'SettingsDep',
 ]

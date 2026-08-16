@@ -283,11 +283,11 @@ def get_logger(name: str) -> logging.Logger:
 atexit.register(shutdown_logging)
 
 __all__ = [
-    "ContextFilter",
-    "NonBlockingQueueHandler",
-    "StructuredFormatter",
-    "get_logger",
-    "sanitize_log_value",
-    "setup_logging",
-    "shutdown_logging",
+    'ContextFilter',
+    'get_logger',
+    'NonBlockingQueueHandler',
+    'sanitize_log_value',
+    'setup_logging',
+    'shutdown_logging',
+    'StructuredFormatter',
 ]

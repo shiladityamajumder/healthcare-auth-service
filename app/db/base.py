@@ -126,12 +126,12 @@ class ImmutableRecordMixin(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
 
 
 __all__ = [
-    "NAMING_CONVENTION",
     "ActorAuditMixin",
     "AuditMixin",
     "Base",
     "CreatedAtMixin",
     "ImmutableRecordMixin",
+    "NAMING_CONVENTION",
     "RecordMixin",
     "SoftDeleteMixin",
     "TimestampMixin",
