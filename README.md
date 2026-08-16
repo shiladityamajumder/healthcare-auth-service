@@ -32,6 +32,13 @@ The service follows a modular FastAPI structure:
 
 Detailed architecture decisions are documented in [`Architecture.md`](Architecture.md).
 
+## Documentation map
+
+- [API reference](docs/API.md)
+- [Deployment runbook](docs/DEPLOYMENT.md)
+- [Architecture](Architecture.md)
+- [Environment template](.env.example)
+
 ## Features
 
 - Email and password registration
@@ -635,7 +642,7 @@ Before production deployment:
 * Verify session revocation behavior.
 * Verify current database-backed authorization.
 
-See [`deployment_guide.md`](deployment_guide.md) for detailed deployment instructions.
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for deployment instructions.
 
 ## Documentation
 
@@ -643,7 +650,7 @@ See [`deployment_guide.md`](deployment_guide.md) for detailed deployment instruc
 | ------------------------------------------------ | ----------------------------------- |
 | [`Architecture.md`](Architecture.md)             | Architecture and design decisions   |
 | [`ENDPOINT_INVENTORY.md`](ENDPOINT_INVENTORY.md) | Complete API route inventory        |
-| [`deployment_guide.md`](deployment_guide.md)     | Production deployment guide         |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)     | Production deployment guide         |
 | [`.env.example`](.env.example)                   | Environment configuration reference |
 
 ## License

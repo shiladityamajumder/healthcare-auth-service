@@ -1582,9 +1582,9 @@ The architecture is protected through:
 Required verification commands are documented in:
 
 * [`README.md`](README.md)
-* [`deployment_guide.md`](deployment_guide.md)
+* [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
 * [`script_commands.md`](script_commands.md)
 
 The complete HTTP route inventory is documented in:
 
-* [`API_DOCUMENTATION.md`](API_DOCUMENTATION.md)
+* [`docs/API.md`](docs/API.md)
