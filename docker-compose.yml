@@ -1,35 +1,137 @@
-# File: docker-compose.yml
+# =============================================================================
+# AUTHENTICATION SERVICE
+#
+# This Compose file starts only the FastAPI authentication API.
+#
+# It does not create or manage:
+#
+# - PostgreSQL
+# - MongoDB
+# - Redis
+# - Notification services
+# - Workers or schedulers
+#
+# External infrastructure must be reachable through URLs configured in .env.
+# =============================================================================
 
 services:
   api:
+    # =========================================================================
+    # IMAGE BUILD
+    # =========================================================================
+
     build:
+      # Use the current project directory as the Docker build context.
       context: .
+
+      # Use the production-oriented Dockerfile in the project root.
       dockerfile: Dockerfile
 
-    env_file:
-      - .env
+    # Give the generated image a reusable local name.
+    image: healthcare-auth-service:latest
 
-    environment:
-      HOST: 0.0.0.0
-      PORT: ${PORT:-5555}
+    # Give the running container a predictable name.
+    container_name: healthcare-auth-service
+
+    # =========================================================================
+    # PROCESS AND RESTART BEHAVIOR
+    # =========================================================================
+
+    # Restart automatically after unexpected process or host failures.
+    # Manual stops remain stopped until explicitly started again.
+    restart: unless-stopped
+
+    # Give Uvicorn time to finish active requests and close dependency clients.
+    stop_grace_period: 30s
+
+    # Provide correct signal forwarding and zombie-process cleanup.
+    init: true
+
+    # =========================================================================
+    # ENVIRONMENT CONFIGURATION
+    # =========================================================================
+
+    # Load application settings and external infrastructure URLs from .env.
+    # The file is optional for image smoke tests and must never be committed.
+    env_file:
+      - path: .env
+        required: false
+
+    # =========================================================================
+    # PORT MAPPING
+    # =========================================================================
 
     ports:
+      # PORT controls both the published host port and Uvicorn's container
+      # listener. The default exposes the API at http://localhost:5555.
       - "${PORT:-5555}:${PORT:-5555}"
 
-    init: true
-    read_only: true
+    # =========================================================================
+    # HEALTH CHECK
+    # =========================================================================
 
-    tmpfs:
-      - /tmp:size=64m,mode=1777
+    healthcheck:
+      # Liveness checks only the API process, not external dependencies.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import os, urllib.request; port=os.getenv('PORT','5555'); urllib.request.urlopen(f'http://127.0.0.1:{port}/health/live', timeout=3).close()"
 
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+    # =========================================================================
+    # SECURITY
+    # =========================================================================
+
+    # Prevent the container from gaining additional Linux privileges.
     security_opt:
       - no-new-privileges:true
 
-    stop_grace_period: 30s
-    restart: unless-stopped
+    # The API does not require Linux capabilities or privileged ports.
+    cap_drop:
+      - ALL
 
+    # Provide bounded temporary storage without a persistent host mount.
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+
+    # =========================================================================
+    # LOGGING
+    # =========================================================================
+
+    # Prevent Docker JSON log files from growing without limit.
     logging:
       driver: json-file
+
       options:
         max-size: "10m"
         max-file: "5"
+
+    # =========================================================================
+    # RESOURCE LIMITS
+    # =========================================================================
+
+    # Adjust these limits after measuring the real authentication workload.
+    mem_limit: 1g
+    cpus: 1.0
+
+    # =========================================================================
+    # NETWORK
+    # =========================================================================
+
+    networks:
+      - application-network
+
+
+# =============================================================================
+# APPLICATION NETWORK
+# =============================================================================
+
+networks:
+  application-network:
+    # Private bridge network for this Compose project.
+    driver: bridge
